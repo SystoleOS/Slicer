@@ -1,3 +1,21 @@
+project(Annotations)
+
+cmake_minimum_required(VERSION 3.0)
+
+find_package(Slicer REQUIRED)
+include(${Slicer_USE_FILE})
+
+find_package(Qt5 COMPONENTS Widgets Network Xml PrintSupport REQUIRED)
+find_package(VTK REQUIRED)
+
+find_package(CTK REQUIRED)
+include(${CTK_USE_FILE})
+
+find_package(ITK REQUIRED)
+include(${ITK_USE_FILE})
+
+link_directories(${Slicer_HOME}/${Slicer_INSTALL_LIB_DIR})
+
 #-----------------------------------------------------------------------------
 set(MODULE_NAME "Terminologies")
 
@@ -11,8 +29,10 @@ add_subdirectory(Widgets)
 set(MODULE_EXPORT_DIRECTIVE "Q_SLICER_QTMODULES_${MODULE_NAME_UPPER}_EXPORT")
 
 set(MODULE_INCLUDE_DIRECTORIES
+  ${Slicer_Libs_INCLUDE_DIRS}
   ${vtkSlicerTerminologiesModuleLogic_INCLUDE_DIRS}
   ${qSlicerTerminologiesModuleWidgets_INCLUDE_DIRS}
+  ${vtkAddon_INCLUDE_DIRS}
   )
 
 set(MODULE_SRCS
@@ -37,6 +57,7 @@ set(MODULE_UI_SRCS
 set(MODULE_TARGET_LIBRARIES
   vtkSlicer${MODULE_NAME}ModuleLogic
   qSlicer${MODULE_NAME}ModuleWidgets
+  ${vtkAddon_LIBRARIES}
   )
 
 set(MODULE_RESOURCES

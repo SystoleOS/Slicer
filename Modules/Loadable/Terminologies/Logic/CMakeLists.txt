@@ -8,6 +8,8 @@ set(${KIT}_EXPORT_DIRECTIVE "VTK_SLICER_${MODULE_NAME_UPPER}_LOGIC_EXPORT")
 
 set(${KIT}_INCLUDE_DIRECTORIES
   ${RapidJSON_INCLUDE_DIR}
+  ${Slicer_Base_INCLUDE_DIRS}
+  ${vtkAddon_INCLUDE_DIRS}
   )
 
 set(${KIT}_SRCS
@@ -22,6 +24,12 @@ set(${KIT}_SRCS
   )
 
 set(${KIT}_TARGET_LIBRARIES
+  MRMLLogic
+  MRMLCore
+  ${CTK_LIBRARIES}
+  ${VTK_LIBRARIES}
+  ${vtkAddon_LIBRARIES}
+  libSlicerBaseLogic.so
   )
 
 #-----------------------------------------------------------------------------

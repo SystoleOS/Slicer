@@ -6,6 +6,7 @@ set(${KIT}_EXPORT_DIRECTIVE "Q_SLICER_MODULE_${MODULE_NAME_UPPER}_WIDGETS_EXPORT
 
 set(${KIT}_INCLUDE_DIRECTORIES
   ${vtkSlicerTerminologiesModuleLogic_INCLUDE_DIRS}
+  ${vtkAddon_INCLUDE_DIRS}
   )
 
 set(${KIT}_SRCS
@@ -36,6 +37,10 @@ set(${KIT}_RESOURCES
 
 set(${KIT}_TARGET_LIBRARIES
   vtkSlicerTerminologiesModuleLogic
+  qMRMLWidgets
+  qSlicerBaseQTCore
+  qSlicerBaseQTGUI
+  ${vtkAddon_INCLUDE_LIB}
   )
 
 #-----------------------------------------------------------------------------
