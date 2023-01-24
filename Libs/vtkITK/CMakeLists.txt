@@ -160,6 +160,10 @@ set(lib_name ${PROJECT_NAME})
 set(srcs ${vtkITK_SRCS})
 add_library(${lib_name} ${srcs})
 
+if(Slicer_USE_SlicerITK)
+  target_compile_definitions(${lib_name} PUBLIC "SLICER_USE_SLICERITK")
+endif()
+
 set(libs
   ${ITK_LIBRARIES}
   ${VTK_LIBRARIES}
