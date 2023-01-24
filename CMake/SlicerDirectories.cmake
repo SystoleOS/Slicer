@@ -62,12 +62,14 @@ mark_as_superbuild(CMAKE_INSTALL_LIBDIR:PATH)
 #-----------------------------------------------------------------------------
 # Slicer relative directories
 #-----------------------------------------------------------------------------
+include(GNUInstallDirs)
+
 # for build tree
-set(Slicer_BIN_DIR "bin")
-set(Slicer_LIB_DIR "${CMAKE_INSTALL_LIBDIR}/${Slicer_MAIN_PROJECT_APPLICATION_NAME}-${Slicer_VERSION_MAJOR}.${Slicer_VERSION_MINOR}")
-set(Slicer_INCLUDE_DIR "include/${Slicer_MAIN_PROJECT_APPLICATION_NAME}-${Slicer_VERSION_MAJOR}.${Slicer_VERSION_MINOR}")
-set(Slicer_SHARE_DIR "share/${Slicer_MAIN_PROJECT_APPLICATION_NAME}-${Slicer_VERSION_MAJOR}.${Slicer_VERSION_MINOR}")
-set(Slicer_LIBEXEC_DIR "libexec/${Slicer_MAIN_PROJECT_APPLICATION_NAME}-${Slicer_VERSION_MAJOR}.${Slicer_VERSION_MINOR}")
+set(Slicer_BIN_DIR "${CMAKE_INSTALL_BINDIR}")
+set(Slicer_LIB_DIR "${CMAKE_INSTALL_LIBDIR}")
+set(Slicer_INCLUDE_DIR "${CMAKE_INSTALL_INCLUDEDIR}/${Slicer_MAIN_PROJECT_APPLICATION_NAME}-${Slicer_VERSION_MAJOR}.${Slicer_VERSION_MINOR}")
+set(Slicer_SHARE_DIR "${CMAKE_INSTALL_DATADIR}/${Slicer_MAIN_PROJECT_APPLICATION_NAME}-${Slicer_VERSION_MAJOR}.${Slicer_VERSION_MINOR}")
+set(Slicer_LIBEXEC_DIR "${CMAKE_INSTALL_LIBEXECDIR}/${Slicer_MAIN_PROJECT_APPLICATION_NAME}-${Slicer_VERSION_MAJOR}.${Slicer_VERSION_MINOR}")
 set(Slicer_ITKFACTORIES_DIR "${Slicer_LIB_DIR}/ITKFactories")
 set(Slicer_QM_DIR "${Slicer_BIN_DIR}/translations")
 
@@ -77,14 +79,26 @@ set(Slicer_BUNDLE_LOCATION "${Slicer_MAIN_PROJECT_APPLICATION_NAME}.app/Contents
 if(APPLE)
   set(Slicer_INSTALL_ROOT "${Slicer_BUNDLE_LOCATION}/") # Set to create Bundle
 endif()
-set(Slicer_INSTALL_BIN_DIR "${Slicer_INSTALL_ROOT}${Slicer_BIN_DIR}")
-set(Slicer_INSTALL_LIB_DIR "${Slicer_INSTALL_ROOT}${Slicer_LIB_DIR}")
-set(Slicer_INSTALL_INCLUDE_DIR "${Slicer_INSTALL_ROOT}${Slicer_INCLUDE_DIR}")
-set(Slicer_INSTALL_SHARE_DIR "${Slicer_INSTALL_ROOT}${Slicer_SHARE_DIR}")
-set(Slicer_INSTALL_LIBEXEC_DIR "${Slicer_INSTALL_ROOT}${Slicer_LIBEXEC_DIR}")
-set(Slicer_INSTALL_ITKFACTORIES_DIR "${Slicer_INSTALL_LIB_DIR}/ITKFactories")
-set(Slicer_INSTALL_QM_DIR "${Slicer_INSTALL_ROOT}${Slicer_QM_DIR}")
+set(Slicer_INSTALL_BIN_DIR "${CMAKE_INSTALL_PREFIX}/${Slicer_INSTALL_ROOT}${Slicer_BIN_DIR}")
+set(Slicer_INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/${Slicer_INSTALL_ROOT}${Slicer_LIB_DIR}")
+set(Slicer_INSTALL_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/${Slicer_INSTALL_ROOT}${Slicer_INCLUDE_DIR}")
+set(Slicer_INSTALL_SHARE_DIR "${CMAKE_INSTALL_PREFIX}/${Slicer_INSTALL_ROOT}${Slicer_SHARE_DIR}")
+set(Slicer_INSTALL_LIBEXEC_DIR "${CMAKE_INSTALL_PREFIX}/${Slicer_INSTALL_ROOT}${Slicer_LIBEXEC_DIR}")
+set(Slicer_INSTALL_ITKFACTORIES_DIR "${CMAKE_INSTALL_PREFIX}/${Slicer_ITKFACTORIES_LIB_DIR}/ITKFactories")
+set(Slicer_INSTALL_QM_DIR "${CMAKE_INSTALL_PREFIX}/${Slicer_INSTALL_ROOT}${Slicer_QM_DIR}")
 
+# CMake install directories according to
+# https://cmake.org/cmake/help/latest/command/find_package.html
+if(WIN32)
+  #Corresponds to <prefix>/<name>*/cmake pattern
+  set(Slicer_INSTALL_CMAKE_DIR "${CMAKE_INSTALL_PREFIX}/${Slicer_MAIN_PROJECT_APPLICATION_NAME}/${Slicer_VERSION_MAJOR}.${Slicer_VERSION_MINOR}/cmake")
+elseif(UNIX)
+  #Corresponds to <prefix>/share/<name>*/cmake pattern
+  set(Slicer_INSTALL_CMAKE_DIR "${Slicer_SHARE_DIR}/cmake")
+elseif(APPLE)
+  #Corresponds to <prefix>/<name>.framework/Resources/CMake pattern
+  set(Slicer_INSTALL_CMAKE_DIR "${Slicer_MAIN_PROJECT_APPLICATION_NAME}/${Slicer_VERSION_MAJOR}.${Slicer_VERSION_MINOR}.framework/Resources/CMake")
+endif()
 
 #-----------------------------------------------------------------------------
 # Slicer CLI relative directories
@@ -101,10 +115,9 @@ set(Slicer_CLIMODULES_LIB_DIR "${Slicer_LIB_DIR}/${Slicer_CLIMODULES_SUBDIR}")
 set(Slicer_CLIMODULES_SHARE_DIR "${Slicer_SHARE_DIR}/${Slicer_CLIMODULES_SUBDIR}")
 
 # for install tree
-set(Slicer_INSTALL_CLIMODULES_BIN_DIR "${Slicer_INSTALL_ROOT}${Slicer_CLIMODULES_BIN_DIR}")
-set(Slicer_INSTALL_CLIMODULES_LIB_DIR "${Slicer_INSTALL_ROOT}${Slicer_CLIMODULES_LIB_DIR}")
-set(Slicer_INSTALL_CLIMODULES_SHARE_DIR "${Slicer_INSTALL_ROOT}${Slicer_CLIMODULES_SHARE_DIR}")
-
+set(Slicer_INSTALL_CLIMODULES_BIN_DIR "${Slicer_INSTALL_LIBEXEC_DIR}/${Slicer_CLIMODULES_SUBDIR}")
+set(Slicer_INSTALL_CLIMODULES_LIB_DIR "${Slicer_INSTALL_LIB_DIR}/${Slicer_MAIN_PROJECT_APPLICATION_NAME}-${Slicer_VERSION_MAJOR}.${Slicer_VERSION_MINOR}/${Slicer_CLIMODULES_SUBDIR}")
+set(Slicer_INSTALL_CLIMODULES_SHARE_DIR "${Slicer_INSTALL_SHARE_DIR}/${Slicer_CLIMODULES_SUBDIR}")
 
 #-----------------------------------------------------------------------------
 # Qt Loadable Modules relative directories
