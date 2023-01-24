@@ -41,9 +41,8 @@ endif()
 # qRestAPI
 #
 if(Slicer_BUILD_EXTENSIONMANAGER_SUPPORT OR Slicer_BUILD_APPLICATIONUPDATE_SUPPORT)
-  find_package(qRestAPI REQUIRED)
-  include(${qRestAPI_USE_FILE})
-endif()
+ find_package(qRestAPI REQUIRED)
+ endif()
 
 #
 # CTKAppLauncherLib
@@ -60,6 +59,7 @@ set(KIT_export_directive "Q_SLICER_BASE_QTCORE_EXPORT")
 set(KIT_include_directories
   ${MRMLLogic_INCLUDE_DIRS}
   ${MRMLDisplayableManager_INCLUDE_DIRS}
+  ${qRestAPI_INCLUDE_DIRS}
   )
 
 if(Slicer_BUILD_CLI_SUPPORT)
