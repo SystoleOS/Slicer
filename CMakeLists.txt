@@ -1200,16 +1200,17 @@ endif()
 #-----------------------------------------------------------------------------
 if(BUILD_TESTING)
   add_subdirectory(Testing)
+
+  # Install testing data
+  if(NOT Slicer_INSTALL_NO_DEVELOPMENT)
+    install(DIRECTORY
+      Testing
+      DESTINATION ${Slicer_INSTALL_SHARE_DIR} COMPONENT Development
+      PATTERN "CMakeLists.txt" EXCLUDE
+    )
+  endif()
 endif()
 
-# Install testing data
-if(NOT Slicer_INSTALL_NO_DEVELOPMENT)
-  install(DIRECTORY
-    Testing
-    DESTINATION ${Slicer_INSTALL_SHARE_DIR} COMPONENT Development
-    PATTERN "CMakeLists.txt" EXCLUDE
-    )
-endif()
 
 #-----------------------------------------------------------------------------
 # Dynamic analysis

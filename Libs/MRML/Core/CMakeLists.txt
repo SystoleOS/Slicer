@@ -376,49 +376,50 @@ endif()
 # --------------------------------------------------------------------------
 if(BUILD_TESTING)
   add_subdirectory(Testing)
-endif()
 
-# --------------------------------------------------------------------------
-# Install Test Data
-# --------------------------------------------------------------------------
-if(NOT DEFINED ${PROJECT_NAME}_INSTALL_NO_DEVELOPMENT)
-  set(${PROJECT_NAME}_INSTALL_NO_DEVELOPMENT ON)
-endif()
-if(NOT ${PROJECT_NAME}_INSTALL_NO_DEVELOPMENT)
-  #file(GLOB_RECURSE MRMLFILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Testing/*.mrml")
-  #file(GLOB_RECURSE TCLFILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Testing/*.tcl")
-  #file(GLOB_RECURSE XMLFILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Testing/*.xml")
-  #file(GLOB_RECURSE GZFILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Testing/*.gz")
-  #file(GLOB_RECURSE NHDRFILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Testing/*.nhdr")
-  #file(GLOB_RECURSE NRRDFILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Testing/*.nrrd")
-  #file(GLOB_RECURSE VTKFILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Testing/*.vtk")
+  # --------------------------------------------------------------------------
+  # Install Test Data
+  # --------------------------------------------------------------------------
+  if(NOT DEFINED ${PROJECT_NAME}_INSTALL_NO_DEVELOPMENT)
+    set(${PROJECT_NAME}_INSTALL_NO_DEVELOPMENT ON)
+  endif()
+  if(NOT ${PROJECT_NAME}_INSTALL_NO_DEVELOPMENT)
+    #file(GLOB_RECURSE MRMLFILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Testing/*.mrml")
+    #file(GLOB_RECURSE TCLFILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Testing/*.tcl")
+    #file(GLOB_RECURSE XMLFILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Testing/*.xml")
+    #file(GLOB_RECURSE GZFILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Testing/*.gz")
+    #file(GLOB_RECURSE NHDRFILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Testing/*.nhdr")
+    #file(GLOB_RECURSE NRRDFILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Testing/*.nrrd")
+    #file(GLOB_RECURSE VTKFILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Testing/*.vtk")
 
-  #foreach(file
-  #    ${MRMLFILES}
-  #    ${TCLFILES}
-  #    ${XMLFILES}
-  #    ${GZFILES}
-  #    ${NHDRFILES}
-  #    ${NRRDFILES}
-  #    ${VTKFILES}
-  #    )
-  #  message(file:${file})
-  #  configure_file(
-  #    ${CMAKE_CURRENT_SOURCE_DIR}/${file}
-  #    ${CMAKE_BINARY_DIR}/share/${PROJECT_NAME}/${file}
-  #    COPYONLY
-  #    )
-  #endforeach()
+    #foreach(file
+    #    ${MRMLFILES}
+    #    ${TCLFILES}
+    #    ${XMLFILES}
+    #    ${GZFILES}
+    #    ${NHDRFILES}
+    #    ${NRRDFILES}
+    #    ${VTKFILES}
+    #    )
+    #  message(file:${file})
+    #  configure_file(
+    #    ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+    #    ${CMAKE_BINARY_DIR}/share/${PROJECT_NAME}/${file}
+    #    COPYONLY
+    #    )
+    #endforeach()
 
-  install(DIRECTORY
-    Testing
-    DESTINATION share/${PROJECT_NAME} COMPONENT Development
-    PATTERN "*.cxx" EXCLUDE
-    PATTERN ".svn" EXCLUDE
-    PATTERN "*.tcl" EXCLUDE
-    PATTERN "CMakeLists.txt" EXCLUDE
+    install(DIRECTORY
+      Testing
+      DESTINATION share/${PROJECT_NAME} COMPONENT Development
+      PATTERN "*.cxx" EXCLUDE
+      PATTERN ".svn" EXCLUDE
+      PATTERN "*.tcl" EXCLUDE
+      PATTERN "CMakeLists.txt" EXCLUDE
     )
+  endif()
 endif()
+
 
 # --------------------------------------------------------------------------
 # Set INCLUDE_DIRS variable
