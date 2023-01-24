@@ -599,6 +599,7 @@ message(STATUS "  Slicer_VTK_VERSION_MAJOR is ${Slicer_VTK_VERSION_MAJOR}")
 # Slicer_VTK_COMPONENTS
 #-----------------------------------------------------------------------------
 set(Slicer_VTK_COMPONENTS
+  CommonSystem
   FiltersExtraction
   FiltersFlowPaths
   FiltersGeometry
