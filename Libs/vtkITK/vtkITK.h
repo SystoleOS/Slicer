@@ -15,7 +15,10 @@
 #ifndef __vtkITK_h
 #define __vtkITK_h
 
+#ifdef SLICER_USE_SLICERITK
 #include "itkNamespace.h"
+#endif
+
 #include "vtkITKExport.h"
 #include "vtkITKNumericTraits.h"
 

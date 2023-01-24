@@ -366,6 +366,14 @@ option(Slicer_USE_QtTesting    "Integrate QtTesting framework into Slicer." ON)
 mark_as_advanced(Slicer_USE_QtTesting)
 mark_as_superbuild(Slicer_USE_QtTesting)
 
+#
+# The Slicer superbuild uses a custom ITK with minor modifications.
+# In a non-superbuild you may consider turning this flag OFF and use
+# another ITK flavour i.e., official ITK.
+#
+option(Slicer_USE_SlicerITK "Slicer builds with custom ITK" ON)
+mark_as_superbuild(Slicer_USE_SlicerITK)
+
 option(Slicer_USE_SimpleITK "Build Slicer with SimpleITK support" ON)
 mark_as_superbuild(Slicer_USE_SimpleITK)
 
