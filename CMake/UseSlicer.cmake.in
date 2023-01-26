@@ -39,6 +39,8 @@
 # This is can avoided by setting the variable Slicer_VERBOSE_SKIP to TRUE
 #
 
+find_package(CTK REQUIRED)
+
 # --------------------------------------------------------------------------
 # Helper function(s) and macro(s)
 # --------------------------------------------------------------------------
