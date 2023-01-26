@@ -94,7 +94,7 @@ if(WIN32)
   set(Slicer_INSTALL_CMAKE_DIR "${CMAKE_INSTALL_PREFIX}/${Slicer_MAIN_PROJECT_APPLICATION_NAME}/${Slicer_VERSION_MAJOR}.${Slicer_VERSION_MINOR}/cmake")
 elseif(UNIX)
   #Corresponds to <prefix>/share/<name>*/cmake pattern
-  set(Slicer_INSTALL_CMAKE_DIR "${Slicer_SHARE_DIR}/cmake")
+  set(Slicer_INSTALL_CMAKE_DIR "${CMAKE_INSTALL_PREFIX}/${Slicer_SHARE_DIR}/cmake")
 elseif(APPLE)
   #Corresponds to <prefix>/<name>.framework/Resources/CMake pattern
   set(Slicer_INSTALL_CMAKE_DIR "${Slicer_MAIN_PROJECT_APPLICATION_NAME}/${Slicer_VERSION_MAJOR}.${Slicer_VERSION_MINOR}.framework/Resources/CMake")
