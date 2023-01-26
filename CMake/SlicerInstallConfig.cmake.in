@@ -93,7 +93,7 @@ set(Slicer_Base_INCLUDE_DIRS
   )
 
 # The location of the UseSlicer.cmake file.
-set(Slicer_USE_FILE "${Slicer_CONFIG_DIR}/UseSlicer.cmake")
+set(Slicer_USE_FILE "@Slicer_INSTALL_CMAKE_DIR@/UseSlicer.cmake")
 
 # The build settings file.
 set(Slicer_BUILD_SETTINGS_FILE
@@ -132,3 +132,5 @@ get_filename_component(PYTHON_LIB_FILE "${PYTHON_LIBRARY}" NAME)
 set(PYTHON_LIBRARIES "${Slicer_HOME}/lib/Python/lib/${PYTHON_LIB_FILE}")
 get_filename_component(PYTHON_INCLUDE_DIR "${PYTHON_INCLUDE_PATH}" NAME)
 set(PYTHON_INCLUDE_PATH "${Slicer_HOME}/lib/Python/include/${PYTHON_INCLUDE_DIR}")
+
+list(APPEND CMAKE_MODULE_PATH "@Slicer_INSTALL_CMAKE_DIR@")
