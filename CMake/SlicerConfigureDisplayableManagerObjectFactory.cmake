@@ -98,11 +98,11 @@ ${_export_header}
     ${CMAKE_CURRENT_BINARY_DIR}/${vtk-module}Module.h
     )
   configure_file(
-    ${Slicer_CMAKE_DIR}/vtkSlicerObjectFactory.h.in
+    ${Slicer_TEMPLATES_DIR}/vtkSlicerObjectFactory.h.in
     ${CMAKE_CURRENT_BINARY_DIR}/${vtk-module}ObjectFactory.h
     )
   configure_file(
-    ${Slicer_CMAKE_DIR}/vtkSlicerObjectFactory.cxx.in
+    ${Slicer_TEMPLATES_DIR}/vtkSlicerObjectFactory.cxx.in
     ${CMAKE_CURRENT_BINARY_DIR}/${vtk-module}ObjectFactory.cxx
     )
 

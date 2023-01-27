@@ -220,7 +220,7 @@ if(Slicer_SUPERBUILD)
     set(fixup_path @rpath)
     set(slicer_cpack_bundle_fixup_directory ${Slicer_BINARY_DIR}/CMake/SlicerCPackBundleFixup)
     configure_file(
-      "${Slicer_SOURCE_DIR}/CMake/SlicerCPackBundleFixup.cmake.in"
+      "${Slicer_TEMPLATES_DIR}/SlicerCPackBundleFixup.cmake.in"
       "${slicer_cpack_bundle_fixup_directory}/SlicerCPackBundleFixup.cmake"
       @ONLY)
     # HACK - For a given directory, "install(SCRIPT ...)" rule will be evaluated first,

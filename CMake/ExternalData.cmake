@@ -384,7 +384,7 @@ function(ExternalData_add_target target)
 
   # Store configuration for use by build-time script.
   set(config ${CMAKE_CURRENT_BINARY_DIR}/${target}_config.cmake)
-  configure_file(${_ExternalData_SELF_DIR}/ExternalData_config.cmake.in ${config} @ONLY)
+  configure_file(${Slicer_TEMPLATES_DIR}/ExternalData_config.cmake.in ${config} @ONLY)
 
   set(files "")
 

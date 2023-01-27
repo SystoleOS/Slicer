@@ -87,6 +87,7 @@ set(CMAKE_MODULE_PATH
   )
 
 set(Slicer_CMAKE_DIR ${Slicer_SOURCE_DIR}/CMake)
+set(Slicer_TEMPLATES_DIR ${Slicer_SOURCE_DIR}/Templates)
 set(Slicer_EXTENSIONS_CMAKE_DIR ${Slicer_SOURCE_DIR}/Extensions/CMake)
 
 #-----------------------------------------------------------------------------
@@ -153,7 +154,7 @@ include(SlicerInitializeReleaseType)
 # Set the header template which defines custom export/import macros
 # for shared libraries
 #-----------------------------------------------------------------------------
-set(Slicer_EXPORT_HEADER_TEMPLATE "${Slicer_SOURCE_DIR}/CMake/qSlicerExport.h.in")
+set(Slicer_EXPORT_HEADER_TEMPLATE "${Slicer_SOURCE_DIR}/Templates/qSlicerExport.h.in")
 set(Slicer_LOGOS_RESOURCE "${Slicer_SOURCE_DIR}/Resources/qSlicer.qrc")
 
 #-----------------------------------------------------------------------------
@@ -470,7 +471,7 @@ endif()
 # CTestCustom
 #-----------------------------------------------------------------------------
 configure_file(
-  CMake/CTestCustom.cmake.in
+  Templates/CTestCustom.cmake.in
   ${CMAKE_BINARY_DIR}/CTestCustom.cmake
   COPYONLY
   )
@@ -1085,11 +1086,11 @@ endif()
 #-----------------------------------------------------------------------------
 set(Slicer_USE_FILE ${Slicer_BINARY_DIR}/UseSlicer.cmake)
 configure_file(
-  ${Slicer_SOURCE_DIR}/CMake/UseSlicer.cmake.in
+  ${Slicer_TEMPLATES_DIR}/UseSlicer.cmake.in
   ${Slicer_USE_FILE} COPYONLY)
 
 configure_file(
-  ${Slicer_SOURCE_DIR}/CMake/SlicerConfigVersion.cmake.in
+  ${Slicer_TEMPLATES_DIR}/SlicerConfigVersion.cmake.in
   ${Slicer_BINARY_DIR}/SlicerConfigVersion.cmake @ONLY)
 
 set(Slicer_EXTENSION_GENERATE_CONFIG ${Slicer_SOURCE_DIR}/CMake/SlicerExtensionGenerateConfig.cmake)
@@ -1104,11 +1105,11 @@ set(extensions_build_dir "${Slicer_BINARY_DIR}/E")
 # Configure a no-op SlicerConfig and SlicerConfigVersion for bundled projects
 set(Slicer_DIR ${extensions_build_dir})
 configure_file(
-  ${Slicer_SOURCE_DIR}/CMake/SlicerConfig.cmake.in
+  ${Slicer_TEMPLATES_DIR}/SlicerConfig.cmake.in
   ${Slicer_DIR}/SlicerConfig.cmake @ONLY)
 
 configure_file(
-  ${Slicer_SOURCE_DIR}/CMake/SlicerConfigVersion.cmake.in
+  ${Slicer_TEMPLATES_DIR}/SlicerConfigVersion.cmake.in
   ${Slicer_DIR}/SlicerConfigVersion.cmake @ONLY)
 
 #
@@ -1190,7 +1191,7 @@ set(files
   )
 foreach(f ${files})
   configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/CMake/${f}.in
+    ${Slicer_TEMPLATES_DIR}/${f}.in
     ${CMAKE_CURRENT_BINARY_DIR}/${f}
     )
 endforeach()
@@ -1266,12 +1267,6 @@ if(NOT Slicer_INSTALL_NO_DEVELOPMENT)
     DESTINATION ${Slicer_INSTALL_CMAKE_DIR} COMPONENT Development
     )
 
-  file(GLOB cmake_files "${CMAKE_CURRENT_SOURCE_DIR}/CMake/*.cmake")
-  install(
-    FILES ${cmake_files}
-    DESTINATION ${Slicer_INSTALL_CMAKE_DIR} COMPONENT Development
-    )
-
   install(FILES
     ${Slicer_BINARY_DIR}/UseSlicer.cmake
     ${Slicer_BINARY_DIR}/install/SlicerConfig.cmake
@@ -1282,12 +1277,12 @@ if(NOT Slicer_INSTALL_NO_DEVELOPMENT)
 endif()
 
 #-----------------------------------------------------------------------------
-# Install CMake modules
+# Install Templates
 #-----------------------------------------------------------------------------
 if(NOT Slicer_INSTALL_NO_DEVELOPMENT)
-  file(GLOB cmake_files "${CMAKE_CURRENT_SOURCE_DIR}/CMake/*.in")
+  file(GLOB cmake_files "${CMAKE_CURRENT_SOURCE_DIR}/Templates/*.in")
   install(
-    FILES "${cmake_files}"
+    FILES ${cmake_files}
     DESTINATION ${Slicer_INSTALL_TEMPLATES_DIR} COMPONENT Development
     )
 endif()

@@ -539,3 +539,7 @@ include(${Slicer_CMAKE_DIR}/SlicerBlockFindQtAndCheckVersion.cmake)
 if(EXISTS "@Slicer_TARGETS_FILE@" AND NOT TARGET SlicerBaseLogic)
   include("@Slicer_TARGETS_FILE@")
 endif()
+
+# --------------------------------------------------------------------------
+# Templates directory
+@Slicer_TEMPLATES_DIR@
