@@ -116,5 +116,5 @@ export(TARGETS ${Slicer_TARGETS} FILE ${EXTENSION_TARGETS_FILE})
 
 # Configure <Extension>Config.cmake for the build tree.
 configure_file(
-  ${Slicer_CMAKE_DIR}/SlicerExtensionConfig.cmake.in
+  ${Slicer_TEMPLATES_DIR}/SlicerExtensionConfig.cmake.in
   ${EXTENSION_SUPERBUILD_BINARY_DIR}/${EXTENSION_BUILD_SUBDIRECTORY}/${EXTENSION_NAME}Config.cmake @ONLY)

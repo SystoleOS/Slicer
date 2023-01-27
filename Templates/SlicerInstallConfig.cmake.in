@@ -41,6 +41,7 @@ get_filename_component(Slicer_HOME ${Slicer_HOME} ABSOLUTE)
 
 # The CMake macros dir.
 set(Slicer_CMAKE_DIR "${Slicer_HOME}/@Slicer_INSTALL_LIB_DIR@/CMake")
+set(Slicer_TEMPLATES_DIR "@Slicer_INSTALL_TEMPLATES_DIR@")
 
 
 # Set the Slicer_EXPORT_HEADER_TEMPLATE to the install dir

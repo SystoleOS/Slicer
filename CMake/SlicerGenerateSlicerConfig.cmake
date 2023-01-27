@@ -41,7 +41,7 @@ set(Slicer_PYTHON_MODULE_TEST_TEMPLATES_DIR_CONFIG ${Slicer_PYTHON_MODULE_TEST_T
 
 # Path to extension CPack script(s)
 set(Slicer_EXTENSION_CPACK_CONFIG ${Slicer_EXTENSION_CPACK})
-set(Slicer_EXTENSION_CPACK_BUNDLE_FIXUP_CONFIG ${Slicer_SOURCE_DIR}/CMake/SlicerExtensionCPackBundleFixup.cmake.in)
+set(Slicer_EXTENSION_CPACK_BUNDLE_FIXUP_CONFIG ${Slicer_TEMPLATES_DIR}/SlicerExtensionCPackBundleFixup.cmake.in)
 
 set(Slicer_GUI_LIBRARY_CONFIG ${Slicer_GUI_LIBRARY})
 set(Slicer_CORE_LIBRARY_CONFIG ${Slicer_CORE_LIBRARY})
@@ -189,10 +189,10 @@ set(Slicer_TARGETS_FILE "${Slicer_BINARY_DIR}/SlicerTargets.cmake")
 
 # Configure SlicerConfig.cmake for the build tree.
 configure_file(
-  ${Slicer_SOURCE_DIR}/CMake/SlicerConfig.cmake.in
+  ${Slicer_SOURCE_DIR}/Templates/SlicerConfig.cmake.in
   ${Slicer_BINARY_DIR}/SlicerConfig.cmake @ONLY)
 
 # Configure SlicerConfig.cmake for the build tree.
 configure_file(
-  ${Slicer_SOURCE_DIR}/CMake/SlicerInstallConfig.cmake.in
+  ${Slicer_SOURCE_DIR}/Templates/SlicerInstallConfig.cmake.in
   ${Slicer_BINARY_DIR}/install/SlicerConfig.cmake @ONLY)

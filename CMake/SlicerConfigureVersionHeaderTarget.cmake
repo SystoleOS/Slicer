@@ -28,6 +28,7 @@
 #  GIT_EXECUTABLE
 #  Slicer_BINARY_DIR
 #  Slicer_CMAKE_DIR
+#  Slicer_TEMPLATES_DIR
 #
 #  Slicer_MAIN_PROJECT_APPLICATION_NAME
 #  <Slicer_MAIN_PROJECT_APPLICATION_NAME>_SOURCE_DIR
@@ -62,6 +63,7 @@ set(expected_defined_vars
   GIT_EXECUTABLE
   Slicer_BINARY_DIR
   Slicer_CMAKE_DIR
+  Slicer_TEMPLATES_DIR
 
   Slicer_MAIN_PROJECT_APPLICATION_NAME # Used by SlicerVersion.cmake
   ${Slicer_MAIN_PROJECT_APPLICATION_NAME}_SOURCE_DIR
@@ -126,7 +128,8 @@ endif()
 
 include(${Slicer_CMAKE_DIR}/SlicerVersion.cmake)
 
-# Variables expected to be set by 'SlicerVersion' module.
+#
+#Variables expected to be set by 'SlicerVersion' module.
 set(expected_defined_vars
   Slicer_BUILDDATE
   Slicer_VERSION
@@ -151,6 +154,6 @@ foreach(var ${expected_defined_vars})
 endforeach()
 
 configure_file(
-  ${Slicer_SOURCE_DIR}/CMake/vtkSlicerVersionConfigure.h.in
+  ${Slicer_TEMPLATES_DIR}/vtkSlicerVersionConfigure.h.in
   ${Slicer_BINARY_DIR}/vtkSlicerVersionConfigure.h
   )

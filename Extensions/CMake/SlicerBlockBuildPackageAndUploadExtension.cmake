@@ -122,7 +122,7 @@ set(CTEST_DROP_SITE_CDASH TRUE)")
   endif()
   message(STATUS "CTestCustom.cmake has been written to: ${ctestconfig_dest_dir}")
   configure_file(
-    ${Slicer_CMAKE_DIR}/CTestCustom.cmake.in
+    ${Slicer_TEMPLATES_DIR}/CTestCustom.cmake.in
     ${ctestconfig_dest_dir}/CTestCustom.cmake
     COPYONLY
     )
