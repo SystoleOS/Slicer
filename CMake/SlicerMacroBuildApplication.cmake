@@ -132,7 +132,7 @@ macro(slicerMacroBuildAppLibrary)
   set(MY_LIBNAME ${lib_name})
 
   configure_file(
-    ${Slicer_SOURCE_DIR}/CMake/qSlicerExport.h.in
+    ${Slicer_TEMPLATES_DIR}/qSlicerExport.h.in
     ${CMAKE_CURRENT_BINARY_DIR}/${MY_EXPORT_HEADER_PREFIX}Export.h
     )
   set(dynamicHeaders
@@ -462,7 +462,7 @@ macro(slicerMacroBuildApplication)
         MACOSX_BUNDLE_BUNDLE_NAME "${SLICERAPP_APPLICATION_NAME} ${Slicer_MAIN_PROJECT_VERSION_FULL}"
         MACOSX_BUNDLE_BUNDLE_VERSION "${Slicer_MAIN_PROJECT_VERSION_FULL}"
         MACOSX_BUNDLE_GUI_IDENTIFIER "${Slicer_MACOSX_BUNDLE_GUI_IDENTIFIER}"
-        MACOSX_BUNDLE_INFO_PLIST "${Slicer_CMAKE_DIR}/MacOSXBundleInfo.plist.in"
+        MACOSX_BUNDLE_INFO_PLIST "${Slicer_TEMPLATES_DIR}/MacOSXBundleInfo.plist.in"
         LINK_FLAGS ${link_flags}
       )
     if("${Slicer_RELEASE_TYPE}" STREQUAL "Stable")
