@@ -1250,12 +1250,29 @@ if(NOT Slicer_INSTALL_NO_DEVELOPMENT)
     DESTINATION ${Slicer_INSTALL_CMAKE_DIR} COMPONENT Development
     )
 
+  file(GLOB cmake_files "${CMAKE_CURRENT_SOURCE_DIR}/CMake/*.cmake")
+  install(
+    FILES ${cmake_files}
+    DESTINATION ${Slicer_INSTALL_CMAKE_DIR} COMPONENT Development
+    )
+
   install(FILES
     ${Slicer_BINARY_DIR}/UseSlicer.cmake
     ${Slicer_BINARY_DIR}/install/SlicerConfig.cmake
     ${Slicer_BINARY_DIR}/SlicerConfigVersion.cmake
     DESTINATION ${Slicer_INSTALL_CMAKE_DIR}
     COMPONENT Development
+    )
+endif()
+
+#-----------------------------------------------------------------------------
+# Install CMake modules
+#-----------------------------------------------------------------------------
+if(NOT Slicer_INSTALL_NO_DEVELOPMENT)
+  file(GLOB cmake_files "${CMAKE_CURRENT_SOURCE_DIR}/CMake/*.in")
+  install(
+    FILES "${cmake_files}"
+    DESTINATION ${Slicer_INSTALL_TEMPLATES_DIR} COMPONENT Development
     )
 endif()
 

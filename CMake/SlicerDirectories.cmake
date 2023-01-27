@@ -92,12 +92,15 @@ set(Slicer_INSTALL_QM_DIR "${CMAKE_INSTALL_PREFIX}/${Slicer_INSTALL_ROOT}${Slice
 if(WIN32)
   #Corresponds to <prefix>/<name>*/cmake pattern
   set(Slicer_INSTALL_CMAKE_DIR "${CMAKE_INSTALL_PREFIX}/${Slicer_MAIN_PROJECT_APPLICATION_NAME}/${Slicer_VERSION_MAJOR}.${Slicer_VERSION_MINOR}/cmake")
+  set(Slicer_INSTALL_TEMPLATES_DIR "${CMAKE_INSTALL_PREFIX}/${Slicer_MAIN_PROJECT_APPLICATION_NAME}/${Slicer_VERSION_MAJOR}.${Slicer_VERSION_MINOR}/templates")
 elseif(UNIX)
   #Corresponds to <prefix>/share/<name>*/cmake pattern
   set(Slicer_INSTALL_CMAKE_DIR "${CMAKE_INSTALL_PREFIX}/${Slicer_SHARE_DIR}/cmake")
+  set(Slicer_INSTALL_TEMPLATES_DIR "${CMAKE_INSTALL_PREFIX}/${Slicer_SHARE_DIR}/templates")
 elseif(APPLE)
   #Corresponds to <prefix>/<name>.framework/Resources/CMake pattern
   set(Slicer_INSTALL_CMAKE_DIR "${Slicer_MAIN_PROJECT_APPLICATION_NAME}/${Slicer_VERSION_MAJOR}.${Slicer_VERSION_MINOR}.framework/Resources/CMake")
+  set(Slicer_INSTALL_TEMPLATES_DIR "${Slicer_MAIN_PROJECT_APPLICATION_NAME}/${Slicer_VERSION_MAJOR}.${Slicer_VERSION_MINOR}.framework/Resources/Templates")
 endif()
 
 #-----------------------------------------------------------------------------
