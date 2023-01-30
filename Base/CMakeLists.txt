@@ -7,17 +7,45 @@ include_directories(
   ${CMAKE_CURRENT_BINARY_DIR}/QTCore
   )
 
-add_subdirectory(Logic)
-add_subdirectory(QTCore)
-add_subdirectory(QTGUI)
+ set(Slicer_BASE_SUBDIRS
+    Logic
+  )
+
+ set(qSlicer_BASE_SUBDIRS
+    QTCore
+    QTGUI
+ )
+
 if(Slicer_BUILD_CLI_SUPPORT)
-  add_subdirectory(QTCLI)
-  add_subdirectory(CLI)
+  list(APPEND Slicer_BASE_SUBDIRS
+   CLI
+  )
+
+  list(APPEND qSlicer_BASE_SUBDIRS
+   QTCLI
+  )
 endif()
 
 if(Slicer_USE_PYTHONQT)
-  add_subdirectory(Python)
+  list(APPEND Slicer_BASE_SUBDIRS
+    Python
+  )
 endif()
+
+foreach(SUBDIR ${Slicer_BASE_SUBDIRS})
+  if(NOT Slicer_INSTALL_NO_DEVELOPMENT)
+    set(SlicerBase${SUBDIR}_INSTALL_NO_DEVELOPMENT 0)
+    add_subdirectory(${SUBDIR})
+  endif()
+endforeach()
+
+foreach(SUBDIR ${qSlicer_BASE_SUBDIRS})
+  if(NOT Slicer_INSTALL_NO_DEVELOPMENT)
+    set(qSlicerBase${SUBDIR}_INSTALL_NO_DEVELOPMENT 0)
+    add_subdirectory(${SUBDIR})
+  endif()
+endforeach()
+
 
 # Since "QTApp" depends on "Modules/Core", the folder is included in the top-level CMakeLists.txt
 # after "Modules/Core" folder.
