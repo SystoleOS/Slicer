@@ -14,6 +14,7 @@ set(KIT_include_directories
   ${qSlicerBaseQTCore_BINARY_DIR}
   )
 
+
 # Source files
 set(KIT_SRCS
   qSlicerAbstractModule.cxx
@@ -366,6 +367,40 @@ SlicerMacroBuildBaseQtLibrary(
   RESOURCES ${KIT_resources}
   WRAP_PYTHONQT
   )
+
+# -----------------------------------------------------
+# Install ui_headers
+# --------------------------------------------------------------------------
+# ui_header files are generated in build time and are not listed by
+# the globbing mechanims in the Slicer build macros. Here we list them and make
+# the installation explicit
+if(NOT DEFINED ${PROJECT_NAME}_INSTALL_NO_DEVELOPMENT)
+  set(${PROJECT_NAME}_INSTALL_NO_DEVELOPMENT ON)
+endif()
+if(NOT ${PROJECT_NAME}_INSTALL_NO_DEVELOPMENT)
+  set(ui_headers
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qSlicerWebWidget.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qSlicerSettingsViewsPanel.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qSlicerSettingsUserInformationPanel.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qSlicerSettingsStylesPanel.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qSlicerSettingsModulesPanel.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qSlicerSettingsInternationalizationPanel.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qSlicerSettingsGeneralPanel.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qSlicerSettingsDeveloperPanel.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qSlicerSettingsCachePanel.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qSlicerSaveDataDialog.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qSlicerNodeWriterOptionsWidget.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qSlicerModulePanel.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qSlicerModuleFinderDialog.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qSlicerModelsDialog.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qSlicerExportNodeDialog.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qSlicerDataDialog.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qSlicerActionsDialog.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qSlicerNodeWriterOptionsWidget.h")
+  install(
+    FILES ${ui_headers}
+    DESTINATION ${Slicer_INSTALL_INCLUDE_DIR}/${PROJECT_NAME} COMPONENT Development)
+endif()
 
 #-----------------------------------------------------------------------------
 # Slicer icon engine
