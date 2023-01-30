@@ -102,11 +102,8 @@ set(Slicer_Base_INCLUDE_DIRS
   "${Slicer_INCLUDE_DIR}/qSlicerBaseQTCore"
   "${Slicer_INCLUDE_DIR}/qSlicerBaseQTGUI"
   "${Slicer_INCLUDE_DIR}/qSlicerModulesCore"
-<<<<<<< Updated upstream
-=======
   "${Slicer_INCLUDE_DIR}/SlicerBaseLogic"
   "${Slicer_INCLUDE_DIR}/SlicerBaseCLI"
->>>>>>> Stashed changes
   )
 
 # Slicer Base libraries
