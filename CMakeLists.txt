@@ -1197,12 +1197,21 @@ foreach(f ${files})
     )
 endforeach()
 
+configure_file(
+ ${Slicer_TEMPLATES_DIR}/vtkSlicerInstallConfigure.h.in
+ ${CMAKE_CURRENT_BINARY_DIR}/install/vtkSlicerConfigure.h
+)
+
+
 # Add target configuring 'vtkSlicerVersionConfigure.h' at build time.
 include(SlicerConfigureVersionHeaderTarget)
-add_dependencies(SlicerBaseLogic SlicerConfigureVersionHeader)
+#add_dependencies(SlicerBaseLogic SlicerConfigureVersionHeader)
 add_dependencies(MRMLCore SlicerConfigureVersionHeader)
 
-list(APPEND files vtkSlicerVersionConfigure.h)
+set(files vtkSlicerVersionConfigure.h)
+list(APPEND files
+  vtkSlicerVersionConfigureMinimal.h
+  install/vtkSlicerConfigure.h)
 
 if(NOT Slicer_INSTALL_NO_DEVELOPMENT)
 foreach(f ${files})
