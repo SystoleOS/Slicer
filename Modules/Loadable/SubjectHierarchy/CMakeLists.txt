@@ -1,7 +1,20 @@
 #-----------------------------------------------------------------------------
+cmake_minimum_required(VERSION 3.16.3...3.19.7 FATAL_ERROR)
+
+#-----------------------------------------------------------------------------
+project(SubjectHierarchy)
+
+#-----------------------------------------------------------------------------
 set(MODULE_NAME "SubjectHierarchy")
 
 string(TOUPPER ${MODULE_NAME} MODULE_NAME_UPPER)
+
+#-----------------------------------------------------------------------------
+set(CMAKE_CXX_STANDARD "17")
+
+#-----------------------------------------------------------------------------
+find_package(Slicer REQUIRED)
+include(${Slicer_USE_FILE})
 
 #-----------------------------------------------------------------------------
 add_subdirectory(Logic)
@@ -13,6 +26,7 @@ set(MODULE_EXPORT_DIRECTIVE "Q_SLICER_QTMODULES_${MODULE_NAME_UPPER}_EXPORT")
 set(MODULE_INCLUDE_DIRECTORIES
   ${Slicer_ModuleWidgets_INCLUDE_DIRS}
   ${qSlicerSubjectHierarchyModuleWidgets_INCLUDE_DIRS}
+  ${vtkAddon_INCLUDE_DIRS}
   )
 
   set(MODULE_SRCS
@@ -38,6 +52,7 @@ set(MODULE_UI_SRCS
 set(MODULE_TARGET_LIBRARIES
   vtkSlicer${MODULE_NAME}ModuleLogic
   qSlicer${MODULE_NAME}ModuleWidgets
+  ${vtkAddon_LIBRARIES}
   )
 
 set(MODULE_RESOURCES

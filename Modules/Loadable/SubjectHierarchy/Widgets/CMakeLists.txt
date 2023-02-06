@@ -8,6 +8,8 @@ set(${KIT}_INCLUDE_DIRECTORIES
   ${vtkSlicerSubjectHierarchyModuleLogic_INCLUDE_DIRS}
   ${qSlicerTerminologiesModuleWidgets_INCLUDE_DIRS}
   ${MRMLCore_INCLUDE_DIRS}
+  ${Slicer_INSTALL_QTLOADABLEMODULES_INCLUDE_DIR}/qSlicerTerminologiesModuleWidgets
+  ${Slicer_INSTALL_QTLOADABLEMODULES_INCLUDE_DIR}/vtkSlicerTerminologiesModuleLogic
   )
 if(Slicer_BUILD_CLI_SUPPORT)
   list(APPEND ${KIT}_INCLUDE_DIRECTORIES
@@ -94,8 +96,11 @@ set_source_files_properties( qSlicerSubjectHierarchyAbstractPlugin.h WRAP_EXCLUD
 set(${KIT}_TARGET_LIBRARIES
   vtkSlicer${MODULE_NAME}ModuleLogic
   qSlicerTerminologiesModuleWidgets
-  MRMLCore
-  vtkSlicerVolumesModuleLogic
+  ${MRML_LIBRARIES}
+  ${CTK_LIBRARIES}
+  ${Slicer_Base_LIBRARIES}
+  vtkSlicerTerminologiesModuleLogic
+  qMRMLWidgets
   )
 if(Slicer_BUILD_CLI_SUPPORT)
   list(APPEND ${KIT}_TARGET_LIBRARIES
@@ -103,6 +108,13 @@ if(Slicer_BUILD_CLI_SUPPORT)
   )
 endif()
 
+
+add_definitions(-DCTK_USE_QVTKOPENGLWIDGET -DCTK_HAS_QVTKOPENGLNATIVEWIDGET_H)
+
+set(WRAP_PYTHONQT)
+if(Slicer_USE_PYTHONQT)
+  set(WRAP_PYTHONQT WRAP_PYTHONQT)
+endif()
 #-----------------------------------------------------------------------------
 SlicerMacroBuildModuleWidgets(
   NAME ${KIT}
@@ -113,7 +125,7 @@ SlicerMacroBuildModuleWidgets(
   UI_SRCS ${${KIT}_UI_SRCS}
   TARGET_LIBRARIES ${${KIT}_TARGET_LIBRARIES}
   RESOURCES ${${KIT}_RESOURCES}
-  WRAP_PYTHONQT
+  ${WRAP_PYTHONQT}
   )
 
 #-----------------------------------------------------------------------------
