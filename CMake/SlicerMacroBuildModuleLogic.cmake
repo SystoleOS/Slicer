@@ -53,6 +53,7 @@ macro(SlicerMacroBuildModuleLogic)
     ${Slicer_Base_INCLUDE_DIRS}
     ${Slicer_ModuleLogic_INCLUDE_DIRS}
     ${Slicer_ModuleMRML_INCLUDE_DIRS}
+    ${vtkAddon_INCLUDE_DIRS}
     )
 
   if(Slicer_BUILD_CLI_SUPPORT)
@@ -69,6 +70,10 @@ macro(SlicerMacroBuildModuleLogic)
 
     list(APPEND MODULELOGIC_TARGET_LIBRARIES
       qSlicerBaseQTCLI
+      ${VTK_LIBRARIES}
+      vtkAddon
+      SlicerBaseLogic
+      ${MRML_LIBRARIES}
       )
     # HACK Explicitly list transitive VTK dependencies because _get_dependencies_recurse
     # used in vtkAddon/CMake/vtkMacroKitPythonWrap.cmake only recurses over dependencies
@@ -95,6 +100,8 @@ macro(SlicerMacroBuildModuleLogic)
     set(MODULELOGIC_NO_INSTALL_OPTION "NO_INSTALL")
   endif()
 
+  link_directories(${Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR})
+
   SlicerMacroBuildModuleVTKLibrary(
     NAME ${MODULELOGIC_NAME}
     EXPORT_DIRECTIVE ${MODULELOGIC_EXPORT_DIRECTIVE}
@@ -105,6 +112,7 @@ macro(SlicerMacroBuildModuleLogic)
     ${MODULELOGIC_NO_INSTALL_OPTION}
     )
 
+  set_target_properties(${MODULELOGIC_NAME} PROPERTIES INSTALL_RPATH "${Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR}")
   set_property(GLOBAL APPEND PROPERTY SLICER_MODULE_LOGIC_TARGETS ${MODULELOGIC_NAME})
 
   #-----------------------------------------------------------------------------

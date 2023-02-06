@@ -167,6 +167,7 @@ macro(SlicerMacroBuildModuleQtLibrary)
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${Slicer_QTLOADABLEMODULES_LIB_DIR}"
     )
   set_target_properties(${lib_name} PROPERTIES LABELS ${lib_name})
+  set_target_properties(${lib_name} PROPERTIES INSTALL_RPATH "${Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR}")
 
   if(NOT "${MODULEQTLIBRARY_FOLDER}" STREQUAL "")
     set_target_properties(${lib_name} PROPERTIES FOLDER ${MODULEQTLIBRARY_FOLDER})

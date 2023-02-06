@@ -57,10 +57,14 @@ macro(SlicerMacroBuildModuleWidgets)
     ${Slicer_ModuleLogic_INCLUDE_DIRS}
     ${Slicer_ModuleMRML_INCLUDE_DIRS}
     ${Slicer_ModuleWidgets_INCLUDE_DIRS}
+    ${vtkAddon_INCLUDE_DIRS}
     )
 
   list(APPEND MODULEWIDGETS_TARGET_LIBRARIES
     ${Slicer_GUI_LIBRARY}
+    ${vtkAddon_LIBRARIES}
+    ${CTK_LIBRARIES}
+    Qt::Xml
     )
 
   if(NOT DEFINED MODULEWIDGETS_FOLDER AND DEFINED MODULE_NAME)
@@ -101,6 +105,8 @@ macro(SlicerMacroBuildModuleWidgets)
     set(QM_OUTPUT_FILES )
   endif()
 
+  link_directories(${Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR})
+
   # --------------------------------------------------------------------------
   # Build library
   # --------------------------------------------------------------------------
@@ -119,6 +125,8 @@ macro(SlicerMacroBuildModuleWidgets)
     )
 
   set_property(GLOBAL APPEND PROPERTY SLICER_MODULE_WIDGET_TARGETS ${MODULEWIDGETS_NAME})
+  set_target_properties(${MODULEWIDGETS_NAME} PROPERTIES INSTALL_RPATH "${Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR}")
+
 
   #-----------------------------------------------------------------------------
   # Update Slicer_ModuleWidgets_INCLUDE_DIRS
