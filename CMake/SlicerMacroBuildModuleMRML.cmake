@@ -51,6 +51,7 @@ macro(SlicerMacroBuildModuleMRML)
   list(APPEND MODULEMRML_INCLUDE_DIRECTORIES
     ${Slicer_Libs_INCLUDE_DIRS}
     ${Slicer_ModuleMRML_INCLUDE_DIRS}
+    ${vtkAddon_INCLUDE_DIRS}
     )
 
   if(NOT DEFINED MODULEMRML_FOLDER AND DEFINED MODULE_NAME)
@@ -61,6 +62,12 @@ macro(SlicerMacroBuildModuleMRML)
   if(MODULEMRML_NO_INSTALL)
     set(MODULEMRML_NO_INSTALL_OPTION "NO_INSTALL")
   endif()
+
+  list(APPEND MODULEMRML_TARGET_LIBRARIES
+    ${MRML_LIBRARIES}
+    ${VTK_LIBRARIES}
+    vtkAddon
+  )
 
   SlicerMacroBuildModuleVTKLibrary(
     NAME ${MODULEMRML_NAME}
