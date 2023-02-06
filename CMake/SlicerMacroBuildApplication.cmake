@@ -454,6 +454,9 @@ macro(slicerMacroBuildApplication)
     LABELS ${SLICERAPP_NAME}
     OUTPUT_NAME ${executable_name}
     )
+  set_target_properties(${slicerapp_target} PROPERTIES
+    INSTALL_RPATH
+    "${Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR}")
 
   if(APPLE)
     set(link_flags "-Wl,-rpath,@loader_path/../")

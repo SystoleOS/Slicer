@@ -101,6 +101,7 @@ macro(slicerMacroBuildLoadableModule)
     ${Slicer_ModuleLogic_INCLUDE_DIRS}
     ${Slicer_ModuleMRML_INCLUDE_DIRS}
     ${LOADABLEMODULE_INCLUDE_DIRECTORIES}
+    ${vtkAddon_INCLUDE_DIRS}
     )
 
   #-----------------------------------------------------------------------------
@@ -188,6 +189,13 @@ macro(slicerMacroBuildLoadableModule)
   # --------------------------------------------------------------------------
   # Build library
   # --------------------------------------------------------------------------
+
+  list(APPEND LOADABLEMODULE_TARGET_LIBRARIES
+    ${Slicer_Base_LIBRARIES}
+  )
+
+  link_directories(${Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR})
+
   add_library(${lib_name}
     ${LOADABLEMODULE_SRCS}
     ${LOADABLEMODULE_MOC_OUTPUT}
@@ -203,6 +211,7 @@ macro(slicerMacroBuildLoadableModule)
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${Slicer_QTLOADABLEMODULES_LIB_DIR}"
     )
   set_target_properties(${lib_name} PROPERTIES LABELS ${lib_name})
+  set_target_properties(${lib_name} PROPERTIES INSTALL_RPATH "${Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR}")
 
   target_link_libraries(${lib_name}
     # The two PUBLIC keywords are not a duplication, they allow developers to
