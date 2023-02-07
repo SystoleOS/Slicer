@@ -33,7 +33,13 @@ set(${KIT}_SRCS
   )
 
 set(${KIT}_TARGET_LIBRARIES
+  ${Python3_LIBRARIES}
+  ${VTK_LIBRARIES}
+  MRMLLogic
+  MRMLCore
   )
+
+link_directories(${Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR})
 
 #-----------------------------------------------------------------------------
 SlicerMacroBuildModuleLogic(
