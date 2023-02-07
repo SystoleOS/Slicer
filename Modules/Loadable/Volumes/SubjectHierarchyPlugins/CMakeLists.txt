@@ -7,12 +7,18 @@ set(${KIT}_EXPORT_DIRECTIVE "Q_SLICER_${MODULE_NAME_UPPER}_SUBJECT_HIERARCHY_PLU
 set(${KIT}_INCLUDE_DIRECTORIES
   ${qSlicerSubjectHierarchyModuleWidgets_INCLUDE_DIRS}
   ${vtkSlicerSubjectHierarchyModuleLogic_INCLUDE_DIRS}
+  ${Slicer_INSTALL_QTLOADABLEMODULES_INCLUDE_DIR}/qSlicerSubjectHierarchyModuleWidgets
+  ${Slicer_INSTALL_QTLOADABLEMODULES_INCLUDE_DIR}/vtkSlicerColorsModuleLogic
+  ${Slicer_INSTALL_QTLOADABLEMODULES_INCLUDE_DIR}/vtkSlicerColorsModuleMRML
   ${qMRMLWidgets_INCLUDE_DIRS}
   ${MRMLLogic_INCLUDE_DIRS}
   ${MRMLCore_INCLUDE_DIRS}
   ${vtkSlicerVolumesModuleLogic_INCLUDE_DIRS}
   ${vtkSlicerColorsModuleLogic_INCLUDE_DIRS}
   ${vtkSlicerColorsModuleMRML_INCLUDE_DIRS}
+  ${Slicer_Libs_INCLUDE_DIRS}
+  ${Slicer_Base_INCLUDE_DIRS}
+  ${vtkAddon_INCLUDE_DIRS}
   )
 
 set(${KIT}_SRCS
@@ -37,14 +43,23 @@ set(${KIT}_RESOURCES
   Resources/${KIT}.qrc
   )
 
+link_directories(${Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR})
+
 #-----------------------------------------------------------------------------
 set(${KIT}_TARGET_LIBRARIES
   qSlicerSubjectHierarchyModuleWidgets
   vtkSlicerSubjectHierarchyModuleLogic
   vtkSlicerColorsModuleLogic
+  vtkSlicerVolumesModuleLogic
   qMRMLWidgets
   MRMLLogic
   MRMLCore
+  Qt::Core
+  Qt::Gui
+  Qt::Xml
+  ${VTK_LIBRARIES}
+  ${CTK_LIBRARIES}
+  ${Slicer_Base_LIBRARIES}
   )
 
 #-----------------------------------------------------------------------------
