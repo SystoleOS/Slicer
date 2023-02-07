@@ -45,6 +45,8 @@ set(${KIT}_RESOURCES
 
 set(${KIT}_TARGET_LIBRARIES
   vtkSlicerVolumesModuleLogic
+  ${Slicer_Base_LIBRARIES}
+  qMRMLWidgets
   )
 
 #-----------------------------------------------------------------------------
