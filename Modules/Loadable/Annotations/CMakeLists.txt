@@ -1,7 +1,17 @@
 #-----------------------------------------------------------------------------
+cmake_minimum_required(VERSION 3.16.3...3.19.7 FATAL_ERROR)
+
+#-----------------------------------------------------------------------------
+project(Annotations)
+
+#-----------------------------------------------------------------------------
 set(MODULE_NAME "Annotations")
 
 string(TOUPPER ${MODULE_NAME} MODULE_NAME_UPPER)
+
+#-----------------------------------------------------------------------------
+find_package(Slicer REQUIRED)
+include(${Slicer_USE_FILE})
 
 #-----------------------------------------------------------------------------
 add_subdirectory(MRML)
@@ -44,11 +54,18 @@ set(MODULE_RESOURCES
   )
 
 set(MODULE_TARGET_LIBRARIES
+  ${CTK_LIBRARIES}
   qSlicerBaseQTCore
   qMRMLWidgets
   vtkSlicer${MODULE_NAME}ModuleMRML
   vtkSlicer${MODULE_NAME}ModuleLogic
+  Qt::Xml
   )
+
+if (Slicer_USE_PYTHONQT)
+  add_compile_definitions(Annotations_USE_PYTHONQT)
+  list(APPEND MODULE_INCLUDE_DIRECTORIES ${PYTHONQT_INCLUDE_DIR})
+endif()
 
 #-----------------------------------------------------------------------------
 slicerMacroBuildLoadableModule(
