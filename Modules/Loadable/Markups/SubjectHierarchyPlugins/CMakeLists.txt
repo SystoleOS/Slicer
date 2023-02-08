@@ -9,14 +9,18 @@ set(${KIT}_INCLUDE_DIRECTORIES
   ${vtkSlicerMarkupsModuleLogic_INCLUDE_DIRS}
   ${vtkSlicerMarkupsModuleVTKWidgets_INCLUDE_DIRS}
   ${qSlicerSubjectHierarchyModuleWidgets_INCLUDE_DIRS}
+  ${Slicer_INSTALL_QTLOADABLEMODULES_INCLUDE_DIR}/qSlicerSubjectHierarchyModuleWidgets
+  ${Slicer_INSTALL_QTLOADABLEMODULES_INCLUDE_DIR}/qSlicerTerminologiesModuleWidgets
+  ${Slicer_INSTALL_QTLOADABLEMODULES_INCLUDE_DIR}/vtkSlicerTerminologiesModuleLogic
+  ${Slicer_Libs_INCLUDE_DIRS}
+  ${Slicer_Base_INCLUDE_DIRS}
   ${vtkSlicerSubjectHierarchyModuleLogic_INCLUDE_DIRS}
   ${qSlicerTerminologiesModuleWidgets_INCLUDE_DIRS}
   ${vtkSlicerTerminologiesModuleLogic_INCLUDE_DIRS}
   ${vtkSegmentationCore_INCLUDE_DIRS}
   ${qMRMLWidgets_INCLUDE_DIRS}
-  ${MRMLLogic_INCLUDE_DIRS}
-  ${MRMLCore_INCLUDE_DIRS}
-  ${MRMLDisplayableManager_INCLUDE_DIRS}
+  ${MRML_INCLUDE_DIRS}
+  ${vtkAddon_INCLUDE_DIRS}
   )
 
 set(${KIT}_SRCS
@@ -31,6 +35,8 @@ set(${KIT}_MOC_SRCS
 set(${KIT}_UI_SRCS
   )
 
+link_directories(${Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR})
+
 #-----------------------------------------------------------------------------
 set(${KIT}_TARGET_LIBRARIES
   vtkSlicer${MODULE_NAME}ModuleMRML
@@ -43,6 +49,11 @@ set(${KIT}_TARGET_LIBRARIES
   MRMLLogic
   MRMLCore
   MRMLDisplayableManager
+  vtkAddon
+  ${Slicer_Base_LIBRARIES}
+  vtkSegmentationCore
+  vtkSlicerTerminologiesModuleLogic
+  ${CTK_LIBRARIES}
   )
 
 #-----------------------------------------------------------------------------

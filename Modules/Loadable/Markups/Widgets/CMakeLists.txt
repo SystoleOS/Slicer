@@ -71,7 +71,15 @@ set(${KIT}_RESOURCES
 set(${KIT}_TARGET_LIBRARIES
   vtkSlicer${MODULE_NAME}ModuleMRML
   vtkSlicer${MODULE_NAME}ModuleLogic
+  ${Slicer_Base_LIBRARIES}
+  ${Slicer_LIBRARIES}
   )
+
+set(WRAP_PYTHONQT)
+if (Slicer_USE_PYTHONQT)
+  set(WRAP_PYTHONQT WRAP_PYTHONQT)
+  list(APPEND ${KIT}_TARGET_LIBRARIES ${Python3_LIBRARIES})
+endif()
 
 #-----------------------------------------------------------------------------
 SlicerMacroBuildModuleWidgets(
@@ -83,7 +91,7 @@ SlicerMacroBuildModuleWidgets(
   UI_SRCS ${${KIT}_UI_SRCS}
   TARGET_LIBRARIES ${${KIT}_TARGET_LIBRARIES}
   RESOURCES ${${KIT}_RESOURCES}
-  WRAP_PYTHONQT
+  ${WRAP_PYTHONQT}
   )
 
 #-----------------------------------------------------------------------------
