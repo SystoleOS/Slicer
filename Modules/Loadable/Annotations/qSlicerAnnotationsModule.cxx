@@ -10,7 +10,7 @@
 #include "GUI/qSlicerAnnotationModuleSnapShotDialog.h"
 
 // PythonQt includes
-#ifdef Slicer_USE_PYTHONQT
+#ifdef Annotations_USE_PYTHONQT
 #include "PythonQt.h"
 #endif
 
