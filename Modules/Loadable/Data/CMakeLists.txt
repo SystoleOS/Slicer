@@ -1,8 +1,17 @@
+#-----------------------------------------------------------------------------
+cmake_minimum_required(VERSION 3.16.3...3.19.7 FATAL_ERROR)
+
+#-----------------------------------------------------------------------------
+project(Data)
 
 #-----------------------------------------------------------------------------
 set(MODULE_NAME Data)
 
 string(TOUPPER ${MODULE_NAME} MODULE_NAME_UPPER)
+
+#-----------------------------------------------------------------------------
+find_package(Slicer REQUIRED)
+include(${Slicer_USE_FILE})
 
 #-----------------------------------------------------------------------------
 add_subdirectory(Logic)
@@ -14,8 +23,10 @@ set(MODULE_EXPORT_DIRECTIVE "Q_SLICER_QTMODULES_${MODULE_NAME_UPPER}_EXPORT")
 set(MODULE_INCLUDE_DIRECTORIES
   ${CMAKE_CURRENT_SOURCE_DIR}/Logic
   ${CMAKE_CURRENT_BINARY_DIR}/Logic
-  ${vtkSlicerCamerasModuleLogic_SOURCE_DIR}
-  ${vtkSlicerCamerasModuleLogic_BINARY_DIR}
+ #${vtkSlicerCamerasModuleLogic_SOURCE_DIR}
+ #${vtkSlicerCamerasModuleLogic_BINARY_DIR}
+  ${Slicer_INSTALL_QTLOADABLEMODULES_INCLUDE_DIR}/qSlicerSubjectHierarchyModuleWidgets
+  ${Slicer_INSTALL_QTLOADABLEMODULES_INCLUDE_DIR}/vtkSlicerCamerasModuleLogic
   ${qSlicerSubjectHierarchyModuleWidgets_INCLUDE_DIRS}
   ${qMRMLWidgets_INCLUDE_DIRS}
   )
@@ -51,6 +62,7 @@ set(MODULE_TARGET_LIBRARIES
   vtkSlicerCamerasModuleLogic
   qSlicerSubjectHierarchyModuleWidgets
   qMRMLWidgets
+  ${CTK_LIBRARIES}
   )
 
 set(MODULE_RESOURCES
