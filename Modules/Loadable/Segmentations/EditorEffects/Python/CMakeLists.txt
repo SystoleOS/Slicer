@@ -41,7 +41,13 @@ ctkMacroCompilePythonScript(
   TARGET_NAME SegmentEditorEffects
   SCRIPTS "${SegmentEditorEffects_PYTHON_SCRIPTS}"
   RESOURCES "${SegmentEditorEffects_PYTHON_RESOURCES}"
-  DESTINATION_DIR ${Slicer_BINARY_DIR}/${Slicer_QTSCRIPTEDMODULES_LIB_DIR}/SegmentEditorEffects
-  INSTALL_DIR ${Slicer_INSTALL_QTSCRIPTEDMODULES_LIB_DIR}/SegmentEditorEffects
-  NO_INSTALL_SUBDIR
+  DESTINATION_DIR "${CMAKE_CURRENT_BINARY_DIR}/SegmentEditorEffects"
   )
+
+# Install python module / resources directory
+install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/"
+  DESTINATION "${Python3_SITELIB}" COMPONENT RuntimeLibraries
+  FILES_MATCHING
+  PATTERN "*.py"
+  PATTERN "*.pyc"
+)

@@ -8,12 +8,14 @@ set(${KIT}_INCLUDE_DIRECTORIES
   ${vtkSlicerSegmentationsModuleMRML_INCLUDE_DIRS}
   ${vtkSlicerSegmentationsModuleLogic_INCLUDE_DIRS}
   ${qSlicerSegmentationsModule_INCLUDE_DIRS}
-  ${qSlicerSubjectHierarchyModuleWidgets_INCLUDE_DIRS}
-  ${vtkSlicerSubjectHierarchyModuleLogic_INCLUDE_DIRS}
-  ${qSlicerTerminologiesModuleWidgets_INCLUDE_DIRS}
+  ${Slicer_INSTALL_QTLOADABLEMODULES_INCLUDE_DIR}/qSlicerSubjectHierarchyModuleWidgets
+  ${Slicer_INSTALL_QTLOADABLEMODULES_INCLUDE_DIR}/vtkSlicerSubjectHierarchyModuleLogic
+  ${Slicer_INSTALL_QTLOADABLEMODULES_INCLUDE_DIR}/qSlicerTerminologiesModuleWidgets
   ${qMRMLWidgets_INCLUDE_DIRS}
-  ${MRMLLogic_INCLUDE_DIRS}
-  ${MRMLCore_INCLUDE_DIRS}
+  ${MRML_INCLUDE_DIRS}
+  ${vtkAddon_INCLUDE_DIRS}
+  ${Slicer_Libs_INCLUDE_DIRS}
+  ${Slicer_Base_INCLUDE_DIRS}
   )
 
 set(${KIT}_SRCS
@@ -44,7 +46,13 @@ set(${KIT}_TARGET_LIBRARIES
   qMRMLWidgets
   MRMLLogic
   MRMLCore
+  vtkAddon
+  Qt::Xml
+  ${Slicer_Base_LIBRARIES}
+  ${CTK_LIBRARIES}
   )
+
+link_directories(${Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR})
 
 #-----------------------------------------------------------------------------
 SlicerMacroBuildModuleQtLibrary(
