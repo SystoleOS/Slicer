@@ -1,8 +1,17 @@
+#-----------------------------------------------------------------------------
+cmake_minimum_required(VERSION 3.16.3...3.19.7 FATAL_ERROR)
+
+#-----------------------------------------------------------------------------
+project(SceneViews)
 
 #-----------------------------------------------------------------------
 set(MODULE_NAME SceneViews)
 
 string(TOUPPER ${MODULE_NAME} MODULE_NAME_UPPER)
+
+#-----------------------------------------------------------------------------
+find_package(Slicer REQUIRED)
+include(${Slicer_USE_FILE})
 
 #-----------------------------------------------------------------------------
 add_subdirectory(Logic)
@@ -19,7 +28,9 @@ set(MODULE_INCLUDE_DIRECTORIES
   ${CMAKE_CURRENT_BINARY_DIR}/Logic
   ${CMAKE_CURRENT_SOURCE_DIR}/SubjectHierarchyPlugins
   ${CMAKE_CURRENT_BINARY_DIR}/SubjectHierarchyPlugins
-  ${qSlicerSubjectHierarchyModuleWidgets_INCLUDE_DIRS}
+  ${Slicer_INSTALL_QTLOADABLEMODULES_INCLUDE_DIR}/qSlicerSubjectHierarchyModuleWidgets
+  ${Slicer_Libs_INCLUDE_DIRS}
+  ${CTK_INCLUDE_DIRS}
   )
 
 set(GUI_SRCS
@@ -54,6 +65,8 @@ set(MODULE_TARGET_LIBRARIES
   qMRMLWidgets
   vtkSlicer${MODULE_NAME}ModuleLogic
   qSlicer${MODULE_NAME}SubjectHierarchyPlugins
+  ${CTK_LIBRARIES}
+  Qt::Xml
   )
 
 #-----------------------------------------------------------------------------
