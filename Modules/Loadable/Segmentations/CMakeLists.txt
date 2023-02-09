@@ -1,7 +1,17 @@
 #-----------------------------------------------------------------------------
+cmake_minimum_required(VERSION 3.16.3...3.19.7 FATAL_ERROR)
+
+#-----------------------------------------------------------------------------
+project(Segmentations)
+
+#-----------------------------------------------------------------------------
 set(MODULE_NAME "Segmentations")
 
 string(TOUPPER ${MODULE_NAME} MODULE_NAME_UPPER)
+
+#-----------------------------------------------------------------------------
+find_package(Slicer REQUIRED)
+include(${Slicer_USE_FILE})
 
 #-----------------------------------------------------------------------------
 add_subdirectory(MRML)
@@ -21,9 +31,9 @@ set(MODULE_INCLUDE_DIRECTORIES
   ${qSlicerSegmentationsModuleWidgets_INCLUDE_DIRS}
   ${qSlicerSegmentationsEditorEffects_INCLUDE_DIRS}
   ${qSlicerSegmentationsSubjectHierarchyPlugins_INCLUDE_DIRS}
-  ${qSlicerSubjectHierarchyModuleWidgets_INCLUDE_DIRS}
-  ${qSlicerTerminologiesModuleWidgets_INCLUDE_DIRS}
-  ${vtkSlicerTerminologiesModuleLogic_INCLUDE_DIRS}
+  ${Slicer_INSTALL_QTLOADABLEMODULES_INCLUDE_DIR}/qSlicerSubjectHierarchyModuleWidgets
+  ${Slicer_INSTALL_QTLOADABLEMODULES_INCLUDE_DIR}/qSlicerTerminologiesModuleWidgets
+  ${Slicer_INSTALL_QTLOADABLEMODULES_INCLUDE_DIR}/vtkSlicerTerminologiesModuleLogic
   )
 
 set(MODULE_SRCS
@@ -75,6 +85,11 @@ set(MODULE_TARGET_LIBRARIES
 set(MODULE_RESOURCES
   Resources/qSlicer${MODULE_NAME}Module.qrc
   )
+
+if(Slicer_USE_PYTHONQT)
+  add_compile_definitions(Segmentations_USE_PYTHONQT)
+  list(APPEND MODULE_INCLUDE_DIRECTORIES ${PYTHONQT_INCLUDE_DIR})
+endif()
 
 #-----------------------------------------------------------------------------
 slicerMacroBuildLoadableModule(

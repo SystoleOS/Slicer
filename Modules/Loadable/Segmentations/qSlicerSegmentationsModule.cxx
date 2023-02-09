@@ -56,7 +56,7 @@
 #include <vtkMRMLSubjectHierarchyNode.h>
 
 // PythonQt includes
-#ifdef Slicer_USE_PYTHONQT
+#ifdef Segmentations_USE_PYTHONQT
 #include "PythonQt.h"
 #endif
 
@@ -196,7 +196,7 @@ void qSlicerSegmentationsModule::setup()
   qSlicerSegmentEditorEffectFactory::instance()->registerEffect(new qSlicerSegmentEditorScissorsEffect());
   // Python effects
   // (otherwise it would be the responsibility of the module that embeds the segment editor widget)
-#ifdef Slicer_USE_PYTHONQT
+#ifdef Segmentations_USE_PYTHONQT
   if (!qSlicerCoreApplication::testAttribute(qSlicerCoreApplication::AA_DisablePython))
     {
     PythonQt::init();

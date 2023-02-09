@@ -9,10 +9,9 @@ set(${KIT}_INCLUDE_DIRECTORIES
   ${vtkSlicerSegmentationsModuleMRMLDisplayableManager_INCLUDE_DIRS}
   ${vtkSlicerSegmentationsModuleLogic_INCLUDE_DIRS}
   ${Slicer_Base_INCLUDE_DIRS}
-  ${qMRMLWidgets_INCLUDE_DIRS}
-  ${MRMLLogic_INCLUDE_DIRS}
-  ${MRMLCore_INCLUDE_DIRS}
-  ${MRMLDisplayableManager_INCLUDE_DIRS}
+  ${Slicer_Libs_INCLUDE_DIRS}
+  ${MRML_INCLUDE_DIRS}
+  ${vtkAddon_INCLUDE_DIRS}
   )
 
 set(${KIT}_SRCS
@@ -78,7 +77,14 @@ set(${KIT}_TARGET_LIBRARIES
   MRMLLogic
   MRMLCore
   qSlicerBaseQTGUI # required for access to qSlicerApplication singletons
+  qSlicerBaseQTCore# required for access to qSlicerApplication singletons
+  vtkAddon
+  Qt::Xml
+  ${CTK_LIBRARIES}
   )
+
+add_definitions(-DCTK_USE_QVTKOPENGLWIDGET -DCTK_HAS_QVTKOPENGLNATIVEWIDGET_H)
+link_directories(${Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR})
 
 #-----------------------------------------------------------------------------
 SlicerMacroBuildModuleQtLibrary(
