@@ -1,8 +1,16 @@
+cmake_minimum_required(VERSION 3.16.3...3.19.7 FATAL_ERROR)
+
+#-----------------------------------------------------------------------------
+project(Transforms)
 
 #-----------------------------------------------------------------------------
 set(MODULE_NAME ViewControllers)
 
 string(TOUPPER ${MODULE_NAME} MODULE_NAME_UPPER)
+
+#-----------------------------------------------------------------------------
+find_package(Slicer REQUIRED)
+include(${Slicer_USE_FILE})
 
 #-----------------------------------------------------------------------------
 add_subdirectory(Logic)
@@ -34,6 +42,9 @@ set(MODULE_UI_SRCS
 
 set(MODULE_TARGET_LIBRARIES
   vtkSlicer${MODULE_NAME}ModuleLogic
+  Qt::Xml
+  qMRMLWidgets
+  ${CTK_LIBRARIES}
   )
 
 set(MODULE_RESOURCES
