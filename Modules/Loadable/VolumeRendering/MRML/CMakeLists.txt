@@ -4,11 +4,13 @@ set(KIT ${PROJECT_NAME})
 
 set(${KIT}_EXPORT_DIRECTIVE "VTK_SLICER_${MODULE_NAME_UPPER}_MODULE_MRML_EXPORT")
 
-find_package(JsonCpp REQUIRED)
+include(FindPkgConfig)
+pkg_check_modules(jsoncpp REQUIRED jsoncpp)
 
 set(${KIT}_INCLUDE_DIRECTORIES
-  ${JsonCpp_INCLUDE_DIR}
+  ${jsoncpp_INCLUDE_DIRS}
   ${vtkSlicerMarkupsModuleMRML_SOURCE_DIR}
+  ${Slicer_INSTALL_QTLOADABLEMODULES_INCLUDE_DIR}/vtkSlicerMarkupsModuleMRML
   )
 
 set(${KIT}_SRCS
@@ -32,10 +34,21 @@ set(${KIT}_SRCS
 
 set(${KIT}_TARGET_LIBRARIES
   ${ITK_LIBRARIES}
-  ${JsonCpp_LIBRARY}
-  ${MRML_LIBRARIES}
+  ${jsoncpp_LIBRARIES}
+  ${mrml_LIBRARIES}
   vtkSlicerMarkupsModuleMRML
   )
+
+set(DISABLE_WRAP_PYTHON DISABLE_WRAP_PYTHON)
+if(Slicer_USE_PYTHONQT)
+  set(DISABLE_WRAP_PYTHON)
+  list(APPEND ${KIT}_TARGET_LIBRARIES
+    ${Python3_LIBRARIES}
+  )
+endif()
+
+
+link_directories(${Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR})
 
 #-----------------------------------------------------------------------------
 SlicerMacroBuildModuleMRML(
@@ -44,4 +57,5 @@ SlicerMacroBuildModuleMRML(
   INCLUDE_DIRECTORIES ${${KIT}_INCLUDE_DIRECTORIES}
   SRCS ${${KIT}_SRCS}
   TARGET_LIBRARIES ${${KIT}_TARGET_LIBRARIES}
+  ${DISABLE_WRAP_PYTHON}
   )

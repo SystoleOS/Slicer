@@ -9,6 +9,7 @@ set(${KIT}_INCLUDE_DIRECTORIES
   ${vtkSlicer${MODULE_NAME}ModuleLogic_BINARY_DIR}
   ${vtkSlicer${MODULE_NAME}ModuleMRML_SOURCE_DIR}
   ${vtkSlicer${MODULE_NAME}ModuleMRML_BINARY_DIR}
+  ${Slicer_INSTALL_QTLOADABLEMODULES_INCLUDE_DIR}/vtkSlicerMarkupsModuleMRML
   )
 
 set(displayable_manager_SRCS
@@ -29,8 +30,9 @@ set(${KIT}_SRCS
   )
 
 set(${KIT}_VTK_LIBRARIES
-  VTK::RenderingVolume
-  VTK::RenderingVolume${VTK_RENDERING_BACKEND}
+  ${VTK_LIBRARIES}
+  #VTK::RenderingVolume
+  #VTK::RenderingVolume${VTK_RENDERING_BACKEND}
   )
 
 set(${KIT}_TARGET_LIBRARIES
@@ -41,6 +43,14 @@ set(${KIT}_TARGET_LIBRARIES
   ${${KIT}_VTK_LIBRARIES}
   )
 
+set(DISABLE_WRAP_PYTHON DISABLE_WRAP_PYTHON)
+if(Slicer_USE_PYTHONQT)
+  set(DISABLE_WRAP_PYTHON)
+  list(APPEND ${KIT}_TARGET_LIBRARIES
+    ${Python3_LIBRARIES}
+  )
+endif()
+
 #-----------------------------------------------------------------------------
 SlicerMacroBuildModuleLogic(
   NAME ${KIT}
@@ -48,4 +58,5 @@ SlicerMacroBuildModuleLogic(
   INCLUDE_DIRECTORIES ${${KIT}_INCLUDE_DIRECTORIES}
   SRCS ${${KIT}_SRCS}
   TARGET_LIBRARIES ${${KIT}_TARGET_LIBRARIES}
+  ${DISABLE_WRAP_PYTHON}
   )
