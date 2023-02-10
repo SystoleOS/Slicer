@@ -26,6 +26,8 @@ set(${KIT}_RESOURCES
   )
 
 set(${KIT}_TARGET_LIBRARIES
+  ${Slicer_Base_LIBRARIES}
+  ${MRML_LIBRARIES}
   )
 
 #-----------------------------------------------------------------------------
