@@ -66,6 +66,15 @@ set(Slicer_CMAKE_DIR ${Slicer_SOURCE_DIR}/CMake)
 set(Slicer_EXTENSIONS_CMAKE_DIR ${Slicer_SOURCE_DIR}/Extensions/CMake)
 
 #-----------------------------------------------------------------------------
+# Check CMake HTTPS support
+#-----------------------------------------------------------------------------
+# This option enables/disables a cmake check for https support. There are cases
+# in which network connectivity may be limited or non-exsisting (i.e., flatkpak
+# building environments). In those cases, this option should be disabled to
+# allow the build process to continue.
+option(Slicer_CHECK_CMAKE_HTTPS_SUPPORT "Enables CMake check for https support." ON)
+
+#-----------------------------------------------------------------------------
 # https://www.slicer.org/w/index.php/Documentation/Nightly/Developers/DevelopmentWithGit
 #-----------------------------------------------------------------------------
 include(SlicerCheckSourceTree)
