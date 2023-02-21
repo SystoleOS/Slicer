@@ -431,8 +431,36 @@ if(NOT DEFINED ${PROJECT_NAME}_INSTALL_NO_DEVELOPMENT)
 endif()
 if(NOT ${PROJECT_NAME}_INSTALL_NO_DEVELOPMENT)
   file(GLOB headers "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
+  # ui_ headers cannot be globbed at config time, here we list them explicitly
+  set(ui_headers
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qMRMLWindowLevelWidget.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qMRMLVolumeThresholdWidget.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qMRMLVolumeInfoWidget.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qMRMLTransformSliders.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qMRMLThreeDViewInformationWidget.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qMRMLThreeDViewControllerWidget.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qMRMLTableViewControllerWidget.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qMRMLSliceWidget.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qMRMLSliceVerticalControllerWidget.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qMRMLSliceInformationWidget.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qMRMLSliceControllerWidget.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qMRMLSegmentSelectorWidget.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qMRMLScreenShotDialog.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qMRMLSceneFactoryWidget.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qMRMLScalarsDisplayWidget.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qMRMLROIWidget.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qMRMLPlotViewControllerWidget.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qMRMLNodeAttributeTableWidget.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qMRMLNodeAttributeTableView.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qMRMLModelInfoWidget.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qMRMLEventLoggerWidget.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qMRMLDisplayNodeWidget.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qMRMLColorPickerWidget.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qMRMLClipNodeWidget.h"
+  )
+
   install(
-    FILES ${headers}
+    FILES ${headers} ${ui_headers}
     DESTINATION ${${PROJECT_NAME}_INSTALL_INCLUDE_DIR} COMPONENT Development)
 endif()
 
