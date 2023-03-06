@@ -1057,6 +1057,7 @@ macro(ExternalProject_SetIfNotDefined var defaultvalue)
     endif()
     set(${var} "${defaultvalue}")
   endif()
+message(STATUS "${var}=${${var}}")
 endmacro()
 
 #.rst:
