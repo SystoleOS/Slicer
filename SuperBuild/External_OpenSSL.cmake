@@ -148,11 +148,23 @@ set(${proj}_WORKING_DIR \"${EP_SOURCE_DIR}\")
 ExternalProject_Execute(${proj} \"build\" make \${jflag} build_libs)
 ")
 
+  ExternalProject_SetIfNotDefined(
+    Slicer_${proj}_ARCHIVE_URL
+    "${OpenSSL_${OPENSSL_DOWNLOAD_VERSION}_URL}"
+    QUIET
+    )
+
+  ExternalProject_SetIfNotDefined(
+    Slicer_${proj}_ARCHIVE_MD5
+    "${OpenSSL_${OPENSSL_DOWNLOAD_VERSION}_MD5}"
+    QUIET
+    )
+
     #------------------------------------------------------------------------------
     ExternalProject_Add(${proj}
       ${${proj}_EP_ARGS}
-      URL ${OpenSSL_${OPENSSL_DOWNLOAD_VERSION}_URL}
-      URL_MD5 ${OpenSSL_${OPENSSL_DOWNLOAD_VERSION}_MD5}
+      URL "${Slicer_${proj}_ARCHIVE_URL}"
+      URL_MD5 "${OpenSSL_${OPENSSL_DOWNLOAD_VERSION}_MD5}"
       DOWNLOAD_DIR ${CMAKE_BINARY_DIR}
       SOURCE_DIR ${EP_SOURCE_DIR}
       BUILD_IN_SOURCE 1
