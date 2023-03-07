@@ -102,8 +102,19 @@ macro(slicerMacroBuildScriptedModule)
     SCRIPTS "${MY_SLICER_SCRIPTS}"
     RESOURCES "${MY_SLICER_RESOURCES}"
     DESTINATION_DIR ${CMAKE_BINARY_DIR}/${Slicer_QTSCRIPTEDMODULES_LIB_DIR}${_destination_subdir}
-    INSTALL_DIR ${Slicer_INSTALL_QTSCRIPTEDMODULES_LIB_DIR}
-    ${_no_install_subdir_option}
+    )
+
+   # Install python module / resources directory
+   install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/"
+     DESTINATION "${Slicer_INSTALL_QTSCRIPTEDMODULES_LIB_DIR}" COMPONENT RuntimeLibraries
+     FILES_MATCHING
+       PATTERN "*.py"
+       PATTERN "*.pyc"
+       PATTERN "*.png"
+       PATTERN "*.ui"
+       PATTERN "CMakeFiles" EXCLUDE
+       PATTERN "ITKFactoryRegistration" EXCLUDE
+       PATTERN "compile_*_python_scripts.py" EXCLUDE
     )
 
   if(BUILD_TESTING AND MY_SLICER_WITH_GENERIC_TESTS)

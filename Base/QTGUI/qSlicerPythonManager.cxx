@@ -17,6 +17,7 @@
 // Slicer includes
 #include "qSlicerApplication.h"
 #include "qSlicerPythonManager.h"
+#include "vtkSlicerConfigure.h"
 
 //-----------------------------------------------------------------------------
 qSlicerPythonManager::qSlicerPythonManager(QObject* _parent) : Superclass(_parent)
@@ -42,7 +43,7 @@ void qSlicerPythonManager::executeInitializationScripts()
     }
 
   // Evaluate application script
-  this->executeFile(app->slicerHome() + "/bin/Python/slicer/slicerqt.py");
+  this->executeFile(QString(Slicer_PYTHON_BIN_DIR)+"/slicer/slicerqt.py");
 }
 
 //-----------------------------------------------------------------------------

@@ -1,27 +1,27 @@
 
 set(Slicer_PYTHON_SCRIPTS
-  slicer/__init__
-  slicer/logic
-  slicer/parameterNodeWrapper/__init__
-  slicer/parameterNodeWrapper/default
-  slicer/parameterNodeWrapper/guiCreation
-  slicer/parameterNodeWrapper/guiConnectors
-  slicer/parameterNodeWrapper/parameterInfo
-  slicer/parameterNodeWrapper/parameterPack
-  slicer/parameterNodeWrapper/serializers
-  slicer/parameterNodeWrapper/types
-  slicer/parameterNodeWrapper/util
-  slicer/parameterNodeWrapper/validators
-  slicer/parameterNodeWrapper/wrapper
-  slicer/ScriptedLoadableModule
-  slicer/slicerqt
-  slicer/testing
-  slicer/util
-  mrml
-  vtkAddon
-  vtkITK
-  vtkSegmentationCore
-  vtkTeem
+  slicer/__init__.py
+  slicer/logic.py
+  slicer/parameterNodeWrapper/__init__.py
+  slicer/parameterNodeWrapper/default.py
+  slicer/parameterNodeWrapper/guiCreation.py
+  slicer/parameterNodeWrapper/guiConnectors.py
+  slicer/parameterNodeWrapper/parameterInfo.py
+  slicer/parameterNodeWrapper/parameterPack.py
+  slicer/parameterNodeWrapper/serializers.py
+  slicer/parameterNodeWrapper/types.py
+  slicer/parameterNodeWrapper/util.py
+  slicer/parameterNodeWrapper/validators.py
+  slicer/parameterNodeWrapper/wrapper.py
+  slicer/ScriptedLoadableModule.py
+  slicer/slicerqt.py
+  slicer/testing.py
+  slicer/util.py
+  mrml.py
+  vtkAddon.py
+  vtkITK.py
+  vtkSegmentationCore.py
+  vtkTeem.py
   )
 
 set(Slicer_PYTHON_MODULES_CONFIG "
@@ -71,5 +71,20 @@ ctkMacroCompilePythonScript(
   SCRIPTS "${Slicer_PYTHON_SCRIPTS}"
   RESOURCES "${Slicer_PYTHON_RESOURCES}"
   DESTINATION_DIR ${Slicer_BINARY_DIR}/bin/Python
-  INSTALL_DIR ${Slicer_INSTALL_BIN_DIR}
   )
+
+# Install python module / resources directory
+install(DIRECTORY "${Slicer_BINARY_DIR}/bin/Python/"
+  DESTINATION "${Python3_SITELIB}" COMPONENT RuntimeLibraries
+  FILES_MATCHING
+  PATTERN "*.py"
+  PATTERN "*.pyc"
+)
+
+# Install python module / resources directory
+install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/"
+  DESTINATION "${Python3_SITELIB}" COMPONENT RuntimeLibraries
+  FILES_MATCHING
+  PATTERN "*.py"
+  PATTERN "*.pyc"
+)
