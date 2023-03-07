@@ -61,6 +61,7 @@ public:
   void UnregisterConverterRule(vtkSegmentationConverterRule* rule);
 
   /// Get all registered converter rules
+  VTK_WRAPEXCLUDE
   const RuleListType& GetConverterRules();
 
   /// Disable a converter rule, preventing it from being used. Achieved by unregistering the rule

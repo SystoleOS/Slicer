@@ -157,6 +157,10 @@ mark_as_superbuild(GIT_EXECUTABLE)
 find_package(Patch REQUIRED)
 mark_as_superbuild(Patch_EXECUTABLE)
 
+if(Slicer_USE_PYTHONQT)
+  find_package(Python3 REQUIRED Interpreter Development.Module)
+endif()
+
 #-----------------------------------------------------------------------------
 # Qt requirements
 #-----------------------------------------------------------------------------
@@ -772,14 +776,6 @@ foreach(dep QT ${Slicer_DEPENDENCIES})
 endforeach()
 
 #-----------------------------------------------------------------------------
-# Update CMake module path
-#------------------------------------------------------------------------------
-set(CMAKE_MODULE_PATH
-  ${vtkAddon_CMAKE_DIR}
-  ${CMAKE_MODULE_PATH}
-  )
-
-#-----------------------------------------------------------------------------
 # Folders
 #-----------------------------------------------------------------------------
 set_property(GLOBAL PROPERTY USE_FOLDERS ${Slicer_USE_FOLDERS})
@@ -901,18 +897,11 @@ include(ctkFunctionAddExecutableUtf8)
 # Set Slicer_PYTHON_VERSION and Slicer_PYTHON_VERSION_DOT
 #-----------------------------------------------------------------------------
 if(Slicer_USE_PYTHONQT)
-  find_package(PythonLibs ${Slicer_REQUIRED_PYTHON_VERSION_DOT} REQUIRED)
-  find_package(PythonInterp ${Slicer_REQUIRED_PYTHON_VERSION_DOT} REQUIRED)
-
-  # Extract python lib path
-  get_filename_component(PYTHON_DIR_PATH ${PYTHON_EXECUTABLE} PATH)
-  set(PYTHON_LIBRARY_PATH ${PYTHON_DIR_PATH}/../lib)
-  if(WIN32)
-    set(PYTHON_LIBRARY_PATH ${PYTHON_DIR_PATH})
-  endif()
+  # find_package(PythonLibs ${Slicer_REQUIRED_PYTHON_VERSION_DOT} REQUIRED)
+  # find_package(PythonInterp ${Slicer_REQUIRED_PYTHON_VERSION_DOT} REQUIRED)
 
   # Extract python version components
-  ctkMacroSetPaths("${PYTHON_LIBRARY_PATH}")
+  ctkMacroSetPaths("${Python3_LIBRARY_DIRS}")
   function(_python_sys_attribute attribute varname)
     execute_process(
       COMMAND ${PYTHON_EXECUTABLE} -c "import sys; print(sys.${attribute})"
@@ -952,6 +941,11 @@ if(Slicer_USE_PYTHONQT)
   # See vtkAddon/CMake/vtkMacroKitPythonWrap.cmake
   set(Slicer_VTK_WRAP_HIERARCHY_DIR ${Slicer_BINARY_DIR})
 endif()
+
+#-----------------------------------------------------------------------------
+# vtkAddon
+#-----------------------------------------------------------------------------
+find_package(vtkAddon REQUIRED)
 
 #-----------------------------------------------------------------------------
 # Teem
