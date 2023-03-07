@@ -174,7 +174,7 @@ if(MRMLDisplayableManager_USE_PYTHON)
     )
   list(APPEND libs
     ${VTK_COMMON_PYTHON_LIBRARY} # For vtkPythonUtils
-    ${PYTHON_LIBRARY} # At some point, VTK should be updated to expose VTK_PYTHON_LIBRARY
+    ${Python3_LIBRARY} # At some point, VTK should be updated to expose VTK_PYTHON_LIBRARY
     )
 endif()
 

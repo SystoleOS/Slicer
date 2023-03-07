@@ -304,6 +304,7 @@ set(libs
   ${ITK_LIBRARIES}
   ${VTK_LIBRARIES}
   VTK::IOInfovis
+  VTK::WrappingPythonCore
   ${LibArchive_LIBRARY}
   )
 if(MRML_USE_vtkTeem)

@@ -166,7 +166,7 @@ if(Slicer_USE_PYTHONQT)
     )
   list(APPEND libs
     ${VTK_COMMON_PYTHON_LIBRARY}
-    ${PYTHON_LIBRARY} # At some point, VTK should be updated to expose VTK_PYTHON_LIBRARY
+    ${Python3_LIBRARY} # At some point, VTK should be updated to expose VTK_PYTHON_LIBRARY
     )
 endif()
 

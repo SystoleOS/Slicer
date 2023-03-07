@@ -59,6 +59,10 @@ endif()
 set(KIT_resources
   )
 
+if(Slicer_USE_PYTHONQT)
+  set(WRAP_PYTHONQT WRAP_PYTHONQT)
+endif()
+
 SlicerMacroBuildBaseQtLibrary(
   NAME ${PROJECT_NAME}
   EXPORT_DIRECTIVE ${KIT_export_directive}
@@ -68,7 +72,7 @@ SlicerMacroBuildBaseQtLibrary(
   UI_SRCS ${KIT_UI_SRCS}
   TARGET_LIBRARIES ${KIT_target_libraries}
   RESOURCES ${KIT_resources}
-  WRAP_PYTHONQT
+  ${WRAP_PYTHONQT}
   )
 
 # --------------------------------------------------------------------------

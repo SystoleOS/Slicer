@@ -165,6 +165,7 @@ endif()
 # See https://github.com/commontk/PythonQt/issues/7
 # and https://github.com/commontk/PythonQt/issues/8
 if(Slicer_USE_PYTHONQT)
+  find_package(Python3 REQUIRED Interpreter Development.Module)
   find_package(PythonQt)
 endif()
 

@@ -45,6 +45,10 @@ include(${Teem_USE_FILE})
 #     See https://sourceforge.net/p/teem/code/4168/
 set(Teem_LIBRARIES teem)
 
+if(VTK_WRAP_PYTHON)
+  find_package(vtkAddon REQUIRED)
+endif()
+
 # --------------------------------------------------------------------------
 # Configure headers
 # --------------------------------------------------------------------------
@@ -61,9 +65,10 @@ if(NOT DEFINED ${PROJECT_NAME}_INSTALL_NO_DEVELOPMENT)
   set(${PROJECT_NAME}_INSTALL_NO_DEVELOPMENT ON)
 endif()
 if(NOT ${PROJECT_NAME}_INSTALL_NO_DEVELOPMENT)
-  file(GLOB headers "${CMAKE_CURRENT_SOURCE_DIR}/*.(h|txx)")
+  file(GLOB headers "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
+  file(GLOB templates "${CMAKE_CURRENT_SOURCE_DIR}/*.txx")
   install(
-    FILES ${headers} ${CMAKE_CURRENT_BINARY_DIR}/${configure_header_file}
+    FILES ${headers} ${templates} ${CMAKE_CURRENT_BINARY_DIR}/${configure_header_file}
     DESTINATION ${${PROJECT_NAME}_INSTALL_INCLUDE_DIR} COMPONENT Development)
 endif()
 
