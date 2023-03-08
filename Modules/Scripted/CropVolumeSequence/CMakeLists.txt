@@ -1,3 +1,10 @@
+cmake_minimum_required(VERSION 3.0)
+
+project(CropVolumeSequence)
+
+find_package(Slicer REQUIRED)
+include(${Slicer_USE_FILE})
+
 #-----------------------------------------------------------------------------
 set(MODULE_NAME CropVolumeSequence)
 
