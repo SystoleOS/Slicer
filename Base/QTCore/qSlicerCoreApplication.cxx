@@ -34,6 +34,7 @@
 #include <QTranslator>
 #include <QStandardPaths>
 #include <QTemporaryFile>
+#include <QSslConfiguration>
 
 // For:
 //  - Slicer_BIN_DIR
