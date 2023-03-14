@@ -1275,6 +1275,13 @@ if(NOT Slicer_INSTALL_NO_DEVELOPMENT)
     )
 endif()
 
+
+#-----------------------------------------------------------------------------
+# Install Utilities
+#-----------------------------------------------------------------------------
+install(PROGRAMS ${Slicer_QRCC_SCRIPT}
+  DESTINATION ${Slicer_INSTALL_UTILITY_SCRIPTS_DIR})
+
 #-----------------------------------------------------------------------------
 # Create target to download data from the <Slicer_ExternalData_DATA_MANAGEMENT_TARGET> group.
 # This must come after all tests have been added that reference the group, so we put it last.
