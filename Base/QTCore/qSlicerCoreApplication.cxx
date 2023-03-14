@@ -34,6 +34,7 @@
 #include <QTranslator>
 #include <QStandardPaths>
 #include <QTemporaryFile>
+#include <QSslConfiguration>
 
 // For:
 //  - Slicer_QTLOADABLEMODULES_LIB_DIR
