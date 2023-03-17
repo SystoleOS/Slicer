@@ -1,5 +1,15 @@
 #-----------------------------------------------------------------------------
+cmake_minimum_required(VERSION 3.16.3...3.19.7 FATAL_ERROR)
+
+#-----------------------------------------------------------------------------
+project(SegmentStatistics)
+
+#-----------------------------------------------------------------------------
 set(MODULE_NAME SegmentStatistics)
+
+#-----------------------------------------------------------------------------
+find_package(Slicer REQUIRED)
+include(${Slicer_USE_FILE})
 
 add_subdirectory(SubjectHierarchyPlugins)
 add_subdirectory(SegmentStatisticsPlugins)
