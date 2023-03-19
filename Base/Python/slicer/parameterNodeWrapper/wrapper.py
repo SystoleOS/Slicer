@@ -1,3 +1,5 @@
+"""The wrapper module is responsible for creating parameterNodeWrappers"""
+
 import logging
 import typing
 from typing import Optional
@@ -287,6 +289,9 @@ def _makeDataTypeFunc(classvar):
 
 
 def _processClass(classtype):
+    """
+    Takes a parameterNodeWrapper class description and creates the full parameterNodeWrapper class.
+    """
     members = typing.get_type_hints(classtype, include_extras=True)
     allParameters: dict[str, ParameterInfo] = dict()
     for name, nametype in members.items():
@@ -296,8 +301,14 @@ def _processClass(classtype):
             serializer, annotations = createSerializer(membertype, annotations)
         except Exception as e:
             raise Exception(f"Unable to create serializer for {classtype} member {name}") from e
-        default, annotations = extractDefault(annotations)
-        default = default if default is not None else Default(serializer.default())
+
+        if hasattr(classtype, name):
+            # default via equals
+            default = Default(getattr(classtype, name))
+        else:
+            # default via "Default" class, or default default
+            default, annotations = extractDefault(annotations)
+            default = default if default is not None else Default(serializer.default())
 
         if annotations:
             logging.warning(f"Unused annotations: {annotations}")
@@ -339,7 +350,7 @@ def isParameterNodeWrapper(classOrObj):
 
 def parameterNodeWrapper(classtype=None):
     """
-    Class decorator to make a parameter node wrapper that supports typed property access.
+    Class decorator to make a parameter node wrapper that supports typed property access and GUI binding.
     """
     def wrap(cls):
         return _processClass(cls)

@@ -31,7 +31,7 @@ parameterNodeWidget = createGui(ParameterNodeWrapper)
 
 The `createGui` methods takes a (possibly annotated) type as input and returns an appropriate widget.
 
-:::{warn}
+:::{warning}
 `createGui` is intended to work with the [GUI connection](./gui_connection.md), so it won't call things like `setMinimum/setMaximum` on the created widgets, as it expects `<parameterNodeWrapper>.connectGui` to do that.
 :::
 
@@ -45,6 +45,7 @@ The `createGui` methods takes a (possibly annotated) type as input and returns a
 | float |  | QDoubleSpinBox |
 | bool | | QCheckBox |
 | str | | QLineEdit |
+| enum.Enum | | QComboBox |
 | pathlib.\[Path, PosixPath, WindowsPath,<br>&emsp;PurePath, PurePosixPath, PureWindowsPath] | | ctkPathLineEdit |
 | vtkMRMLNode<br>&emsp;(including subclasses and a typing.Union of nodes) | | qMRMLComboBox |
 | parameterPack | | qSlicerWidget* that is a QFormLayout with the name and appropriate GUI for each parameter in the pack |
@@ -57,7 +58,7 @@ You can use the `Label` annotation to give a nicer user facing label to a parame
 
 ```py
 from typing import Annotated
-from MRMLCorePython import vtkMRMLScalarVolumeNode
+from slicer import vtkMRMLScalarVolumeNode
 from slicer.parameterNodeWrapper import (
   createGui,
   parameterNodeWrapper,

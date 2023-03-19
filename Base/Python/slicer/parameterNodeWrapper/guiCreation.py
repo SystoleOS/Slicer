@@ -1,5 +1,10 @@
+"""The guiCreation module is responsible for creating widgets for given datatypes.
+This module is extensible such that users can add new widgets and datatypes from within
+other slicer modules."""
+
 import abc
 import dataclasses
+import enum
 import pathlib
 
 import ctk
@@ -9,6 +14,7 @@ import slicer
 
 from .guiConnectors import SlicerPackParameterNamePropertyName
 from . import parameterPack as pack
+from .types import FloatRange
 from .validators import Choice, Maximum, Minimum, WithinRange
 from .util import (
     findFirstAnnotation,
@@ -35,6 +41,13 @@ class Label:
 
 
 class GuiCreator(abc.ABC):
+    """
+    GuiCreator is an interface to allow taking a type and creating an appropriate qt.QWidget.
+
+    Concrete GuiCreators are registered for use by the createGui method by using the
+    @parameterNodeGuiCreator decorator.
+    """
+
     @staticmethod
     @abc.abstractmethod
     def representationValue(datatype) -> int:
@@ -61,6 +74,9 @@ _registeredGuiCreators = []
 
 
 def _processGuiCreator(classtype):
+    """
+    Registers a GuiCreator so it can be used by createGui.
+    """
     if not issubclass(classtype, GuiCreator):
         raise TypeError("Must be a GuiCreator subclass")
     global _registeredGuiCreators
@@ -108,6 +124,20 @@ class ChoiceGuiCreator(GuiCreator):
     def representationValue(datatype) -> int:
         choice = findFirstAnnotation(splitAnnotations(datatype)[1], Choice)
         if choice is not None and unannotatedType(datatype) in (int, float, str, bool):
+            return CanRepresentWithChoice
+        return CannotRepresent
+
+    @staticmethod
+    def create(datatype):
+        return qt.QComboBox()
+
+
+@parameterNodeGuiCreator
+class EnumGuiCreator(GuiCreator):
+    @staticmethod
+    def representationValue(datatype) -> int:
+        unannotated = unannotatedType(datatype)
+        if isinstance(unannotated, type) and issubclass(unannotatedType(datatype), enum.Enum):
             return CanRepresentWithChoice
         return CannotRepresent
 
@@ -178,6 +208,19 @@ class StrGuiCreator(GuiCreator):
     @staticmethod
     def create(datatype):
         return qt.QLineEdit()
+
+
+@parameterNodeGuiCreator
+class FloatRangeGuiCreator(GuiCreator):
+    @staticmethod
+    def representationValue(datatype) -> int:
+        if unannotatedType(datatype) == FloatRange:
+            return CanRepresentWithMinMax
+        return CannotRepresent
+    
+    @staticmethod
+    def create(datatype):
+        return ctk.ctkRangeWidget()
 
 
 @parameterNodeGuiCreator
