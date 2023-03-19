@@ -1,18 +1,27 @@
+"""The wrapper module is responsible for creating parameterNodeWrappers"""
+
 import logging
 import typing
 from typing import Optional
 
+import qt
+
 import slicer
 import vtk
 
-from .default import extractDefault
-from .guiConnectors import GuiConnector, createGuiConnector
+from .default import Default, extractDefault
+from .guiConnectors import GuiConnector, createGuiConnector, _getPackNameToWidgetMap
 from .parameterInfo import ParameterInfo
 from .parameterPack import _checkMember as checkPackMember
 from .serializers import Serializer, createSerializer
 from .util import splitAnnotations, splitPossiblyDottedName, unannotatedType
 
-__all__ = ["parameterNodeWrapper", "SlicerParameterNamePropertyName"]
+__all__ = [
+    "parameterNodeWrapper",
+    "SlicerParameterNamePropertyName",
+    "findChildWidgetForParameter",
+    "isParameterNodeWrapper",
+]
 
 
 SlicerParameterNamePropertyName = "SlicerParameterName"
@@ -32,7 +41,7 @@ class _Parameter:
 
     def read(self, parameterNode):
         if not self.serializer.isIn(parameterNode, self.name):
-            self.serializer.write(parameterNode, self.name, self.default)
+            self.serializer.write(parameterNode, self.name, self.default.value)
         return self.serializer.read(parameterNode, self.name)
 
     def remove(self, parameterNode) -> None:
@@ -49,7 +58,7 @@ class _ParameterWrapper:
         self.parameterNode = parameterNode
 
     def default(self):
-        return self.parameter.default
+        return self.parameter.default.value
 
     def isIn(self) -> bool:
         """Whether this parameter has a value in the parameter node given to the constructor."""
@@ -116,10 +125,10 @@ def _initMethod(self, parameterNode, prefix: Optional[str] = None):
     self._parameterGUIs = dict()
     self._nextParameterGUIsTag = 0
     self._updatingGUIFromParameterNode = False
-    for parameterInfo in self.__allParameters:
+    for parameterInfo in self.allParameters.values():
         parameter = _Parameter(parameterInfo, prefix)
         if not parameter.isIn(self.parameterNode):
-            parameter.write(self.parameterNode, parameter.default)
+            parameter.write(self.parameterNode, parameter.default.value)
 
         if parameter.supportsCaching():
             setattr(self, f"_{parameterInfo.basename}_impl", _CachedParameterWrapper(parameter, parameterNode))
@@ -130,17 +139,17 @@ def _initMethod(self, parameterNode, prefix: Optional[str] = None):
 def _checkParamName(paramNodeWrapInstanceOrClass, paramName: str):
     topname, subname = splitPossiblyDottedName(paramName)
 
-    for paramInfo in paramNodeWrapInstanceOrClass.__allParameters:
-        if paramInfo.basename == topname:
-            if subname is None:
-                return
-            else:
-                checkPackMember(unannotatedType(paramInfo.unalteredType), subname)
-                return
-    raise ValueError(f"Cannot find a param with the given name: {topname}"
-                     + "\n  Found parameters ["
-                     + "".join([f"\n    {p.basename}," for p in paramNodeWrapInstanceOrClass.__allParameters])
-                     + "\n  ]")
+    if topname in paramNodeWrapInstanceOrClass.allParameters:
+        if subname is None:
+            return
+        else:
+            checkPackMember(unannotatedType(paramNodeWrapInstanceOrClass.allParameters[topname].unalteredType),
+                            subname)
+    else:
+        raise ValueError(f"Cannot find a param with the given name: {topname}"
+                         + "\n  Found parameters ["
+                         + "".join([f"\n    {name}," for name in paramNodeWrapInstanceOrClass.allParameters.keys()])
+                         + "\n  ]")
 
 
 def _isCached(self, paramName: str):
@@ -196,12 +205,42 @@ def _connectParametersToGui(self, mapping):
     return tag
 
 
+def findChildWidgetForParameter(widget, parameter):
+    # see if we have the full name
+    for w in widget.findChildren(qt.QWidget):
+        if w.property(SlicerParameterNamePropertyName) == parameter:
+            return w
+
+    # see if it is in a parameterPack
+    topname, subname = splitPossiblyDottedName(parameter)
+    w = findChildWidgetForParameter(widget, topname)
+    if w:
+        packNameToWidgetMap = _getPackNameToWidgetMap(w)
+        if subname in packNameToWidgetMap:
+            return packNameToWidgetMap[subname]
+    return None
+
+
+def _isWidget(obj):
+    """
+    For some reason (likely to do with the python wrapping)
+    `isinstance(slicer.qSlicerWidget(), qt.Widget)` returns False.
+    So this is a poor replacement.
+    """
+    return getattr(obj, "isWidgetType", lambda: False)()
+
+
 def _connectGui(self, gui):
-    # go through each widget in the gui and check for our special property
     paramNameToWidget = {}
-    for widget in gui.__dict__.values():
-        if widget.property(SlicerParameterNamePropertyName):
-            paramNameToWidget[widget.property(SlicerParameterNamePropertyName)] = widget
+    if _isWidget(gui):
+        for widget in gui.findChildren(qt.QWidget):
+            if widget.property(SlicerParameterNamePropertyName):
+                paramNameToWidget[widget.property(SlicerParameterNamePropertyName)] = widget
+    else:
+        # go through each widget in the gui and check for our special property
+        for widget in gui.__dict__.values():
+            if widget.property(SlicerParameterNamePropertyName):
+                paramNameToWidget[widget.property(SlicerParameterNamePropertyName)] = widget
 
     _connectParametersToGui(self, paramNameToWidget)
 
@@ -238,60 +277,80 @@ def _makeDataTypeFunc(classvar):
     def dataType(membername):
         _checkParamName(classvar, membername)
         topname, subname = splitPossiblyDottedName(membername)
-        for param in classvar.__allParameters:
-            if param.basename == topname:
-                if subname is None:
-                    return param.unalteredType
-                else:
-                    return unannotatedType(param.unalteredType).dataType(subname)
-        raise RuntimeError(f"Name '{membername}' appeared to exist but can't find it in allParameters")
+        if topname in classvar.allParameters:
+            param = classvar.allParameters[topname]
+            if subname is None:
+                return param.unalteredType
+            else:
+                return unannotatedType(param.unalteredType).dataType(subname)
+        else:
+            raise RuntimeError(f"Name '{membername}' appeared to exist but can't find it in allParameters")
     return dataType
 
 
 def _processClass(classtype):
+    """
+    Takes a parameterNodeWrapper class description and creates the full parameterNodeWrapper class.
+    """
     members = typing.get_type_hints(classtype, include_extras=True)
-    allParameters = []
+    allParameters: dict[str, ParameterInfo] = dict()
     for name, nametype in members.items():
         membertype, annotations = splitAnnotations(nametype)
 
-        serializer, annotations = createSerializer(membertype, annotations)
-        default, annotations = extractDefault(annotations)
-        default = default.value if default is not None else serializer.default()
+        try:
+            serializer, annotations = createSerializer(membertype, annotations)
+        except Exception as e:
+            raise Exception(f"Unable to create serializer for {classtype} member {name}") from e
+
+        if hasattr(classtype, name):
+            # default via equals
+            default = Default(getattr(classtype, name))
+        else:
+            # default via "Default" class, or default default
+            default, annotations = extractDefault(annotations)
+            default = default if default is not None else Default(serializer.default())
 
         if annotations:
             logging.warning(f"Unused annotations: {annotations}")
-        try:
-            serializer.validate(default)
-        except Exception as e:
-            raise ValueError(f"The default parameter of '{default}' fails the validation checks:\n  {str(e)}")
 
         parameter = ParameterInfo(name, serializer, default, nametype)
-        allParameters.append(parameter)
+        allParameters[name] = parameter
         setattr(classtype, parameter.basename, _makeProperty(parameter.basename))
 
-    setattr(classtype, "__allParameters", allParameters)
-    setattr(classtype, "_is_parameter_node_wrapper", True)
+    # don't allow them use names we are using
+    def checkedSetAttr(class_, attr, value):
+        if hasattr(class_, attr):
+            raise ValueError(f"Cannot use reserved name '{attr}' in a parameterNodeWrapper")
+        setattr(class_, attr, value)
 
+    checkedSetAttr(classtype, "allParameters", allParameters)
+    checkedSetAttr(classtype, "_is_parameter_node_wrapper", True)
+
+    # __init__ will already exist, so don't run it through the checked
     setattr(classtype, "__init__", _initMethod)
-    setattr(classtype, "default", _default)
-    setattr(classtype, "isCached", _isCached)
-    setattr(classtype, "dataType", _makeDataTypeFunc(classtype))
-    setattr(classtype, "getValue", _getValue)
-    setattr(classtype, "setValue", _setValue)
-    setattr(classtype, "connectGui", _connectGui)
-    setattr(classtype, "connectParametersToGui", _connectParametersToGui)
-    setattr(classtype, "disconnectGui", _disconnectGui)
-    setattr(classtype, "StartModify", lambda self: self.parameterNode.StartModify())
-    setattr(classtype, "EndModify", lambda self, wasModified: self.parameterNode.EndModify(wasModified))
-    setattr(classtype, "AddObserver", lambda self, event, callback, priority=0.0: self.parameterNode.AddObserver(event, callback, priority))
-    setattr(classtype, "RemoveObserver", lambda self, tag: self.parameterNode.RemoveObserver(tag))
-    setattr(classtype, "Modified", lambda self: self.parameterNode.Modified())
+    checkedSetAttr(classtype, "default", _default)
+    checkedSetAttr(classtype, "isCached", _isCached)
+    checkedSetAttr(classtype, "dataType", _makeDataTypeFunc(classtype))
+    checkedSetAttr(classtype, "getValue", _getValue)
+    checkedSetAttr(classtype, "setValue", _setValue)
+    checkedSetAttr(classtype, "connectGui", _connectGui)
+    checkedSetAttr(classtype, "connectParametersToGui", _connectParametersToGui)
+    checkedSetAttr(classtype, "disconnectGui", _disconnectGui)
+    checkedSetAttr(classtype, "StartModify", lambda self: self.parameterNode.StartModify())
+    checkedSetAttr(classtype, "EndModify", lambda self, wasModified: self.parameterNode.EndModify(wasModified))
+    checkedSetAttr(classtype, "AddObserver", lambda self, event, callback, priority=0.0: self.parameterNode.AddObserver(event, callback, priority))
+    checkedSetAttr(classtype, "RemoveObserver", lambda self, tag: self.parameterNode.RemoveObserver(tag))
+    checkedSetAttr(classtype, "Modified", lambda self: self.parameterNode.Modified())
     return classtype
+
+
+def isParameterNodeWrapper(classOrObj):
+    return getattr(classOrObj, "_is_parameter_node_wrapper", False)
 
 
 def parameterNodeWrapper(classtype=None):
     """
-    Class decorator to make a parameter node wrapper that supports typed property access.
+    Class decorator to make a parameter node wrapper that supports typed property access and GUI binding.
     """
     def wrap(cls):
         return _processClass(cls)
