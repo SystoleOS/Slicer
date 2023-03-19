@@ -30,6 +30,7 @@
 #include <QNetworkProxyFactory>
 #include <QResource>
 #include <QSettings>
+#include <QSslConfiguration>
 #include <QTranslator>
 #include <QStandardPaths>
 #include <QTemporaryFile>
@@ -1414,9 +1415,9 @@ QString qSlicerCoreApplication::defaultCachePath() const
   // The returned path is never empty.
   //
   // Examples:
-  // - Windows: C:/Users/username/AppData/Local/NA-MIC/Slicer/cache
-  // - Linux: /home/username/.cache/NA-MIC/Slicer
-  // - macOS: /Users/username/Library/Caches/NA-MIC/Slicer
+  // - Windows: C:/Users/username/AppData/Local/slicer.org/Slicer/cache
+  // - Linux: /home/username/.cache/slicer.org/Slicer
+  // - macOS: /Users/username/Library/Caches/slicer.org/Slicer
   //
   // This is already a user and application specific folder, but various software components
   // may place files there (e.g., QWebEngine), therefore we create a subfolder (SlicerIO)
@@ -2092,9 +2093,11 @@ bool qSlicerCoreApplication::loadCaCertificates(const QString& caCertificatesPat
 #ifdef Slicer_USE_PYTHONQT_WITH_OPENSSL
   if (QSslSocket::supportsSsl())
     {
-    QSslSocket::setDefaultCaCertificates(QSslCertificate::fromPath(caCertificatesPath));
+    QSslConfiguration sslConfiguration = QSslConfiguration::defaultConfiguration();
+    sslConfiguration.setCaCertificates(QSslCertificate::fromPath(caCertificatesPath));
+    QSslConfiguration::setDefaultConfiguration(sslConfiguration);
     }
-  return !QSslSocket::defaultCaCertificates().empty();
+  return !QSslConfiguration::defaultConfiguration().caCertificates().empty();
 #else
   Q_UNUSED(caCertificatesPath);
   return false;
