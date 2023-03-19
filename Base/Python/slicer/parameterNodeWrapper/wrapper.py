@@ -1,3 +1,5 @@
+"""The wrapper module is responsible for creating parameterNodeWrappers"""
+
 import logging
 import typing
 from typing import Optional
@@ -8,13 +10,18 @@ import slicer
 import vtk
 
 from .default import Default, extractDefault
-from .guiConnectors import GuiConnector, createGuiConnector
+from .guiConnectors import GuiConnector, createGuiConnector, _getPackNameToWidgetMap
 from .parameterInfo import ParameterInfo
 from .parameterPack import _checkMember as checkPackMember
 from .serializers import Serializer, createSerializer
 from .util import splitAnnotations, splitPossiblyDottedName, unannotatedType
 
-__all__ = ["parameterNodeWrapper", "SlicerParameterNamePropertyName"]
+__all__ = [
+    "parameterNodeWrapper",
+    "SlicerParameterNamePropertyName",
+    "findChildWidgetForParameter",
+    "isParameterNodeWrapper",
+]
 
 
 SlicerParameterNamePropertyName = "SlicerParameterName"
@@ -198,6 +205,22 @@ def _connectParametersToGui(self, mapping):
     return tag
 
 
+def findChildWidgetForParameter(widget, parameter):
+    # see if we have the full name
+    for w in widget.findChildren(qt.QWidget):
+        if w.property(SlicerParameterNamePropertyName) == parameter:
+            return w
+
+    # see if it is in a parameterPack
+    topname, subname = splitPossiblyDottedName(parameter)
+    w = findChildWidgetForParameter(widget, topname)
+    if w:
+        packNameToWidgetMap = _getPackNameToWidgetMap(w)
+        if subname in packNameToWidgetMap:
+            return packNameToWidgetMap[subname]
+    return None
+
+
 def _isWidget(obj):
     """
     For some reason (likely to do with the python wrapping)
@@ -266,6 +289,9 @@ def _makeDataTypeFunc(classvar):
 
 
 def _processClass(classtype):
+    """
+    Takes a parameterNodeWrapper class description and creates the full parameterNodeWrapper class.
+    """
     members = typing.get_type_hints(classtype, include_extras=True)
     allParameters: dict[str, ParameterInfo] = dict()
     for name, nametype in members.items():
@@ -275,8 +301,14 @@ def _processClass(classtype):
             serializer, annotations = createSerializer(membertype, annotations)
         except Exception as e:
             raise Exception(f"Unable to create serializer for {classtype} member {name}") from e
-        default, annotations = extractDefault(annotations)
-        default = default if default is not None else Default(serializer.default())
+
+        if hasattr(classtype, name):
+            # default via equals
+            default = Default(getattr(classtype, name))
+        else:
+            # default via "Default" class, or default default
+            default, annotations = extractDefault(annotations)
+            default = default if default is not None else Default(serializer.default())
 
         if annotations:
             logging.warning(f"Unused annotations: {annotations}")
@@ -312,9 +344,13 @@ def _processClass(classtype):
     return classtype
 
 
+def isParameterNodeWrapper(classOrObj):
+    return getattr(classOrObj, "_is_parameter_node_wrapper", False)
+
+
 def parameterNodeWrapper(classtype=None):
     """
-    Class decorator to make a parameter node wrapper that supports typed property access.
+    Class decorator to make a parameter node wrapper that supports typed property access and GUI binding.
     """
     def wrap(cls):
         return _processClass(cls)

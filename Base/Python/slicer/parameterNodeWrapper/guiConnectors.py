@@ -1,14 +1,20 @@
+"""The guiConnection module is responsible for adapting different input widget types (widgets that represent a value
+of some kind) to a common interface. This is then used by the parameterNodeWrapper to bind parameters to widgets.
+This module is extensible such that users can add new widgets and datatypes from within other slicer modules."""
+
 import abc
+import dataclasses
 import enum
 import pathlib
 import logging
+from typing import Union
 
 import ctk
 import qt
 
 import slicer
-from qSlicerSubjectHierarchyModuleWidgetsPythonQt import qMRMLSubjectHierarchyTreeView
 from . import parameterPack as pack
+from .types import FloatRange
 from . import validators
 from .util import (
     findFirstAnnotation,
@@ -20,10 +26,32 @@ from .util import (
 
 
 __all__ = [
+    "createGuiConnector",
     "parameterNodeGuiConnector",
     "GuiConnector",
     "SlicerPackParameterNamePropertyName",
+
+    "Decimals",
+    "SingleStep",
 ]
+
+
+# Extra annotations for use
+
+@dataclasses.dataclass
+class Decimals:
+    """
+    Annotation for Qt's setDecimals methods for spinboxes and sliders.
+    """
+    value: int
+
+
+@dataclasses.dataclass
+class SingleStep:
+    """
+    Annotation for Qt's setSingleStep methods for spinboxes and sliders.
+    """
+    value: Union[float, int]
 
 
 class GuiConnector(abc.ABC):
@@ -105,6 +133,9 @@ _registeredGuiConnectors = []
 
 
 def _processGuiConnector(classtype):
+    """
+    Registers a GuiConnector for use by createGuiConnector.
+    """
     if not issubclass(classtype, GuiConnector):
         raise TypeError("Must be a GuiConnector subclass")
     global _registeredGuiConnectors
@@ -222,6 +253,14 @@ class QSliderOrSpinBoxToIntConnector(GuiConnector):
         super().__init__()
         self._widget = widget
 
+        decimals = findFirstAnnotation(annotations, Decimals)
+        if decimals is not None:
+            self._widget.decimals = decimals.value
+
+        singleStep = findFirstAnnotation(annotations, SingleStep)
+        if singleStep is not None:
+            self._widget.singleStep = singleStep.value
+
         withinRange = findFirstAnnotation(annotations, validators.WithinRange)
         minimum = findFirstAnnotation(annotations, validators.Minimum)
         maximum = findFirstAnnotation(annotations, validators.Maximum)
@@ -279,6 +318,14 @@ class QDoubleSpinBoxCtkSliderWidgetToFloatConnector(GuiConnector):
     def __init__(self, widget, annotations):
         super().__init__()
         self._widget = widget
+
+        decimals = findFirstAnnotation(annotations, Decimals)
+        if decimals is not None:
+            self._widget.decimals = decimals.value
+
+        singleStep = findFirstAnnotation(annotations, SingleStep)
+        if singleStep is not None:
+            self._widget.singleStep = singleStep.value
 
         withinRange = findFirstAnnotation(annotations, validators.WithinRange)
         minimum = findFirstAnnotation(annotations, validators.Minimum)
@@ -477,6 +524,55 @@ class QTextEditPlainTextToStrConnector(GuiConnector):
 
 
 @parameterNodeGuiConnector
+class ctkRangeWidgetToRangeConnector(GuiConnector):
+    @staticmethod
+    def canRepresent(widget, datatype) -> bool:
+        return type(widget) == ctk.ctkRangeWidget and unannotatedType(datatype) == FloatRange
+
+    @staticmethod
+    def create(widget, datatype):
+        if ctkRangeWidgetToRangeConnector.canRepresent(widget, datatype):
+            return ctkRangeWidgetToRangeConnector(widget, datatype)
+        return None
+
+    def __init__(self, widget: ctk.ctkRangeWidget, type_) -> None:
+        super().__init__()
+        self._widget: ctk.ctkRangeWidget = widget
+        self._type = type_
+        annotations = splitAnnotations(self._type)[1]
+
+        decimals = findFirstAnnotation(annotations, Decimals)
+        if decimals is not None:
+            self._widget.decimals = decimals.value
+
+        singleStep = findFirstAnnotation(annotations, SingleStep)
+        if singleStep is not None:
+            self._widget.singleStep = singleStep.value
+
+        rangeBounds = findFirstAnnotation(annotations, validators.RangeBounds)
+
+        if rangeBounds is None:
+            raise RuntimeError("Cannot have a connection to ctkRangeWidget where the float is unbounded. Add a RangeBounds annotation.")
+
+        self._widget.setRange(rangeBounds.minimum, rangeBounds.maximum)
+
+    def _connect(self):
+        self._widget.valuesChanged.connect(self.changed)
+
+    def _disconnect(self):
+        self._widget.valuesChanged.disconnect(self.changed)
+
+    def widget(self) -> ctk.ctkRangeWidget:
+        return self._widget
+
+    def read(self):
+        return self._type(self._widget.minimumValue, self._widget.maximumValue)
+
+    def write(self, value) -> None:
+        self._widget.setValues(value.minimum, value.maximum)
+
+
+@parameterNodeGuiConnector
 class ctkPathLineEditToPathConnector(GuiConnector):
     @staticmethod
     def canRepresent(widget, datatype) -> bool:
@@ -579,47 +675,6 @@ class qMRMLNodeComboBoxToNodeConnector(GuiConnector):
 
     def write(self, value) -> None:
         self._widget.setCurrentNode(value)
-
-
-@parameterNodeGuiConnector
-class qMRMLSubjectHierarchyTreeViewToNodeConnector(GuiConnector):
-    @staticmethod
-    def canRepresent(widget, datatype) -> bool:
-        return type(widget) == qMRMLSubjectHierarchyTreeView and isNodeOrUnionOfNodes(datatype)
-
-    @staticmethod
-    def create(widget, datatype):
-        if qMRMLSubjectHierarchyTreeViewToNodeConnector.canRepresent(widget, datatype):
-            return qMRMLSubjectHierarchyTreeViewToNodeConnector(widget, datatype)
-        return None
-
-    def __init__(self, widget: qMRMLSubjectHierarchyTreeView, datatype):
-        super().__init__()
-        self._widget: qMRMLSubjectHierarchyTreeView = widget
-        self._widget.nodeTypes = getNodeTypes(datatype)
-
-    def _connect(self):
-        self._widget.currentItemsChanged.connect(self.changed)
-
-    def _disconnect(self):
-        self._widget.currentItemsChanged.disconnect(self.changed)
-
-    def widget(self) -> qMRMLSubjectHierarchyTreeView:
-        return self._widget
-
-    def read(self):
-        itemId = self._widget.currentItem()
-        shNode = self._widget.subjectHierarchyNode()
-        if itemId == shNode.GetInvalidItemID():
-            return None
-        else:
-            return shNode.GetItemDataNode(itemId)
-
-    def write(self, value) -> None:
-        if value is not None:
-            self._widget.setCurrentNode(value)
-        else:
-            self._widget.clearSelection()
 
 
 SlicerPackParameterNamePropertyName = "SlicerPackParameterName"
