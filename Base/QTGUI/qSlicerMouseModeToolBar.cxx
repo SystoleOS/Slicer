@@ -172,6 +172,17 @@ void qSlicerMouseModeToolBarPrivate::init()
   q->addAction(this->PlaceWidgetAction);
 
   q->addAction(this->ToolBarAction);  // add Toggle Markups ToolBar action last
+
+  this->PlaceWidgetToolBarAction = new QAction(this);
+  this->PlaceWidgetToolBarAction->setObjectName("PlaceWidgetToolBarAction");
+  this->PlaceWidgetToolBarAction->setToolTip(qSlicerMouseModeToolBar::tr("Toggle Markups Toolbar"));
+  this->PlaceWidgetToolBarAction->setText(qSlicerMouseModeToolBar::tr("Toggle Markups Toolbar"));
+  this->PlaceWidgetToolBarAction->setEnabled(true);
+  this->PlaceWidgetToolBarAction->setIcon(QIcon(":/Icons/MarkupsDisplayToolBar.png"));
+
+  QObject::connect(this->PlaceWidgetToolBarAction, SIGNAL(triggered()),
+    q, SLOT(toggleMarkupsToolBar()));
+  this->PlaceWidgetMenu->addAction(this->PlaceWidgetToolBarAction);
 }
 
 //---------------------------------------------------------------------------
@@ -269,9 +280,6 @@ void qSlicerMouseModeToolBarPrivate::updateWidgetFromMRML()
 
   // Update place widget action
   this->updatePlaceWidget();
-
-  // Update persistence checkbox
-  int persistence = interactionNode->GetPlaceModePersistence();
 
   // find the active place node class name and set it's corresponding action to be checked
   QString activePlaceNodeClassName;
