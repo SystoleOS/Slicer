@@ -1,0 +1,162 @@
+# This GitHub Actions workflow is designed to keep a fork's branches in sync with the main Slicer repository.
+# The workflow performs the following steps:
+#
+# 1. Sets up a job that runs on an Ubuntu-latest runner.
+# 2. Checks out the fork's repository and configures the necessary Git settings.
+# 3. Fetches the main Slicer repository as a remote named 'upstream'.
+# 4. Iterates through a list of specified branches in the fork.
+# 5. For each branch:
+#    - Attempts to rebase the branch with the Slicer/main branch.
+#    - If the rebase is successful and has no conflicts, force-pushes the rebased branch to the fork.
+#    - If the rebase encounters conflicts, creates or updates a pull request to handle the conflicts.
+#      The pull request is created as a non-draft PR.
+#
+# Note: Replace the 'branches' array in the 'Sync branches and create PRs' step with the list of branches
+#       you want to keep in sync with the Slicer/main branch.
+
+name: Sync Branches with Slicer Main
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Run the workflow nightly at 00:00 UTC
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  sync_branches:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0 # Fetch all branches
+
+      - name: Setup Git
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/Slicer/Slicer.git
+
+      - name: Fetch upstream
+        run: git fetch upstream
+
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-get install -y gh
+          gh --version
+
+      - name: Sync branches and create PRs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -x
+          GH_CONFIG_DIR=$(mktemp -d)
+          echo "github.com:" > "$GH_CONFIG_DIR/hosts.yml"
+          echo "  oauth_token: ${GITHUB_TOKEN}" >> "$GH_CONFIG_DIR/hosts.yml"
+          export GH_CONFIG_DIR
+
+          branches=(
+            "main"
+            "Systole-patches/Slicer"
+            "Systole-patches/Modules/CLI/ACPCTransform"
+            "Systole-patches/Modules/CLI/AddScalarVolumes"
+            "Systole-patches/Modules/CLI/ExtractSkeleton"
+            "Systole-patches/Modules/Loadable/Annotations"
+            "Systole-patches/Modules/Loadable/Colors"
+            "Systole-patches/Modules/Loadable/Data"
+            "Systole-patches/Modules/Loadable/Markups"
+            "Systole-patches/Modules/Loadable/Models"
+            "Systole-patches/Modules/Loadable/Plots"
+            "Systole-patches/Modules/Loadable/Reformat"
+            "Systole-patches/Modules/Loadable/SceneViews"
+            "Systole-patches/Modules/Loadable/Segmentations"
+            "Systole-patches/Modules/Loadable/SlicerWelcome"
+            "Systole-patches/Modules/Loadable/SubjectHierarchy"
+            "Systole-patches/Modules/Loadable/Tables"
+            "Systole-patches/Modules/Loadable/Terminologies"
+            "Systole-patches/Modules/Loadable/Texts"
+            "Systole-patches/Modules/Loadable/Units"
+            "Systole-patches/Modules/Loadable/VolumeRendering"
+            "Systole-patches/Modules/Loadables/Transforms"
+            "Systole-patches/Modules/Loadables/ViewControllers"
+            "Systole-patches/Modules/Loadables/Volumes"
+            "Systole-patches/Modules/Scripted/CropVolumeSequence"
+            "Systole-patches/Modules/Scripted/DICOMLib"
+            "Systole-patches/Modules/Scripted/DICOMPatcher"
+            "Systole-patches/Modules/Scripted/DICOMPlugins"
+            "Systole-patches/Modules/Scripted/DMRIInstall"
+            "Systole-patches/Modules/Scripted/DataProbe"
+            "Systole-patches/Modules/Scripted/Endoscopy"
+            "Systole-patches/Modules/Scripted/ExtensionWizard"
+            "Systole-patches/Modules/Scripted/ImportItkSnapLabel"
+            "Systole-patches/Modules/Scripted/PerformanceTests"
+            "Systole-patches/Modules/Scripted/SampleData"
+            "Systole-patches/Modules/Scripted/ScreenCapture"
+            "Systole-patches/Modules/Scripted/SegmentEditor"
+            "Systole-patches/Modules/Scripted/SegmentStatistics"
+            "Systole-patches/Modules/Scripted/SelfTests"
+            "Systole-patches/Modules/Scripted/VectorToScalarVolume"
+            "Systole-patches/Modules/Scripted/WebServer"
+            "Systole-patches/Modules/Scripted/DICOM"
+          )
+
+          # Update main branch
+          git checkout main
+          if git pull --rebase upstream main; then
+            git push --force origin main
+          else
+            # Rebase had conflicts, create or update a PR
+            git rebase --abort # Abort the conflicted rebase
+            git checkout -b "sync-main" # Check out a new branch based on main
+            git pull --no-rebase upstream main || true # Ignore conflicts
+            git add . # Stage all changes
+            git commit -m "Sync with Slicer/main" # Commit the changes
+            git push --force-with-lease origin "sync-main" # Force-push the new branch to your fork
+
+            # Check if a PR with the same title already exists
+            existing_pr=$(gh pr list --state=open --author="${{ github.actor }}" --search="Sync main with Slicer/main" --json number -q '.[0].number')
+
+            if [ -n "$existing_pr" ]; then
+              # Update the existing PR
+              echo "Updating PR to sync main with Slicer/main"
+              gh pr edit "$existing_pr" --head "sync-main"
+            else
+              # Create a new PR
+              echo "Creating PR to sync main with Slicer/main"
+              gh pr create --title "Sync main with Slicer/main" --base main --head "sync-main" --repo ${{ github.repository }} --body '' --draft=false
+            fi
+          fi
+
+          for branch in "${branches[@]}"; do
+            if [ "$branch" == "main" ]; then
+              continue # Skip main branch, as it has been updated before the loop
+            fi
+
+            echo "Updating branch $branch..."
+            sync_branch="sync-$(echo "$branch" | tr '/' '_')"
+            git fetch origin "$branch:$branch"
+            git checkout "$branch"
+
+            if git pull --rebase upstream main; then
+              git push --force origin "$branch"
+            else
+              git rebase --abort
+              git checkout -b "$sync_branch"
+              git pull --no-rebase upstream main || true
+
+              git push --force-with-lease origin "$sync_branch"
+
+              pr_title="Sync $branch with Slicer/main"
+              existing_pr=$(gh pr list --state=open --author="${{ github.actor }}" --search="$pr_title" --json number -q '.[0].number')
+
+              if [ -n "$existing_pr" ]; then
+                echo "Updating PR to sync $branch with Slicer/main"
+                gh pr edit "$existing_pr" --head "$sync_branch"
+              else
+                echo "Creating PR to sync $branch with Slicer/main"
+                gh pr create --title "$pr_title" --base "$branch" --head "$sync_branch" --repo ${{ github.repository }} --body '' --draft=false
+              fi
+            fi
+          done
