@@ -21,6 +21,7 @@
 // Qt includes
 #include <QKeyEvent>
 #include <QPushButton>
+#include <QSettings>
 
 // Slicer includes
 #include "qSlicerAbstractCoreModule.h"
@@ -76,6 +77,18 @@ void qSlicerModuleFinderDialogPrivate::init()
   filterModel->setShowHidden(false);
   // Hide testing modules by default
   filterModel->setShowTesting(false);
+
+  // Only allow to show modules in Testing category if developer mode is enabled
+  // to not clutter the module list for regular users with tests
+  QSettings settings;
+  bool developerModeEnabled = settings.value("Developer/DeveloperMode", false).toBool();
+  if (!developerModeEnabled)
+    {
+    this->ShowTestingCheckBox->hide();
+    }
+
+  // Set default search role (not full text)
+  q->setSearchInAllText(false);
 
   QObject::connect(this->SearchInAllTextCheckBox, SIGNAL(toggled(bool)),
     q, SLOT(setSearchInAllText(bool)));
@@ -239,7 +252,7 @@ void qSlicerModuleFinderDialog::onSelectionChanged(const QItemSelection& selecte
       }
 
     // Type
-    QString type = tr("Core");
+    QString type = tr("Unknown type");
     // Use "inherits" instead of "qobject_cast" because "qSlicerBaseQTCLI" depends on "qSlicerQTGUI"
     if (module->inherits("qSlicerScriptedLoadableModule"))
       {
@@ -382,13 +395,11 @@ void qSlicerModuleFinderDialog::setSearchInAllText(bool searchAll)
   qSlicerModuleFactoryFilterModel* filterModel = d->ModuleListView->filterModel();
   if (searchAll)
     {
-    // qModuleListViewPrivate::FullTextSearchRole = Qt::UserRole + 4
-    filterModel->setFilterRole(Qt::UserRole + 4);
+    filterModel->setFilterRole(qSlicerModuleFactoryFilterModel::FullTextSearchRole);
     }
   else
     {
-    // search in displayed module title
-    filterModel->setFilterRole(Qt::DisplayRole);
+    filterModel->setFilterRole(qSlicerModuleFactoryFilterModel::SearchRole);
     }
   d->makeSelectedItemVisible();
 }
