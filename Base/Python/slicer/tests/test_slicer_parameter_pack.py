@@ -1,9 +1,8 @@
 import unittest
-from typing import Annotated, Union
-
-from MRMLCorePython import vtkMRMLModelNode
+from typing import Annotated, Any, Union
 
 import slicer
+from slicer import vtkMRMLModelNode
 from slicer.parameterNodeWrapper import *
 from slicer.parameterNodeWrapper.parameterPack import ParameterPackSerializer
 
@@ -23,6 +22,70 @@ class Point:
 class BoundingBox:
     topLeft: Point
     bottomRight: Point
+
+
+class BadDateException(ValueError):
+    pass
+
+
+@parameterPack
+class Date:
+    _month: int = 1
+    _day: int = 1
+    _year: int = 1970
+
+    @staticmethod
+    def checkDate(month, day, year):
+        if month < 1 or month > 12 or day < 1 or day > 31:
+            raise BadDateException(f"Bad date: {month}/{day}/{year}")
+        if month == 2 and day > 28:
+            raise BadDateException(f"Bad date: {month}/{day}/{year}")
+        if month in (4, 6, 9, 11) and day > 30:
+            raise BadDateException(f"Bad date: {month}/{day}/{year}")
+
+    def __init__(self, month=None, day=None, year=None) -> None:
+        if month is not None:
+            self._month = month
+        if day is not None:
+            self._day = day
+        if year is not None:
+            self._year = year
+        self.checkDate(self._month, self._day, self._year)
+
+    def __str__(self) -> str:
+        return f"Date(month={self.month}, day={self.day}, year={self.year})"
+
+    @property
+    def month(self):
+        return self._month
+
+    @month.setter
+    def month(self, value):
+        self.checkDate(value, self.day, self.year)
+        self._month = value
+
+    @property
+    def day(self):
+        return self._day
+
+    @day.setter
+    def day(self, value):
+        self.checkDate(self.month, value, self.year)
+        self._day = value
+
+    @property
+    def year(self):
+        return self._year
+
+    @year.setter
+    def year(self, value):
+        self._year = value
+
+    def setDate(self, month: int, day: int, year: int) -> None:
+        self.checkDate(month, day, year)
+        self._month = month
+        self._day = day
+        self._year = year
 
 
 class TypedParameterNodeTest(unittest.TestCase):
@@ -171,8 +234,7 @@ class TypedParameterNodeTest(unittest.TestCase):
     def test_serialization_of_nested(self):
         @parameterNodeWrapper
         class ParameterNodeType:
-            box: Annotated[BoundingBox,
-                           Default(BoundingBox(Point(0, 1), Point(1, 0)))]
+            box: BoundingBox = BoundingBox(Point(0, 1), Point(1, 0))
 
         param = ParameterNodeType(newParameterNode())
 
@@ -257,7 +319,7 @@ class TypedParameterNodeTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             @parameterPack
             class ParameterPack:
-                _parameterPack_allParameters: int
+                allParameters: int
         with self.assertRaises(ValueError):
             @parameterPack
             class ParameterPack:
@@ -345,6 +407,26 @@ class TypedParameterNodeTest(unittest.TestCase):
         self.assertEqual(pack.getValue("box"), BoundingBox(Point(-99, 8), Point(11, 10)))
         self.assertEqual(pack.getValue("box.topLeft.x"), -99)
 
+    def test_parameter_pack_getSetValue_updates(self):
+        @parameterPack
+        class ParameterPack:
+            box: BoundingBox
+            value: int
+
+        @parameterNodeWrapper
+        class ParameterNodeType:
+            pack: ParameterPack
+
+        param = ParameterNodeType(newParameterNode())
+
+        param.pack.setValue("value", 123)
+
+        self.assertEqual(param.pack.value, 123)
+
+        param.pack.setValue("box.bottomRight.x", 33)
+
+        self.assertEqual(param.pack.box.bottomRight.x, 33)
+
     def test_parameter_pack_dataType(self):
         @parameterPack
         class AnnotatedSub:
@@ -356,7 +438,7 @@ class TypedParameterNodeTest(unittest.TestCase):
             value: int
             union: Union[int, str]
             annotated: Annotated[bool, Default(True)]
-            annotatedBox: Annotated[BoundingBox, Default(BoundingBox(Point(-99, 8), Point(11, 10)))]
+            annotatedBox: BoundingBox = BoundingBox(Point(-99, 8), Point(11, 10))
             annotatedSub: AnnotatedSub
 
         self.assertEqual(ParameterPack.dataType("box"), BoundingBox)
@@ -365,8 +447,7 @@ class TypedParameterNodeTest(unittest.TestCase):
         self.assertEqual(ParameterPack.dataType("value"), int)
         self.assertEqual(ParameterPack.dataType("union"), Union[int, str])
         self.assertEqual(ParameterPack.dataType("annotated"), Annotated[bool, Default(True)])
-        self.assertEqual(ParameterPack.dataType("annotatedBox"),
-                         Annotated[BoundingBox, Default(BoundingBox(Point(-99, 8), Point(11, 10)))])
+        self.assertEqual(ParameterPack.dataType("annotatedBox"), BoundingBox)
         self.assertEqual(ParameterPack.dataType("annotatedBox.topLeft"), Point)
         self.assertEqual(ParameterPack.dataType("annotatedSub"), AnnotatedSub)
         self.assertEqual(ParameterPack.dataType("annotatedSub.iterations"), Annotated[int, Default(44)])
@@ -378,8 +459,102 @@ class TypedParameterNodeTest(unittest.TestCase):
         self.assertEqual(param.dataType("value"), int)
         self.assertEqual(param.dataType("union"), Union[int, str])
         self.assertEqual(param.dataType("annotated"), Annotated[bool, Default(True)])
-        self.assertEqual(param.dataType("annotatedBox"),
-                         Annotated[BoundingBox, Default(BoundingBox(Point(-99, 8), Point(11, 10)))])
+        self.assertEqual(param.dataType("annotatedBox"), BoundingBox)
         self.assertEqual(param.dataType("annotatedBox.topLeft"), Point)
         self.assertEqual(param.dataType("annotatedSub"), AnnotatedSub)
         self.assertEqual(param.dataType("annotatedSub.iterations"), Annotated[int, Default(44)])
+
+    def test_parameter_pack_any(self):
+        @parameterPack
+        class AnyPack:
+            any: Any
+
+        param = AnyPack()
+        self.assertIsNone(param.any)
+
+        param.any = 1
+        self.assertEqual(param.any, 1)
+        param.any = "some string"
+        self.assertEqual(param.any, "some string")
+
+        # add weird recursive use
+        param.any = AnyPack(Point(3, 4))
+        self.assertEqual(param.any.any, Point(3, 4))
+
+    def test_parameter_pack_invariants(self):
+        self.assertEqual(Date(), Date(1, 1, 1970))
+        with self.assertRaises(BadDateException):
+            Date(0, 1, 1970)
+        with self.assertRaises(BadDateException):
+            Date(13, 1, 1970)
+        with self.assertRaises(BadDateException):
+            Date(1, 0, 1970)
+        with self.assertRaises(BadDateException):
+            Date(1, 32, 1970)
+        with self.assertRaises(BadDateException):
+            Date(2, 29, 1970)
+
+        date = Date()
+        with self.assertRaises(BadDateException):
+            date.month = 0
+        self.assertEqual(date.month, 1)
+        date = Date()
+        with self.assertRaises(BadDateException):
+            date.month = 55
+        self.assertEqual(date.month, 1)
+        date.month = 2
+        with self.assertRaises(BadDateException):
+            date.day = 30
+
+        date.setValue("month", 4)
+        with self.assertRaises(BadDateException):
+            date.setValue("day", 31)
+
+        date.setDate(1, 31, 1980)
+        self.assertEqual(date, Date(1, 31, 1980))
+
+        with self.assertRaises(BadDateException):
+            date.month = 44
+
+    def test_parameter_pack_invariants_in_wrapper(self):
+        @parameterNodeWrapper
+        class ParameterNodeType:
+            date: Date
+            date2: Date = Date(2, 28, 2028)
+
+        param = ParameterNodeType(newParameterNode())
+        self.assertEqual(param.date, Date())
+        self.assertEqual(param.date2, Date(2, 28, 2028))
+
+        with self.assertRaises(BadDateException):
+            param.date.month = 0
+        self.assertEqual(param.date.month, 1)
+        with self.assertRaises(BadDateException):
+            param.date.month = 55
+        self.assertEqual(param.date.month, 1)
+        param.date.month = 2
+        with self.assertRaises(BadDateException):
+            param.date.day = 30
+
+        param.date.setDate(1, 31, 1980)
+        self.assertEqual(param.date, Date(1, 31, 1980))
+
+        with self.assertRaises(BadDateException):
+            param.date.month = 44
+
+        self.assertEqual(param.date, Date(1, 31, 1980))
+        self.assertEqual(param.date2, Date(2, 28, 2028))
+
+        param2 = ParameterNodeType(param.parameterNode)
+        self.assertEqual(param2.date, Date(1, 31, 1980))
+        self.assertEqual(param2.date2, Date(2, 28, 2028))
+
+    def test_equals_default(self):
+        @parameterPack
+        class Pack:
+            i: int = 50
+            j: Annotated[int, Default(60)]
+
+        pack = Pack()
+        self.assertEqual(pack.i, 50)
+        self.assertEqual(pack.j, 60)
