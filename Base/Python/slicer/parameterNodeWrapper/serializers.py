@@ -1,3 +1,5 @@
+"""The serializers module is responsible for serializing data into and out from a vtkMRMLScriptedModuleNode (aka a parameter node)"""
+
 import abc
 import collections
 import enum
@@ -121,6 +123,14 @@ class Serializer(abc.ABC):
 
 
 class ValidatedSerializer(Serializer):
+    """
+    ValidatedSerializer is a serializer that wraps around another serializer and runs zero or more
+    Validators.
+
+    If a ValidatedSerializer is wrapped around another ValidatedSerializer, they will flatten with the
+    inner serializer's Validators running first.
+    """
+
     @staticmethod
     def canSerialize(type_) -> bool:
         """
@@ -171,6 +181,10 @@ _registeredSerializers = []
 
 
 def _processSerializer(classtype):
+    """
+    Registers a Serializer so it can be used by createSerializer.
+    """
+
     if not issubclass(classtype, Serializer):
         raise Exception("Must be a serializer type.")
     global _registeredSerializers
@@ -1036,6 +1050,7 @@ class AnySerializer(Serializer):
     Serializes the typing.Any annotation.
 
     This is flexible, but has some downsides:
+
     - Chooses the serializer to use each time a write is called. As such it can only actually
       serialize types that have a serializer.
     - It can only serialize classes that exist at the module level, i.e. it cannot serialize
