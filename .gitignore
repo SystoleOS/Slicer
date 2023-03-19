@@ -6,6 +6,7 @@
 !.git-blame-ignore-revs
 !.pre-commit-config.yaml
 !.readthedocs.yaml
+!.github
 
 # Ignore all back-up files...
 *~
