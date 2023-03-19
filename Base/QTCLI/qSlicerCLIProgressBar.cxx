@@ -21,13 +21,13 @@
 // Qt includes
 #include <QApplication>
 #include <QDebug>
+#include <QElapsedTimer>
 #include <QFormLayout>
 #include <QGridLayout>
 #include <QLabel>
 #include <QProgressBar>
 #include <QScrollBar>
 #include <QTextBrowser>
-#include <QTime>
 
 // CTK includes
 #include <ctkExpandButton.h>
@@ -59,7 +59,7 @@ public:
 
   bool isVisible(qSlicerCLIProgressBar::Visibility visibility)const;
 
-  QString getLastNLines(const std::string& str, int numberOfLines, int maxLength=5000);
+  QString getLastNLines(const std::string& str, int numberOfLines, unsigned int maxLength=5000);
 
 private:
 
@@ -69,7 +69,7 @@ private:
   QLabel *       StatusLabel;
   ctkExpandButton * DetailsTextExpandButton;
   QTextBrowser * DetailsTextBrowser;
-  QTime DetailsLastUpdateTime;
+  QElapsedTimer DetailsLastUpdateTime;
   QProgressBar * ProgressBar;
   QProgressBar * StageProgressBar;
 
@@ -187,7 +187,7 @@ bool qSlicerCLIProgressBarPrivate
 }
 
 //-----------------------------------------------------------------------------
-QString qSlicerCLIProgressBarPrivate::getLastNLines(const std::string& str, int numberOfLines, int maxLength)
+QString qSlicerCLIProgressBarPrivate::getLastNLines(const std::string& str, int numberOfLines, unsigned int maxLength)
 {
   if (numberOfLines < 1 || str.size() < 1)
     {
@@ -359,7 +359,7 @@ void qSlicerCLIProgressBar::updateUiFromCommandLineModuleNode(
     d->ProgressBar->setMaximum(0);
     d->StageProgressBar->setMaximum(0);
     d->DetailsTextBrowser->setVisible(d->DetailsTextExpandButton->isChecked());
-    d->DetailsLastUpdateTime = QTime();
+    d->DetailsLastUpdateTime.invalidate();
     return;
     }
 

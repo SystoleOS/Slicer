@@ -1,6 +1,9 @@
+"""The serializers module is responsible for serializing data into and out from a vtkMRMLScriptedModuleNode (aka a parameter node)"""
+
 import abc
 import collections
 import enum
+import importlib
 import logging
 import pathlib
 import typing
@@ -29,6 +32,7 @@ __all__ = [
     "TupleSerializer",
     "DictSerializer",
     "UnionSerializer",
+    "AnySerializer",
 ]
 
 
@@ -119,6 +123,14 @@ class Serializer(abc.ABC):
 
 
 class ValidatedSerializer(Serializer):
+    """
+    ValidatedSerializer is a serializer that wraps around another serializer and runs zero or more
+    Validators.
+
+    If a ValidatedSerializer is wrapped around another ValidatedSerializer, they will flatten with the
+    inner serializer's Validators running first.
+    """
+
     @staticmethod
     def canSerialize(type_) -> bool:
         """
@@ -169,6 +181,10 @@ _registeredSerializers = []
 
 
 def _processSerializer(classtype):
+    """
+    Registers a Serializer so it can be used by createSerializer.
+    """
+
     if not issubclass(classtype, Serializer):
         raise Exception("Must be a serializer type.")
     global _registeredSerializers
@@ -390,7 +406,7 @@ class NodeSerializer(Serializer):
 
     @staticmethod
     def canSerialize(type_) -> bool:
-        return issubclass(type_, slicer.vtkMRMLNode) if type(type_) == type else False
+        return issubclass(type_, slicer.vtkMRMLNode) if isinstance(type_, type) else False
 
     @staticmethod
     def create(type_):
@@ -403,16 +419,20 @@ class NodeSerializer(Serializer):
         return None
 
     def isIn(self, parameterNode, name: str) -> bool:
-        return parameterNode.GetNodeReferenceID(name) is not None
+        return parameterNode.HasParameter(name)
 
     def write(self, parameterNode, name: str, value: slicer.vtkMRMLNode) -> None:
-        return parameterNode.SetNodeReferenceID(name, value.GetID() if value is not None else None)
+        # Because None is a valid value we need a separate identifiable parameter
+        # that we can search for in isIn(). We know it is safe to reuse the exact same name.
+        parameterNode.SetParameter(name, "")
+        parameterNode.SetNodeReferenceID(name, value.GetID() if value is not None else None)
 
     def read(self, parameterNode, name) -> slicer.vtkMRMLNode:
         return parameterNode.GetNodeReference(name)
 
     def remove(self, parameterNode, name) -> None:
         """Removes this parameter from the node if it exists."""
+        parameterNode.UnsetParameter(name)
         parameterNode.RemoveNodeReferenceIDs(name)
 
     def supportsCaching(self) -> bool:
@@ -532,7 +552,7 @@ class ListSerializer(Serializer):
 
     @staticmethod
     def canSerialize(type_) -> bool:
-        return typing.get_origin(type_) == list
+        return typing.get_origin(type_) == list or type_ == list
 
     @staticmethod
     def create(type_):
@@ -541,7 +561,7 @@ class ListSerializer(Serializer):
             if len(args) != 1:
                 logging.warning("Unexpected list[] type arg length")
             if len(args) == 0:
-                Exception("Unsure how to handle a typed list with no discernible type")
+                args = [typing.Any]
             return ListSerializer(createSerializerFromAnnotatedType(args[0]))
         return None
 
@@ -557,10 +577,10 @@ class ListSerializer(Serializer):
         return []
 
     def _lenName(self, name):
-        return f"{name}_len"
+        return f"{name}.len"
 
     def _paramName(self, name, index):
-        return f"{name}_{index}"
+        return f"{name}.{index}"
 
     def _len(self, parameterNode, name) -> int:
         if self.isIn(parameterNode, name):
@@ -653,7 +673,7 @@ class TupleSerializer(Serializer):
 
     @staticmethod
     def _paramName(name, index):
-        return f"{name}_{index}"
+        return f"{name}.{index}"
 
     def isIn(self, parameterNode, name: str) -> bool:
         return self._serializers[0].isIn(parameterNode, self._paramName(name, 0))
@@ -779,14 +799,17 @@ class DictSerializer(Serializer):
 
     @staticmethod
     def canSerialize(type_) -> bool:
-        return typing.get_origin(type_) == dict
+        return typing.get_origin(type_) == dict or type_ == dict
 
     @staticmethod
     def create(type_):
         if DictSerializer.canSerialize(type_):
             args = typing.get_args(type_)
-            if len(args) != 2:
-                raise Exception("Unsure how to handle a typed dictionary without exactly 2 types.")
+            if len(args) not in (0, 2):
+                raise Exception("Unsure how to handle a typed dictionary without exactly 0 or 2 types."
+                                " Note that zero types will be dict[typing.Any, typing.Any]")
+            if len(args) == 0:
+                args = [typing.Any, typing.Any]
             serializers = [createSerializerFromAnnotatedType(arg) for arg in args]
             return DictSerializer(serializers[0], serializers[1])
         return None
@@ -904,7 +927,7 @@ class UnionSerializer(Serializer):
 
     @staticmethod
     def _paramName(name, index):
-        return f"{name}_{index}"
+        return f"{name}.{index}"
 
     def isIn(self, parameterNode, name: str) -> bool:
         for index, validatedSerializer in enumerate(self._serializers):
@@ -977,7 +1000,7 @@ class UnionSerializer(Serializer):
 class EnumSerializer(Serializer):
     @staticmethod
     def canSerialize(type_) -> bool:
-        return issubclass(type_, enum.Enum)
+        return issubclass(type_, enum.Enum) if isinstance(type_, type) else False
 
     @staticmethod
     def create(type_):
@@ -1019,3 +1042,77 @@ class EnumSerializer(Serializer):
     @staticmethod
     def supportsCaching() -> bool:
         return True
+
+
+@parameterNodeSerializer
+class AnySerializer(Serializer):
+    """
+    Serializes the typing.Any annotation.
+
+    This is flexible, but has some downsides:
+
+    - Chooses the serializer to use each time a write is called. As such it can only actually
+      serialize types that have a serializer.
+    - It can only serialize classes that exist at the module level, i.e. it cannot serialize
+      classes that were created in functions.
+    - Can never cache.
+    - Needs to recreate the serializer each read.
+    - Can't set to tuples of values (but can set to lists of values instead)
+    """
+
+    @staticmethod
+    def canSerialize(type_) -> bool:
+        return type_ == typing.Any
+
+    @staticmethod
+    def create(type_):
+        if AnySerializer.canSerialize(type_):
+            return AnySerializer()
+        return None
+
+    @staticmethod
+    def _typeName(name: str) -> str:
+        return f"{name}.type"
+
+    @staticmethod
+    def _valueName(name: str) -> str:
+        return f"{name}.value"
+
+    def _getValueSerializer(self, parameterNode, name: str) -> Serializer:
+        modulename, classname = self._typeSerializer.read(parameterNode, self._typeName(name))
+        if (modulename, classname) == ("builtins", "NoneType"):
+            # "from builtins import NoneType" doesn't work
+            return createSerializerFromAnnotatedType(type(None))
+        else:
+            mod = importlib.import_module(modulename)
+            type_ = getattr(mod, classname)
+            return createSerializerFromAnnotatedType(type_)
+
+    def __init__(self):
+        # type is (modulename, classname)
+        self._typeSerializer = TupleSerializer([StringSerializer(), StringSerializer()])
+
+    def default(self):
+        return None
+
+    def isIn(self, parameterNode, name: str) -> bool:
+        return self._typeSerializer.isIn(parameterNode, self._typeName(name))
+
+    def write(self, parameterNode, name: str, value) -> None:
+        self.remove(parameterNode, name)
+        valueSerializer = createSerializerFromAnnotatedType(type(value))
+        valueSerializer.write(parameterNode, self._valueName(name), value)
+        self._typeSerializer.write(parameterNode, self._typeName(name), (type(value).__module__, type(value).__name__))
+
+    def read(self, parameterNode, name: str) -> typing.Any:
+        valueSerializer = self._getValueSerializer(parameterNode, name)
+        return valueSerializer.read(parameterNode, self._valueName(name))
+
+    def remove(self, parameterNode, name: str) -> None:
+        if self.isIn(parameterNode, name):
+            valueSerializer = self._getValueSerializer(parameterNode, name)
+            valueSerializer.remove(parameterNode, self._valueName(name))
+            self._typeSerializer.remove(parameterNode, self._typeName(name))
+
+    def supportsCaching(self) -> bool:
+        return False

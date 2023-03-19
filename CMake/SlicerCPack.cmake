@@ -329,6 +329,10 @@ set(CPACK_SYSTEM_NAME "${Slicer_OS}-${Slicer_ARCHITECTURE}")
 set(Slicer_CPACK_PACKAGE_INSTALL_DIRECTORY "${${app_name}_CPACK_PACKAGE_NAME} ${CPACK_PACKAGE_VERSION}")
 slicer_cpack_set("CPACK_PACKAGE_INSTALL_DIRECTORY")
 
+#
+# The following global properties are defined in Applications/<main_application_name>/slicer-application-properties.cmake
+#
+
 get_property(${app_name}_CPACK_PACKAGE_DESCRIPTION_FILE GLOBAL PROPERTY ${app_name}_DESCRIPTION_FILE)
 slicer_cpack_set("CPACK_PACKAGE_DESCRIPTION_FILE")
 
@@ -399,6 +403,7 @@ if(CPACK_GENERATOR STREQUAL "NSIS")
   get_property(${app_name}_CPACK_NSIS_MUI_ICON GLOBAL PROPERTY ${app_name}_WIN_ICON_FILE)
   slicer_cpack_set("CPACK_NSIS_MUI_ICON")
   slicer_verbose_set(CPACK_NSIS_INSTALLED_ICON_NAME "${app_name}.exe")
+  slicer_verbose_set(CPACK_NSIS_MUI_FINISHPAGE_RUN "../${APPLICATION_NAME}.exe")
 
   # -------------------------------------------------------------------------
   # File extensions

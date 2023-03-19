@@ -8,7 +8,7 @@ import enum
 import vtk
 import slicer
 
-from MRMLCorePython import (
+from slicer import (
     vtkMRMLNode,
     vtkMRMLModelNode,
     vtkMRMLScalarVolumeNode,
@@ -27,6 +27,11 @@ class CustomClass:
     x: int
     y: int
     z: int
+
+
+class EnumClass(enum.Enum):
+    A = 0
+    B = 1
 
 
 @parameterNodeSerializer
@@ -139,6 +144,18 @@ class TypedParameterNodeTest(unittest.TestCase):
     def setUp(self):
         slicer.mrmlScene.Clear(0)
 
+    def test_node_serialier_has_parameter(self):
+        nodeSerializer = NodeSerializer()
+
+        parameterNode = newParameterNode()
+
+        # a bug was caused by this, which is why it is explicitly tested
+        self.assertFalse(nodeSerializer.isIn(parameterNode, "node"))
+        nodeSerializer.write(parameterNode, "node", None)
+        self.assertTrue(nodeSerializer.isIn(parameterNode, "node"))
+        nodeSerializer.remove(parameterNode, "node")
+        self.assertFalse(nodeSerializer.isIn(parameterNode, "node"))
+
     def test_removes(self):
         # for each serializer, make sure that calling remove from it
         # erases all trace of it in the parameterNode
@@ -146,6 +163,7 @@ class TypedParameterNodeTest(unittest.TestCase):
         stringSerializer = StringSerializer()
         pathSerializer = PathSerializer(pathlib.Path)
         boolSerializer = BoolSerializer()
+        nodeSerializer = NodeSerializer()
         listSerializer = ListSerializer(NumberSerializer(float))
         tupleSerializer = TupleSerializer([NumberSerializer(float), BoolSerializer()])
         dictSerializer = DictSerializer(StringSerializer(), NumberSerializer(float))
@@ -157,6 +175,7 @@ class TypedParameterNodeTest(unittest.TestCase):
         stringSerializer.write(parameterNode, "string", "1")
         pathSerializer.write(parameterNode, "path", pathlib.Path("."))
         boolSerializer.write(parameterNode, "bool", True)
+        nodeSerializer.write(parameterNode, "node", slicer.mrmlScene.AddNewNodeByClass("vtkMRMLModelNode"))
         listSerializer.write(parameterNode, "list", [1])
         tupleSerializer.write(parameterNode, "tuple", (3.3, True))
         dictSerializer.write(parameterNode, "dict", {"a": 1, "b": 2})
@@ -166,6 +185,7 @@ class TypedParameterNodeTest(unittest.TestCase):
         stringSerializer.remove(parameterNode, "string")
         pathSerializer.remove(parameterNode, "path")
         boolSerializer.remove(parameterNode, "bool")
+        nodeSerializer.remove(parameterNode, "node")
         listSerializer.remove(parameterNode, "list")
         tupleSerializer.remove(parameterNode, "tuple")
         dictSerializer.remove(parameterNode, "dict")
@@ -248,6 +268,49 @@ class TypedParameterNodeTest(unittest.TestCase):
         self.assertIsNone(param.noneDefault)
         self.assertEqual(param.nonNoneDefault, AnotherCustomClass(1, 2, 3))
 
+    def test_getSetValue(self):
+        @parameterNodeWrapper
+        class ParameterNodeType:
+            float_: float
+            bool_: bool
+            int_: Annotated[int, Default(4), Maximum(37)]
+            string_: Annotated[str, Default("TypedParam")]
+
+        param = ParameterNodeType(newParameterNode())
+        self.assertEqual(param.getValue("float_"), 0.0)
+        self.assertFalse(param.getValue("bool_"))
+        self.assertEqual(param.getValue("int_"), 4)
+        self.assertEqual(param.getValue("string_"), "TypedParam")
+
+        param.setValue("float_", 9.9)
+        self.assertEqual(param.getValue("float_"), 9.9)
+        param.setValue("bool_", True)
+        self.assertTrue(param.getValue("bool_"))
+        param.setValue("int_", 36)
+        self.assertEqual(param.getValue("int_"), 36)
+        param.setValue("string_", "Another string")
+        self.assertEqual(param.getValue("string_"), "Another string")
+
+        with self.assertRaises(TypeError):
+            param.setValue("float_", "this is not a float")
+        self.assertEqual(param.getValue("float_"), 9.9)
+        with self.assertRaises(ValueError):
+            param.setValue("int_", 38)
+        self.assertEqual(param.getValue("int_"), 36)
+
+    def test_dataType(self):
+        @parameterNodeWrapper
+        class ParameterNodeType:
+            float_: float
+            bool_: bool
+            int_: int = 4
+            string_: Annotated[str, Default("TypedParam")]
+
+        self.assertEqual(ParameterNodeType.dataType("float_"), float)
+        self.assertEqual(ParameterNodeType.dataType("bool_"), bool)
+        self.assertEqual(ParameterNodeType.dataType("int_"), int)
+        self.assertEqual(ParameterNodeType.dataType("string_"), Annotated[str, Default("TypedParam")])
+
     def test_primitives(self):
         @parameterNodeWrapper
         class ParameterNodeType:
@@ -255,10 +318,10 @@ class TypedParameterNodeTest(unittest.TestCase):
             float1: float
             bool1: bool
             string1: str
-            int2: Annotated[int, Default(4)]
+            int2: int = 4
             float2: Annotated[float, Default(9.9)]
             bool2: Annotated[bool, Default(True)]
-            string2: Annotated[str, Default("TypedParam")]
+            string2: str = "TypedParam"
 
         param = ParameterNodeType(newParameterNode())
         self.assertTrue(param.isCached("int1"))
@@ -351,6 +414,23 @@ class TypedParameterNodeTest(unittest.TestCase):
         self.assertEqual(param2.purePath, pathlib.PurePath("relativePath/folder"))
         self.assertEqual(param2.purePosixPath, pathlib.PurePosixPath("relativePath/folder"))
         self.assertEqual(param2.pureWindowsPath, pathlib.PureWindowsPath("relativePath/folder"))
+
+    def test_default_generator(self):
+        count = 0
+
+        def nextCount():
+            nonlocal count
+            count += 1
+            return count - 1
+        
+        @parameterNodeWrapper
+        class ParameterNodeType:
+            x: Annotated[int, Default(generator=nextCount)]
+
+        param = ParameterNodeType(newParameterNode())
+        self.assertEqual(param.x, 0)
+        param1 = ParameterNodeType(newParameterNode())
+        self.assertEqual(param1.x, 1)
 
     def test_multiple_instances_are_independent(self):
         @parameterNodeWrapper
@@ -541,7 +621,7 @@ class TypedParameterNodeTest(unittest.TestCase):
         @parameterNodeWrapper
         class ParameterNodeType:
             a: tuple[Annotated[int, Minimum(0)], str]
-            b: Annotated[tuple[Annotated[float, Minimum(4)], bool], Default((44.0, False))]
+            b: tuple[Annotated[float, Minimum(4)], bool] = (44.0, False)
             c: tuple[list[int]]
 
         param = ParameterNodeType(newParameterNode())
@@ -859,6 +939,38 @@ class TypedParameterNodeTest(unittest.TestCase):
         # test alias
         param.bg = Color.blue
         self.assertIs(param.bg, Color.BLUE)
+
+    def test_any(self):
+        @parameterNodeWrapper
+        class ParameterNodeType:
+            any: typing.Any
+            anyDefaulted: Annotated[typing.Any, Default(7.7)]
+
+        param = ParameterNodeType(newParameterNode())
+        self.assertIsNone(param.any)
+        self.assertEqual(param.anyDefaulted, 7.7)
+
+        param.any = 1
+        self.assertEqual(param.any, 1)
+        param.any = "some string"
+        self.assertEqual(param.any, "some string")
+        param.any = EnumClass.B
+        self.assertEqual(param.any, EnumClass.B)
+        param.any = CustomClass(2, 3, 4)
+        self.assertEqual(param.any, CustomClass(2, 3, 4))
+        param.any = None
+        self.assertEqual(param.any, None)
+        param.any = [1, 2, 3]
+        self.assertEqual(param.any, [1, 2, 3])
+        param.any = [1, "multiple types", True]
+        self.assertEqual(param.any, [1, "multiple types", True])
+        param.any = {1: "a", "b": 2}
+        self.assertEqual(param.any, {1: "a", "b": 2})
+
+        param.anyDefaulted = 1
+        self.assertEqual(param.anyDefaulted, 1)
+        param.anyDefaulted = "some string"
+        self.assertEqual(param.anyDefaulted, "some string")
 
     def test_events(self):
         class _Callback:

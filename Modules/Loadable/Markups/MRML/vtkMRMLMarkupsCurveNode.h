@@ -174,7 +174,8 @@ public:
     double samplingDistance, bool closedCurve, vtkDoubleArray* pedigreeIdsArray=nullptr);
 
   /// Resample static control point measurements using linear interpolation, based on fractional pedigreeIds.
-  static bool ResampleStaticControlPointMeasurements(vtkCollection* measurements, vtkDoubleArray* curvePointsPedigreeIdsArray, int curvePointsPerControlPoint);
+  static bool ResampleStaticControlPointMeasurements(vtkCollection* measurements, vtkDoubleArray* curvePointsPedigreeIdsArray,
+    int curvePointsPerControlPoint, bool closedCurve);
 
   /// Samples points along the curve at equal distances.
   /// If endPointIndex < startPointIndex then after the last point, the curve is assumed to continue at the first point.
@@ -339,6 +340,8 @@ protected:
 
   /// Command handling curvature measurement modified events to propagate enabled state
   vtkCallbackCommand* CurvatureMeasurementModifiedCallbackCommand;
+  /// Command handling torsion measurement modified events to propagate enabled state
+  vtkCallbackCommand* TorsionMeasurementModifiedCallbackCommand;
 
 protected:
   void ProcessMRMLEvents(vtkObject* caller, unsigned long event, void* callData) override;
@@ -358,7 +361,9 @@ protected:
   void UpdateMeasurementsInternal() override;
 
   /// Callback function observing curvature measurement modified events to propagate enabled state
-  static void OnCurvatureMeasurementModified(vtkObject* caller, unsigned long eid, void* clientData, void* callData);
+  static void OnCurvatureMeasurementEnabledModified(vtkObject* caller, unsigned long eid, void* clientData, void* callData);
+  /// Callback function observing torsion measurement modified events to propagate enabled state
+  static void OnTorsionMeasurementEnabledModified(vtkObject* caller, unsigned long eid, void* clientData, void* callData);
 
 private:
   vtkSmartPointer<vtkProjectMarkupsCurvePointsFilter> ProjectPointsFilter;
