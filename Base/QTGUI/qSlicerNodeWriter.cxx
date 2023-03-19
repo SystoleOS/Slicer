@@ -145,12 +145,11 @@ bool qSlicerNodeWriter::write(const qSlicerIO::IOProperties& properties)
   QString fileName = properties["fileName"].toString();
   snode->SetFileName(fileName.toUtf8());
 
-  qSlicerCoreIOManager* coreIOManager =
-    qSlicerCoreApplication::application()->coreIOManager();
-
-  QString fileFormat =
-    properties.value("fileFormat", coreIOManager->completeSlicerWritableFileNameSuffix(node)).toString();
-  snode->SetWriteFileFormat(fileFormat.toUtf8());
+  QString fileFormat = properties.value("fileFormat").toString();
+  if (!fileFormat.isEmpty())
+    {
+    snode->SetWriteFileFormat(fileFormat.toUtf8());
+    }
   snode->SetURI(nullptr);
   if (properties.contains("useCompression"))
     {
