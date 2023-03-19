@@ -30,7 +30,9 @@ Directory where modules can store their temporary outputs if needed.
 
 #### Additional module paths
 
-List of directories scanned at startup to load additional modules. Any CLI, Loadable or scripted modules located in these paths will be loaded. Extensions are listed in the list, to remove an extension, use the [Extensions Manager](extensions_manager.md) instead.
+List of directories scanned at startup to load additional modules. Any CLI, Loadable or scripted modules located in these paths will be loaded.
+
+Module folders of extensions are included in this list. To remove modules of an extension, it is recommended to use the [Extensions Manager](extensions_manager.md) instead of just removing its module paths.
 
 It is also possible to start Slicer by temporarily adding module paths (not saved in settings) by passing the arguments in the command line.
 
@@ -96,9 +98,9 @@ Settings are stored in *.ini files. If the settings file is found in application
 
 If .ini file is not found in the the application home directory then it is searched in user profile:
 
--  Windows: `%USERPROFILE%\AppData\Roaming\NA-MIC\` (typically `C:\Users\<your_user_name>\AppData\Roaming\NA-MIC\`)
--  Linux: `~/.config/NA-MIC/`
--  Mac: `~/.config/www.na-mic.org/`
+-  Windows: `%USERPROFILE%\AppData\Roaming\slicer.org\` (typically `C:\Users\<your_user_name>\AppData\Roaming\slicer.org\`)
+-  Linux: `~/.config/slicer.org/`
+-  Mac: `~/.config/slicer.org/`
 
 Deleting the *.ini files restores all the settings to default.
 
