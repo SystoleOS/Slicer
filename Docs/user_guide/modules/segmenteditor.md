@@ -37,7 +37,7 @@ The following keyboard shortcuts are active when you are in the Segment Editor m
 ## Panels and their use
 
 - Segmentation: Choose the segmentation to edit
-- Reference volume: Choose the volume to segment. The reference volume that is selected the very first time after the segmentation is created is used to determine the segmentation's labelmap representation geometry (extent, resolution, axis directions, origin). The reference volume is used by all editor effects that uses intensity of the segmented volume (e.g., thresholding, level tracing). The reference volume can be changed at any time during the segmentation process. Note: changing the reference volume does not affect the segmentation's labelmap representation geometry. To make changes to the geometry (make the extent larger, the resolution finer, etc.) click "Specify geometry" button next to the reference volume selector, select a "Source geometry" node that will be used as a basis for the new geometry, adjust parameters, and click OK. To specify an arbitrary extens, an ROI (region of interest) node can be created and selected as source geometry. If the new geometry will crop a region from the existing segments, a warning icon will be displayed beside the "Pad output" checkbox. If the "Pad output" is checked, the extent will be expanded so that it contains both the existing segments and the new reference geometry.
+- Source volume: Choose the volume to segment. The source volume that is selected the very first time after the segmentation is created is used to determine the segmentation's labelmap representation geometry (extent, resolution, axis directions, origin). The source volume is used by all editor effects that uses intensity of the segmented volume (e.g., thresholding, level tracing). The source volume can be changed at any time during the segmentation process. Note: changing the source volume does not affect the segmentation's labelmap representation geometry. To make changes to the geometry (make the extent larger, the resolution finer, etc.) click "Specify geometry" button next to the source volume selector, select a "Source geometry" node that will be used as a basis for the new geometry, adjust parameters, and click OK. To specify an arbitrary extens, an ROI (region of interest) node can be created and selected as source geometry. If the new geometry will crop a region from the existing segments, a warning icon will be displayed beside the "Pad output" checkbox. If the "Pad output" is checked, the extent will be expanded so that it contains both the existing segments and the new reference geometry.
 - Add segment: Add a new segment to the segmentation and select it.
 - Remove segment: Select the segment you would like to delete then click Remove segment to delete from the segmentation.
 - Create Surface: Display your segmentation in the 3D Viewer. This is a toggle button. When turned on the surface is created and updated automatically as the user is segmenting. When turned off, the conversion is not ongoing so the segmentation process is faster. To change surface creation parameters: go to Segmentations module, click Update button in Closed surface row in Representations section, click Binary labelmap -> Closed surface line, double-click on value column to edit a conversion parameter value. Setting Smoothing factor to 0 disables smoothing, making updates much faster. Set Smoothing factor to 0.1 for weak smoothing and 0.5 or larger for stronger smoothing.
@@ -49,7 +49,7 @@ The following keyboard shortcuts are active when you are in the Segment Editor m
 - Undo/Redo: The module saves state of segmentation before each effect is applied. This is useful for experimentation and error correction. By default the last 10 states are remembered.
 - Masking: These options allow you to define the editable areas and whether or not certain segments can be overwritten.
   - Editable area: Changes will be limited to the selected area. This can be used for drawing inside a specific region or split a segment into multiple segments.
-  - Editable intensity range: Changes will be limited to areas where the reference volume's voxels are in the selected intensity range. It is useful when locally an intensity threshold separates well between different regions. Intensity range can be previewed by using Threshold effect.
+  - Editable intensity range: Changes will be limited to areas where the source volume's voxels are in the selected intensity range. It is useful when locally an intensity threshold separates well between different regions. Intensity range can be previewed by using Threshold effect.
   - Modify other segments: Select which segments will be overwritten rather than overlapped.
     - Overwrite all: Segment will not overlap (default).
     - Overwrite visible: Visible segments will not overlap with each other. Hidden segments will not be overwritten by changes done to visible segments.
@@ -118,7 +118,7 @@ Draw segment inside each anatomical structure. This method will start from these
 
 - Initialize: Click this button after initial segmentation is completed (by using other editor effects).
 Initial computation may take more time than subsequent updates.
-Reference volume and auto-complete method will be locked after initialization,
+Source volume and auto-complete method will be locked after initialization,
 therefore if either of these have to be changed then click Cancel and initialize again.
 - Update: Update completed segmentation based on changed inputs.
 - Auto-update: activate this option to automatically updating result preview when segmentation is changed.
@@ -138,7 +138,7 @@ Create complete segmentation on selected slices using any editor effect. You can
 
 - Initialize: Click this button after initial segmentation is completed (by using other editor effects).
 Initial computation may take more time than subsequent updates.
-Reference volume and auto-complete method will be locked after initialization,
+Source volume and auto-complete method will be locked after initialization,
 therefore if either of these have to be changed then click Cancel and initialize again.
 - Update: Update completed segmentation based on changed inputs.
 - Auto-update: activate this option to automatically updating result preview when segmentation is changed.
@@ -150,26 +150,26 @@ therefore if either of these have to be changed then click Cancel and initialize
 Notes:
 
 - Only visible segments are used by this effect.
-- The method does not use the reference volume, only the shape of the specified segments.
+- The method does not use the source volume, only the shape of the specified segments.
 - The method uses *ND morphological contour interpolation algorithm* described in this paper: <https://insight-journal.org/browse/publication/977>
 
 ### ![](https://github.com/Slicer/Slicer/releases/download/docs-resources/module_segmenteditor_margin.png) Margin
 
 Grows or shrinks the selected segment by the specified margin.
 
-By enabling `Apply to all segments`, all visible segments of the segmentation will be processed (in the order of the segment list).
+By enabling `Apply to visible segments`, all visible segments of the segmentation will be processed (in the order of the segment list).
 
 ### ![](https://github.com/Slicer/Slicer/releases/download/docs-resources/module_segmenteditor_hollow.png) Hollow
 
 Makes the selected visible segment hollow by replacing the segment with a uniform-thickness shell defined by the segment boundary.
 
-By enabling `Apply to all segments`, all visible segments of the segmentation will be processed (in the order of the segment list).
+By enabling `Apply to visible segments`, all visible segments of the segmentation will be processed (in the order of the segment list).
 
 ### ![](https://github.com/Slicer/Slicer/releases/download/docs-resources/module_segmenteditor_smoothing.png) Smoothing
 
 Smoothes segments by filling in holes and/or removing extrusions.
 
-By default, the current segment will be smoothed. By enabling `Apply to all segments`, all visible segments of the segmentation will be smoothed (in the order of the segment list). This operation may be time-consuming for complex segmentations. The `Joint smoothing` method always smoothes all visible segments.
+By default, the current segment will be smoothed. By enabling `Apply to visible segments`, all visible segments of the segmentation will be smoothed (in the order of the segment list). This operation may be time-consuming for complex segmentations. The `Joint smoothing` method always smoothes all visible segments.
 
 By clicking `Apply` button, the entire segmentation is smoothed. To smooth a specific region, left click and drag in any slice or 3D view. Same smoothing method and strength is used as for the whole-segmentation mode (size of the brush does not affect smoothing strength, just makes it easier to designate a larger region).
 
@@ -187,7 +187,7 @@ Clip segments to the specified region or fill regions of a segment (typically us
 - Left click to start drawing (free-form or rubber band circle or rectangle)
 - Release button to apply
 
-By enabling `Apply to all segments`, all visible segments of the segmentation will be processed (in the order of the segment list).
+By enabling `Apply to visible segments`, all visible segments of the segmentation will be processed (in the order of the segment list).
 
 ### ![](https://github.com/Slicer/Slicer/releases/download/docs-resources/module_segmenteditor_islands.png) Islands
 
@@ -209,9 +209,13 @@ Apply basic copy, clear, fill, and Boolean operations to the selected segment(s)
 Blank out inside/outside of a segment in a volume or create a binary mask. Result can be saved into a new volume or overwrite the input volume.
 This is useful for removing irrelevant details from an image (for example remove patient table; or crop the volume to arbitrary shape for volume rendering) or create masks for image processing operations (such as registration or intensity correction).
 
-- Fill inside: set all voxels of the selected volume to the specified value inside the selected segment
-- Fill outside: set all voxels of the selected volume to the specified value outside the selected segment
-- Fill inside and outside: create a binary labelmap volume as output. Most image processing operations require background (outside, ignored) region to be filled with 0 value.
+- `Operation`:
+  - `Fill inside`: set all voxels of the selected volume to the specified `Fill value` inside the selected segment
+  - `Fill outside`: set all voxels of the selected volume to the specified `Fill value` outside the selected segment
+  - `Fill inside and outside`: create a binary labelmap volume as output, filled with `Outside fill value` and `Intside fill value`. Most image processing operations require background (outside, ignored) region to be filled with 0 value.
+- `Soft edge`: if set to >0 then transition between the inside/outside the mask is gradual. The value specifies the standard deviation of the Gaussian blurring function. Larger value results in softer transition.
+- `Input volume`: voxels of this volume will be used as input for the masking. Geometry and voxel type of the output volume will be the same as this volume's.
+- `Output volume`: this volume will store the result of the masking. While it can be the same as the input volume, generally it is better to use a different output volume, because then the options can be adjusted and mask can be recomputed multiple times.
 
 ## Tips
 
@@ -222,7 +226,7 @@ This is useful for removing irrelevant details from an image (for example remove
 
 ### Cannot paint outside some boundaries
 
-When you create a segmentation, internal labelmap geometry (extent, origin, spacing, axis directions) is determined from the reference volume *that you choose first*. You cannot paint outside this extent.
+When you create a segmentation, internal labelmap geometry (extent, origin, spacing, axis directions) is determined from the source volume *that you choose first*. You cannot paint outside this extent.
 
 If you want to extend the segmentation to a larger region then you need to modify segmentation's geometry using "Specify geometry" button.
 
@@ -230,7 +234,7 @@ If you want to extend the segmentation to a larger region then you need to modif
 
 Masking settings (visible at the bottom of the effect options when any effect is selected) may prevent modifications of segments. If painting, erasing, etc. "does not work" then make sure your masking settings are set to default:
 - Editable area: everywhere
-- Editable intensity range: unchecked (it means that the segmentation is editable, regardless of the intensity values of the reference volume)
+- Editable intensity range: unchecked (it means that the segmentation is editable, regardless of the intensity values of the source volume)
 
 ### Segmentation is not accurate enough
 
@@ -238,7 +242,7 @@ If details cannot be accurately depicted during segmentation or the exported sur
 
 As a general rule, segmentation's spacing needs to be 2-5x smaller than the size of the smallest relevant detail or the maximum acceptable surface error in the generated surface.
 
-By default, segmentation's spacing is set from the *reference volume that is selected first after the segmentation is created*. If the first selected reference volume's resolution is not sufficient or highly anisotropic (spacing value is not the same along the 3 axes) then one of the following is recommended:
+By default, segmentation's spacing is set from the *source volume that is selected first after the segmentation is created*. If the first selected source volume's resolution is not sufficient or highly anisotropic (spacing value is not the same along the 3 axes) then one of the following is recommended:
   - Option A. Crop and resample the input volume using *Crop volume* module before starting segmentation. Make spacing smaller (small enough to represent all details but not too small to slow things down and consume too much memory) and isotropic by reducing *Spacing scale* and enabling *Isotropic spacing*. Also adjust the region of interest to crop the volume to minimum necessary size to minimize memory usage and make editing faster.
   - Option B. Click *Specify geometry* button in Segment Editor any time to specify smaller spacing. After this smooth segments using *Smoothing* effect. *Joint smoothing* method is recommended as it can smooth all the segments at once and it preserves boundaries between segments. *Joint smoothing* flattens all the processed segments into one layer, so if the segentation contains overlapping segments then segment in several steps, in each step only show a set of non-overlapping segments (or use any of the other smoothing methods, which only operate on the selected segment).
 
@@ -269,7 +273,7 @@ Segment Editor allows editing of segmentation on slices of arbitrary orientation
 
 ## Information for Developers
 
-See examples for creating and modifying segmentation nodes and using segment editor effects from your own modules in [Slicer script repository](../../developer_guide/script_repository.md#segmentations)
+See examples for creating and modifying segmentation nodes and using segment editor effects from your own modules in [Developer guide](../../developer_guide/modules/segmenteditor) and [Slicer script repository](../../developer_guide/script_repository.md#segmentations)
 
 ## Contributors
 

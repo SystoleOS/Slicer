@@ -288,6 +288,13 @@ void qMRMLSceneModel::setPreItems(const QStringList& extraItems, QStandardItem* 
     return;
     }
 
+  QStringList currentExtraItems = d->extraItems(parent, "preItem");
+  if (currentExtraItems == extraItems)
+    {
+    // no change
+    return;
+    }
+
   d->removeAllExtraItems(parent, "preItem");
 
   int row = 0;
@@ -311,6 +318,13 @@ void qMRMLSceneModel::setPostItems(const QStringList& extraItems, QStandardItem*
 
   if (parent == nullptr)
     {
+    return;
+    }
+
+  QStringList currentExtraItems = d->extraItems(parent, "postItem");
+  if (currentExtraItems == extraItems)
+    {
+    // no change
     return;
     }
 
@@ -848,7 +862,7 @@ QStandardItem* qMRMLSceneModel::insertNode(vtkMRMLNode* node, QStandardItem* par
 
   // Insert an invalid item in the cache to indicate that the node is in the model
   // but we don't know its index yet. This is needed because a custom widget may be notified
-  // abot row insertion before insertRow() returns (and the RowCache entry is added).
+  // about row insertion before insertRow() returns (and the RowCache entry is added).
   // For example, qSlicerPresetComboBox::setIconToPreset() is called at the end of insertRow,
   // before the RowCache entry is added.
   d->RowCache[node]=QModelIndex();

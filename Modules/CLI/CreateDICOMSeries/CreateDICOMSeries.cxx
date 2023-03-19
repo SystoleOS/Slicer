@@ -158,7 +158,7 @@ int DoIt( int argc, char * argv[])
     }
   else if (modality == "SC")
     {
-    // Scondary capture, converted from non-DICOM (scanned drawings, screenshots, etc.)
+    // Secondary capture, converted from non-DICOM (scanned drawings, screenshots, etc.)
     sopClassUID = "1.2.840.10008.5.1.4.1.1.7";
     // Value 3 shall identify any Image IOD specific specialization (optional), may be encoded with zero-length
     imageType = "ORIGINAL\\PRIMARY\\";
@@ -178,6 +178,10 @@ int DoIt( int argc, char * argv[])
       rescaleType = "HU";
       }
   }
+
+  // All strings are UTF8-encoded, set the SpecificCharacterSet accordingly.
+  itk::EncapsulateMetaData<std::string>(dictionary, "0008|0005", "ISO_IR 192");
+
   itk::EncapsulateMetaData<std::string>(dictionary, "0008|0016", sopClassUID);
   itk::EncapsulateMetaData<std::string>(dictionary, "0008|0008", imageType);
   itk::EncapsulateMetaData<std::string>(dictionary, "0028|1054", rescaleType);

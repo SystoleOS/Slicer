@@ -133,25 +133,25 @@ void qSlicerSubjectHierarchyVolumesPluginPrivate::init()
     QTimer::singleShot(0, q, SLOT(onLayoutChanged()));
     }
 
-  this->ShowVolumesInBranchAction = new QAction("Show volumes in folder",q);
+  this->ShowVolumesInBranchAction = new QAction(qSlicerSubjectHierarchyVolumesPlugin::tr("Show volumes in folder"),q);
   QObject::connect(this->ShowVolumesInBranchAction, SIGNAL(triggered()), q, SLOT(showVolumesInBranch()));
 
-  this->ShowVolumeInForegroundAction = new QAction("Show in slice views as foreground", q);
+  this->ShowVolumeInForegroundAction = new QAction(qSlicerSubjectHierarchyVolumesPlugin::tr("Show in slice views as foreground"), q);
   QObject::connect(this->ShowVolumeInForegroundAction, SIGNAL(triggered()), q, SLOT(showVolumeInForeground()));
 
-  this->ResetFieldOfViewOnShowAction = new QAction("Reset field of view on show",q);
+  this->ResetFieldOfViewOnShowAction = new QAction(qSlicerSubjectHierarchyVolumesPlugin::tr("Reset field of view on show"),q);
   QObject::connect(this->ResetFieldOfViewOnShowAction, SIGNAL(toggled(bool)), q, SLOT(toggleResetFieldOfViewOnShowAction(bool)));
   this->ResetFieldOfViewOnShowAction->setCheckable(true);
   this->ResetFieldOfViewOnShowAction->setChecked(false);
 
-  this->ResetViewOrientationOnShowAction = new QAction("Reset view orientation on show",q);
+  this->ResetViewOrientationOnShowAction = new QAction(qSlicerSubjectHierarchyVolumesPlugin::tr("Reset view orientation on show"),q);
   QObject::connect(this->ResetViewOrientationOnShowAction, SIGNAL(toggled(bool)), q, SLOT(toggleResetViewOrientationOnShowAction(bool)));
   this->ResetViewOrientationOnShowAction->setCheckable(true);
   this->ResetViewOrientationOnShowAction->setChecked(false);
 
   // Add color legend action
 
-  this->ShowColorLegendAction = new QAction(tr("Show color legend"), q);
+  this->ShowColorLegendAction = new QAction(qSlicerSubjectHierarchyVolumesPlugin::tr("Show color legend"), q);
   this->ShowColorLegendAction->setObjectName("ShowColorLegendAction");
   q->setActionPosition(this->ShowColorLegendAction, qSlicerSubjectHierarchyAbstractPlugin::SectionBottom);
   QObject::connect(this->ShowColorLegendAction, SIGNAL(toggled(bool)), q, SLOT(toggleVisibilityForCurrentItem(bool)));
@@ -160,7 +160,7 @@ void qSlicerSubjectHierarchyVolumesPluginPrivate::init()
 
   // Add volume preset actions
 
-  this->VolumeDisplayPresetAction = new QAction("Window/level presets");
+  this->VolumeDisplayPresetAction = new QAction(qSlicerSubjectHierarchyVolumesPlugin::tr("Window/level presets"));
   this->VolumeDisplayPresetAction->setObjectName("VolumeDisplayPresetAction");
   q->setActionPosition(this->VolumeDisplayPresetAction, qSlicerSubjectHierarchyAbstractPlugin::SectionBottom);
 
@@ -184,7 +184,7 @@ void qSlicerSubjectHierarchyVolumesPluginPrivate::init()
     QString presetIdStr = QString("%1%2").arg(QString::fromStdString(DISPLAY_NODE_PRESET_PREFIX)).arg(displayNodePresetIndex);
     QAction* presetAction = new QAction();
     presetAction->setObjectName(presetIdStr);
-    presetAction->setToolTip(tr("Default preset for the selected volume"));
+    presetAction->setToolTip(qSlicerSubjectHierarchyVolumesPlugin::tr("Default preset for the selected volume"));
     presetAction->setCheckable(true);
     this->PresetSubmenu->addAction(presetAction);
     presetModeActions->addAction(presetAction);
@@ -192,9 +192,9 @@ void qSlicerSubjectHierarchyVolumesPluginPrivate::init()
     }
 
   // Add Automatic preset
-  QAction* autoAction = new QAction(tr("Automatic"));
+  QAction* autoAction = new QAction(qSlicerSubjectHierarchyVolumesPlugin::tr("Automatic"));
   autoAction->setObjectName(QString::fromStdString(PRESET_AUTO));
-  autoAction->setToolTip(tr("Display the full intensity range of the volume."));
+  autoAction->setToolTip(qSlicerSubjectHierarchyVolumesPlugin::tr("Display the full intensity range of the volume."));
   autoAction->setCheckable(true);
   this->PresetSubmenu->addAction(autoAction);
   presetModeActions->addAction(autoAction);
@@ -204,11 +204,11 @@ void qSlicerSubjectHierarchyVolumesPluginPrivate::init()
   for (const auto& presetId : presetIds)
     {
     vtkSlicerVolumesLogic::VolumeDisplayPreset preset = volumesModuleLogic->GetVolumeDisplayPreset(presetId);
-    QString presetName = tr(preset.name.c_str());
+    QString presetName = qSlicerSubjectHierarchyVolumesPlugin::tr(preset.name.c_str());
     QString presetIdStr = QString::fromStdString(presetId);
     QAction* presetAction = new QAction(presetName);
     presetAction->setObjectName(presetIdStr);
-    presetAction->setToolTip(tr(preset.description.c_str()));
+    presetAction->setToolTip(qSlicerSubjectHierarchyVolumesPlugin::tr(preset.description.c_str()));
     if (!preset.icon.empty())
       {
       presetAction->setIcon(QIcon(QString::fromStdString(preset.icon)));
@@ -464,13 +464,13 @@ QString qSlicerSubjectHierarchyVolumesPlugin::tooltip(vtkIdType itemID)const
   if (itemID == vtkMRMLSubjectHierarchyNode::INVALID_ITEM_ID)
     {
     qCritical() << Q_FUNC_INFO << ": Invalid input item";
-    return QString("Invalid");
+    return tr("Invalid");
     }
   vtkMRMLSubjectHierarchyNode* shNode = qSlicerSubjectHierarchyPluginHandler::instance()->subjectHierarchyNode();
   if (!shNode)
     {
     qCritical() << Q_FUNC_INFO << ": Failed to access subject hierarchy node";
-    return QString("Error");
+    return tr("Error");
     }
 
   // Get basic tooltip from abstract plugin
@@ -484,13 +484,13 @@ QString qSlicerSubjectHierarchyVolumesPlugin::tooltip(vtkIdType itemID)const
     imageData->GetDimensions(dimensions);
     double spacing[3] = {0.0,0.0,0.0};
     volumeNode->GetSpacing(spacing);
-    tooltipString.append( QString(" (Dimensions: %1x%2x%3  Spacing: %4mm x %5mm x %6mm)")
-      .arg(dimensions[0]).arg(dimensions[1]).arg(dimensions[2])
-      .arg(spacing[0],0,'g',3).arg(spacing[1],0,'g',3).arg(spacing[2],0,'g',3) );
+    tooltipString.append( QString(" (%1 %2x%3x%4  %5 %6mm x %7mm x %8mm)")
+      .arg(tr("Dimensions:")).arg(dimensions[0]).arg(dimensions[1]).arg(dimensions[2])
+      .arg(tr("Spacing:")).arg(spacing[0],0,'g',3).arg(spacing[1],0,'g',3).arg(spacing[2],0,'g',3) );
     }
   else
     {
-    tooltipString.append(" !Invalid volume");
+    tooltipString.append(tr(" Empty volume"));
     }
 
   return tooltipString;

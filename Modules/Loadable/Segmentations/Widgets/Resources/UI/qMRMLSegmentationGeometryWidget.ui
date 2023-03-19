@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>490</width>
-    <height>363</height>
+    <height>370</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -63,12 +63,11 @@
       <item row="0" column="1">
        <widget class="qMRMLNodeComboBox" name="MRMLNodeComboBox_SourceGeometryNode">
         <property name="nodeTypes">
-         <stringlist>
+         <stringlist notr="true">
           <string>vtkMRMLScalarVolumeNode</string>
           <string>vtkMRMLSegmentationNode</string>
           <string>vtkMRMLModelNode</string>
           <string>vtkMRMLMarkupsROINode</string>
-          <string>vtkMRMLAnnotationROINode</string>
          </stringlist>
         </property>
         <property name="noneEnabled">
@@ -207,7 +206,7 @@
          <set>ctkDoubleSpinBox::DecimalsByKey|ctkDoubleSpinBox::DecimalsByShortcuts|ctkDoubleSpinBox::DecimalsByValue|ctkDoubleSpinBox::InsertDecimals|ctkDoubleSpinBox::ReplaceDecimals</set>
         </property>
         <property name="quantity">
-         <string>length</string>
+         <string notr="true">length</string>
         </property>
        </widget>
       </item>
@@ -283,7 +282,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Error message</string>
+         <string notr="true" extracomment="Placeholder only">Error message</string>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -313,7 +312,7 @@
          <number>2</number>
         </property>
         <property name="quantity">
-         <string>length</string>
+         <string notr="true">length</string>
         </property>
        </widget>
       </item>

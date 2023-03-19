@@ -99,21 +99,22 @@ void qSlicerScalarVolumeDisplayWidgetPrivate::init()
     qSlicerCoreApplication::application()->moduleLogic("Volumes")) : nullptr);
   if (volumesModuleLogic)
   {
-    QLayout* volumeDisplayPresetsLayout = this->PresetsWidget->layout();
+    QLayout* volumeDisplayPresetsLayout = this->PresetsGroupBox->layout();
     if (!volumeDisplayPresetsLayout)
       {
       volumeDisplayPresetsLayout = new QHBoxLayout;
-      this->PresetsWidget->setLayout(volumeDisplayPresetsLayout);
+      this->PresetsGroupBox->setLayout(volumeDisplayPresetsLayout);
       }
     std::vector<std::string> presetIds = volumesModuleLogic->GetVolumeDisplayPresetIDs();
     for (const auto& presetId : presetIds)
       {
       vtkSlicerVolumesLogic::VolumeDisplayPreset preset = volumesModuleLogic->GetVolumeDisplayPreset(presetId);
       QString presetIdStr = QString::fromStdString(presetId);
-      QString presetName = q->tr(preset.name.c_str());
+      QString presetName = qSlicerScalarVolumeDisplayWidget::tr(preset.name.c_str());
       QToolButton* presetButton = new QToolButton();
       presetButton->setObjectName(presetIdStr);
-      presetButton->setToolTip(q->tr(preset.name.c_str()) + "\n" + q->tr(preset.description.c_str()));
+      presetButton->setToolTip(qSlicerScalarVolumeDisplayWidget::tr(preset.name.c_str()) + "\n"
+        + qSlicerScalarVolumeDisplayWidget::tr(preset.description.c_str()));
       if (!preset.icon.empty())
         {
         presetButton->setIcon(QIcon(QString::fromStdString(preset.icon)));
@@ -134,8 +135,6 @@ void qSlicerScalarVolumeDisplayWidgetPrivate::init()
                    q, SLOT(setInterpolate(bool)));
   QObject::connect(this->ColorTableComboBox, SIGNAL(currentNodeChanged(vtkMRMLNode*)),
                    q, SLOT(setColorNode(vtkMRMLNode*)));
-  QObject::connect(this->LockWindowLevelButton, SIGNAL(clicked()),
-                   q, SLOT(onLockWindowLevelButtonClicked()));
   QObject::connect(this->HistogramGroupBox, SIGNAL(toggled(bool)),
                    q, SLOT(onHistogramSectionExpanded(bool)));
 }
@@ -234,20 +233,6 @@ void qSlicerScalarVolumeDisplayWidget::updateWidgetFromMRML()
     {
     d->ColorTableComboBox->setCurrentNode(displayNode->GetColorNode());
     d->InterpolateCheckbox->setChecked(displayNode->GetInterpolate());
-    bool lockedWindowLevel = displayNode->GetWindowLevelLocked();
-    d->LockWindowLevelButton->setChecked(lockedWindowLevel);
-    if (lockedWindowLevel)
-      {
-      d->LockWindowLevelButton->setIcon(QIcon(":Icons/Medium/SlicerLock.png"));
-      d->LockWindowLevelButton->setToolTip(QString("Click to enable modification of Window/Level values"));
-      }
-    else
-      {
-      d->LockWindowLevelButton->setIcon(QIcon(":Icons/Medium/SlicerUnlock.png"));
-      d->LockWindowLevelButton->setToolTip(QString("Click to prevent modification of Window/Level values"));
-      }
-    d->PresetsWidget->setEnabled(!lockedWindowLevel);
-    d->MRMLWindowLevelWidget->setEnabled(!lockedWindowLevel);
     }
   this->updateHistogram();
 }
@@ -408,19 +393,6 @@ void qSlicerScalarVolumeDisplayWidget::setColorNode(vtkMRMLNode* colorNode)
     }
   Q_ASSERT(vtkMRMLColorNode::SafeDownCast(colorNode));
   displayNode->SetAndObserveColorNodeID(colorNode->GetID());
-}
-
-// --------------------------------------------------------------------------
-void qSlicerScalarVolumeDisplayWidget::onLockWindowLevelButtonClicked()
-{
-  vtkMRMLScalarVolumeDisplayNode* displayNode = this->volumeDisplayNode();
-  if (!displayNode)
-    {
-    return;
-    }
-  // toggle the lock
-  int locked = displayNode->GetWindowLevelLocked();
-  displayNode->SetWindowLevelLocked(!locked);
 }
 
 // --------------------------------------------------------------------------

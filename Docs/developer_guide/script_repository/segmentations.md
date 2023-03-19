@@ -3,8 +3,14 @@
 ### Load a 3D image or model file as segmentation
 
 ```python
+# Load segmentation from .seg.nrrd file (includes segment names and colors)
 slicer.util.loadSegmentation("c:/tmp/tmp/Segmentation.nrrd")
-slicer.util.loadSegmentation("c:/tmp/tmp/Segmentation.nii")
+
+# Create segmentation from a NIFTI + color table file
+colorNode = slicer.util.loadColorTable('c:/tmp/tmp/Segmentation-label_ColorTable.ctbl')
+slicer.util.loadSegmentation("c:/tmp/tmp/Segmentation.nii", {'colorNodeID': colorNode.GetID()})
+
+# Create segmentation from a STL file
 slicer.util.loadSegmentation("c:/tmp/Segment_1.stl")
 ```
 
@@ -102,7 +108,7 @@ Slicer can import a labelmap volume into segmentation, visualize/edit the segmen
 
 #### Create color table node
 
-A color table node can be loaded from a [color table file](modules/colors.md#color-table-file-format-txt-ctbl) or created from scratch like this:
+A color table node can be loaded from a [color table file](developer_guide/modules/colors.md#color-table-file-format-txt-ctbl) or created from scratch like this:
 
 ```python
 segment_names_to_labels = [("ribs", 10), ("right lung", 12), ("left lung", 6)]
@@ -441,7 +447,7 @@ slicer.modules.markups.logic().JumpSlicesToLocation(mean_Ras[0], mean_Ras[1], me
 # Generate example input data (volumeNode, segmentationNode, segmentId)
 ################################################
 
-# Load reference volume
+# Load source volume
 import SampleData
 sampleDataLogic = SampleData.SampleDataLogic()
 volumeNode = sampleDataLogic.downloadMRBrainTumor1()
@@ -514,11 +520,11 @@ defaultSegmentEditorNode.SetOverwriteMode(slicer.vtkMRMLSegmentEditorNode.Overwr
 slicer.mrmlScene.AddDefaultNode(defaultSegmentEditorNode)
 ```
 
-To always make this the default, add the lines above to your [.slicerrc.py file](../user_guide/settings.md#application-startup-file).
+To always make this the default, add the lines above to your [.slicerrc.py file](user_guide/settings.md#application-startup-file).
 
 ### How to run segment editor effects from a script
 
-Editor effects are complex because they need to handle changing reference volumes, undo/redo, masking operations, etc. Therefore, it is recommended to use the effect by instantiating a qMRMLSegmentEditorWidget or use/extract processing logic of the effect and use that from a script.
+Editor effects are complex because they need to handle changing source volumes, undo/redo, masking operations, etc. Therefore, it is recommended to use the effect by instantiating a qMRMLSegmentEditorWidget or use/extract processing logic of the effect and use that from a script.
 
 #### Use Segment editor effects from script (qMRMLSegmentEditorWidget)
 
@@ -533,7 +539,7 @@ Examples:
 - [remove patient table from CT image](https://gist.github.com/lassoan/84d1f9a093dbb6a46c0fcc89279d8088)
 - [fill holes inside bones](https://gist.github.com/lassoan/0f45db8bae792ea19ccad36ceefbf52d)
 
-Description of effect parameters are available [here](modules/segmenteditor.md#effect-parameters).
+Description of effect parameters are available [here](developer_guide/modules/segmenteditor.md#effect-parameters).
 
 #### Use logic of effect from a script
 
@@ -658,7 +664,7 @@ for segmentId in stats["SegmentIDs"]:
 
 #### Get size, position, and orientation of each segment
 
-Get oriented bounding box and display them using markups ROI node or legacy annotation ROI node.
+Get oriented bounding box and display them using markups ROI node.
 
 ##### Markups ROI
 
@@ -697,47 +703,6 @@ for segmentId in stats["SegmentIDs"]:
   boundingBoxToRasTransform = np.row_stack((np.column_stack((obb_direction_ras_x, obb_direction_ras_y, obb_direction_ras_z, obb_center_ras)), (0, 0, 0, 1)))
   boundingBoxToRasTransformMatrix = slicer.util.vtkMatrixFromArray(boundingBoxToRasTransform)
   roi.SetAndObserveObjectToNodeMatrix(boundingBoxToRasTransformMatrix)
-```
-
-##### Annotation ROI (legacy)
-
-```python
-segmentationNode = getNode("Segmentation")
-
-# Compute bounding boxes
-import SegmentStatistics
-segStatLogic = SegmentStatistics.SegmentStatisticsLogic()
-segStatLogic.getParameterNode().SetParameter("Segmentation", segmentationNode.GetID())
-segStatLogic.getParameterNode().SetParameter("LabelmapSegmentStatisticsPlugin.obb_origin_ras.enabled",str(True))
-segStatLogic.getParameterNode().SetParameter("LabelmapSegmentStatisticsPlugin.obb_diameter_mm.enabled",str(True))
-segStatLogic.getParameterNode().SetParameter("LabelmapSegmentStatisticsPlugin.obb_direction_ras_x.enabled",str(True))
-segStatLogic.getParameterNode().SetParameter("LabelmapSegmentStatisticsPlugin.obb_direction_ras_y.enabled",str(True))
-segStatLogic.getParameterNode().SetParameter("LabelmapSegmentStatisticsPlugin.obb_direction_ras_z.enabled",str(True))
-segStatLogic.computeStatistics()
-stats = segStatLogic.getStatistics()
-
-# Draw ROI for each oriented bounding box
-import numpy as np
-for segmentId in stats["SegmentIDs"]:
-  # Get bounding box
-  obb_origin_ras = np.array(stats[segmentId,"LabelmapSegmentStatisticsPlugin.obb_origin_ras"])
-  obb_diameter_mm = np.array(stats[segmentId,"LabelmapSegmentStatisticsPlugin.obb_diameter_mm"])
-  obb_direction_ras_x = np.array(stats[segmentId,"LabelmapSegmentStatisticsPlugin.obb_direction_ras_x"])
-  obb_direction_ras_y = np.array(stats[segmentId,"LabelmapSegmentStatisticsPlugin.obb_direction_ras_y"])
-  obb_direction_ras_z = np.array(stats[segmentId,"LabelmapSegmentStatisticsPlugin.obb_direction_ras_z"])
-  # Create ROI
-  segment = segmentationNode.GetSegmentation().GetSegment(segmentId)
-  roi=slicer.mrmlScene.AddNewNodeByClass("vtkMRMLAnnotationROINode")
-  roi.SetName(segment.GetName() + " bounding box")
-  roi.SetXYZ(0.0, 0.0, 0.0)
-  roi.SetRadiusXYZ(*(0.5*obb_diameter_mm))
-  # Position and orient ROI using a transform
-  obb_center_ras = obb_origin_ras+0.5*(obb_diameter_mm[0] * obb_direction_ras_x + obb_diameter_mm[1] * obb_direction_ras_y + obb_diameter_mm[2] * obb_direction_ras_z)
-  boundingBoxToRasTransform = np.row_stack((np.column_stack((obb_direction_ras_x, obb_direction_ras_y, obb_direction_ras_z, obb_center_ras)), (0, 0, 0, 1)))
-  boundingBoxToRasTransformMatrix = slicer.util.vtkMatrixFromArray(boundingBoxToRasTransform)
-  transformNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLTransformNode")
-  transformNode.SetAndObserveMatrixTransformToParent(boundingBoxToRasTransformMatrix)
-  roi.SetAndObserveTransformNodeID(transformNode.GetID())
 ```
 
 :::{note}

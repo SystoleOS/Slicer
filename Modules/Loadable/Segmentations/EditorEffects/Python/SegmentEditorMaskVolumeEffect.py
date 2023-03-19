@@ -31,7 +31,8 @@ class SegmentEditorMaskVolumeEffect(AbstractScriptedSegmentEditorEffect):
         return qt.QIcon()
 
     def helpText(self):
-        return """<html>Use the currently selected segment as a mask to blank out regions in a volume.<br> The mask is applied to the reference volume by default.<p>
+        return """<html>Use the currently selected segment as a mask to blank out regions in a volume.
+<br> The mask is applied to the source volume by default.<p>
 Fill inside and outside operation creates a binary labelmap volume as output, with the inside and outside fill values modifiable.
 </html>"""
 
@@ -101,6 +102,18 @@ Fill inside and outside operation creates a binary labelmap volume as output, wi
         fillValuesSpinBoxLayout.addRow(fillValueLayout)
         self.scriptedEffect.addOptionsWidget(fillValuesSpinBoxLayout)
 
+        # Soft edge
+        self.softEdgeMmSpinBox = slicer.qMRMLSpinBox()
+        self.softEdgeMmSpinBox.setMRMLScene(slicer.mrmlScene)
+        self.softEdgeMmSpinBox.setToolTip("Standard deviation of the Gaussian function that blurs the edge of the mask."
+                                          " Higher value makes the edge softer.")
+        self.softEdgeMmSpinBox.quantity = "length"
+        self.softEdgeMmSpinBox.value = 0
+        self.softEdgeMmSpinBox.minimum = 0
+        self.softEdgeMmSpinBox.singleStep = 0.5
+        self.softEdgeMmLabel = self.scriptedEffect.addLabeledOptionsWidget("Soft edge:", self.softEdgeMmSpinBox)
+        self.softEdgeMmSpinBox.connect("valueChanged(double)", self.softEdgeMmChanged)
+
         # input volume selector
         self.inputVolumeSelector = slicer.qMRMLNodeComboBox()
         self.inputVolumeSelector.nodeTypes = ["vtkMRMLScalarVolumeNode"]
@@ -108,10 +121,10 @@ Fill inside and outside operation creates a binary labelmap volume as output, wi
         self.inputVolumeSelector.addEnabled = True
         self.inputVolumeSelector.removeEnabled = True
         self.inputVolumeSelector.noneEnabled = True
-        self.inputVolumeSelector.noneDisplay = "(Reference volume)"
+        self.inputVolumeSelector.noneDisplay = "(Source volume)"
         self.inputVolumeSelector.showHidden = False
         self.inputVolumeSelector.setMRMLScene(slicer.mrmlScene)
-        self.inputVolumeSelector.setToolTip("Volume to mask. Default is current reference volume node.")
+        self.inputVolumeSelector.setToolTip("Volume to mask. Default is current source volume node.")
         self.inputVolumeSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onInputVolumeChanged)
 
         self.inputVisibilityButton = qt.QToolButton()
@@ -163,6 +176,7 @@ Fill inside and outside operation creates a binary labelmap volume as output, wi
         self.scriptedEffect.setParameterDefault("FillValue", "0")
         self.scriptedEffect.setParameterDefault("BinaryMaskFillValueInside", "1")
         self.scriptedEffect.setParameterDefault("BinaryMaskFillValueOutside", "0")
+        self.scriptedEffect.setParameterDefault("SoftEdgeMm", "0")
         self.scriptedEffect.setParameterDefault("Operation", "FILL_OUTSIDE")
 
     def isVolumeVisible(self, volumeNode):
@@ -190,14 +204,17 @@ Fill inside and outside operation creates a binary labelmap volume as output, wi
             operationButton = list(self.buttonToOperationNameMap.keys())[list(self.buttonToOperationNameMap.values()).index(operationName)]
             operationButton.setChecked(True)
 
+        self.softEdgeMmSpinBox.setValue(float(self.scriptedEffect.parameter("SoftEdgeMm"))
+                                        if self.scriptedEffect.parameter("SoftEdgeMm") else 0)
+
         inputVolume = self.scriptedEffect.parameterSetNode().GetNodeReference("Mask volume.InputVolume")
         self.inputVolumeSelector.setCurrentNode(inputVolume)
         outputVolume = self.scriptedEffect.parameterSetNode().GetNodeReference("Mask volume.OutputVolume")
         self.outputVolumeSelector.setCurrentNode(outputVolume)
 
-        referenceVolume = self.scriptedEffect.parameterSetNode().GetReferenceVolumeNode()
+        sourceVolume = self.scriptedEffect.parameterSetNode().GetSourceVolumeNode()
         if inputVolume is None:
-            inputVolume = referenceVolume
+            inputVolume = sourceVolume
 
         self.fillValueEdit.setVisible(operationName in ["FILL_INSIDE", "FILL_OUTSIDE"])
         self.fillValueLabel.setVisible(operationName in ["FILL_INSIDE", "FILL_OUTSIDE"])
@@ -227,31 +244,35 @@ Fill inside and outside operation creates a binary labelmap volume as output, wi
         self.scriptedEffect.setParameter("BinaryMaskFillValueOutside", self.binaryMaskFillOutsideEdit.value)
         self.scriptedEffect.parameterSetNode().SetNodeReferenceID("Mask volume.InputVolume", self.inputVolumeSelector.currentNodeID)
         self.scriptedEffect.parameterSetNode().SetNodeReferenceID("Mask volume.OutputVolume", self.outputVolumeSelector.currentNodeID)
+        self.scriptedEffect.setParameter("SoftEdgeMm", self.softEdgeMmSpinBox.value)
 
     def activate(self):
         self.scriptedEffect.setParameter("InputVisibility", "True")
 
     def deactivate(self):
-        if self.outputVolumeSelector.currentNode() is not self.scriptedEffect.parameterSetNode().GetReferenceVolumeNode():
+        if self.outputVolumeSelector.currentNode() is not self.scriptedEffect.parameterSetNode().GetSourceVolumeNode():
             self.scriptedEffect.setParameter("OutputVisibility", "False")
-        slicer.util.setSliceViewerLayers(background=self.scriptedEffect.parameterSetNode().GetReferenceVolumeNode())
+        slicer.util.setSliceViewerLayers(background=self.scriptedEffect.parameterSetNode().GetSourceVolumeNode())
 
     def onOperationSelectionChanged(self, operationName, toggle):
         if not toggle:
             return
         self.scriptedEffect.setParameter("Operation", operationName)
 
+    def softEdgeMmChanged(self, edgeMm):
+        self.scriptedEffect.setParameter("SoftEdgeMm", edgeMm)
+
     def getInputVolume(self):
         inputVolume = self.inputVolumeSelector.currentNode()
         if inputVolume is None:
-            inputVolume = self.scriptedEffect.parameterSetNode().GetReferenceVolumeNode()
+            inputVolume = self.scriptedEffect.parameterSetNode().GetSourceVolumeNode()
         return inputVolume
 
     def onInputVisibilityButtonClicked(self):
         inputVolume = self.scriptedEffect.parameterSetNode().GetNodeReference("Mask volume.InputVolume")
-        referenceVolume = self.scriptedEffect.parameterSetNode().GetReferenceVolumeNode()
+        sourceVolume = self.scriptedEffect.parameterSetNode().GetSourceVolumeNode()
         if inputVolume is None:
-            inputVolume = referenceVolume
+            inputVolume = sourceVolume
         if inputVolume:
             slicer.util.setSliceViewerLayers(background=inputVolume)
             self.updateGUIFromMRML()
@@ -274,39 +295,41 @@ Fill inside and outside operation creates a binary labelmap volume as output, wi
         self.updateMRMLFromGUI()
 
     def onApply(self):
-        inputVolume = self.getInputVolume()
-        outputVolume = self.outputVolumeSelector.currentNode()
-        operationMode = self.scriptedEffect.parameter("Operation")
-        if not outputVolume:
-            # Create new node for output
-            volumesLogic = slicer.modules.volumes.logic()
-            scene = inputVolume.GetScene()
-            if operationMode == "FILL_INSIDE_AND_OUTSIDE":
-                outputVolumeName = inputVolume.GetName() + " label"
-                outputVolume = volumesLogic.CreateAndAddLabelVolume(inputVolume, outputVolumeName)
+        with slicer.util.tryWithErrorDisplay("Failed to apply mask to volume.", waitCursor=True):
+            inputVolume = self.getInputVolume()
+            outputVolume = self.outputVolumeSelector.currentNode()
+            operationMode = self.scriptedEffect.parameter("Operation")
+            if not outputVolume:
+                # Create new node for output
+                volumesLogic = slicer.modules.volumes.logic()
+                scene = inputVolume.GetScene()
+                if operationMode == "FILL_INSIDE_AND_OUTSIDE":
+                    outputVolumeName = inputVolume.GetName() + " label"
+                    outputVolume = volumesLogic.CreateAndAddLabelVolume(inputVolume, outputVolumeName)
+                else:
+                    outputVolumeName = inputVolume.GetName() + " masked"
+                    outputVolume = volumesLogic.CloneVolumeGeneric(scene, inputVolume, outputVolumeName, False)
+                self.outputVolumeSelector.setCurrentNode(outputVolume)
+
+            if operationMode in ["FILL_INSIDE", "FILL_OUTSIDE"]:
+                fillValues = [self.fillValueEdit.value]
             else:
-                outputVolumeName = inputVolume.GetName() + " masked"
-                outputVolume = volumesLogic.CloneVolumeGeneric(scene, inputVolume, outputVolumeName, False)
-            self.outputVolumeSelector.setCurrentNode(outputVolume)
+                fillValues = [self.binaryMaskFillInsideEdit.value, self.binaryMaskFillOutsideEdit.value]
 
-        if operationMode in ["FILL_INSIDE", "FILL_OUTSIDE"]:
-            fillValues = [self.fillValueEdit.value]
-        else:
-            fillValues = [self.binaryMaskFillInsideEdit.value, self.binaryMaskFillOutsideEdit.value]
+            segmentID = self.scriptedEffect.parameterSetNode().GetSelectedSegmentID()
+            segmentationNode = self.scriptedEffect.parameterSetNode().GetSegmentationNode()
 
-        segmentID = self.scriptedEffect.parameterSetNode().GetSelectedSegmentID()
-        segmentationNode = self.scriptedEffect.parameterSetNode().GetSegmentationNode()
+            softEdgeMm = self.scriptedEffect.doubleParameter("SoftEdgeMm")
 
-        slicer.app.setOverrideCursor(qt.Qt.WaitCursor)
-        SegmentEditorMaskVolumeEffect.maskVolumeWithSegment(segmentationNode, segmentID, operationMode, fillValues, inputVolume, outputVolume)
+            SegmentEditorMaskVolumeEffect.maskVolumeWithSegment(segmentationNode, segmentID, operationMode, fillValues, inputVolume, outputVolume,
+                                                                softEdgeMm=softEdgeMm)
 
-        slicer.util.setSliceViewerLayers(background=outputVolume)
-        qt.QApplication.restoreOverrideCursor()
+            slicer.util.setSliceViewerLayers(background=outputVolume)
 
-        self.updateGUIFromMRML()
+            self.updateGUIFromMRML()
 
     @staticmethod
-    def maskVolumeWithSegment(segmentationNode, segmentID, operationMode, fillValues, inputVolumeNode, outputVolumeNode, maskExtent=None):
+    def maskVolumeWithSegment(segmentationNode, segmentID, operationMode, fillValues, inputVolumeNode, outputVolumeNode, maskExtent=None, softEdgeMm=0.0):
         """
         Fill voxels of the input volume inside/outside the masking model with the provided fill value
         maskExtent: optional output to return computed mask extent (expected input is a 6-element list)
@@ -314,6 +337,7 @@ Fill inside and outside operation creates a binary labelmap volume as output, wi
           If fill mode is inside&outside then the list must contain two values: first is the inside fill, second is the outside fill value.
         """
 
+        import vtk  # without this we get the error: UnboundLocalError: local variable 'vtk' referenced before assignment
         segmentIDs = vtk.vtkStringArray()
         segmentIDs.InsertNextValue(segmentID)
         maskVolumeNode = slicer.modules.volumes.logic().CreateAndAddLabelVolume(inputVolumeNode, "TemporaryVolumeMask")
@@ -334,31 +358,81 @@ Fill inside and outside operation creates a binary labelmap volume as output, wi
             import vtkSegmentationCorePython as vtkSegmentationCore
             vtkSegmentationCore.vtkOrientedImageDataResample.CalculateEffectiveExtent(img, maskExtent, 0)
 
-        maskToStencil = vtk.vtkImageToImageStencil()
-        maskToStencil.ThresholdByLower(0)
-        maskToStencil.SetInputData(maskVolumeNode.GetImageData())
+        if softEdgeMm == 0:
+            # Hard edge
+            maskToStencil = vtk.vtkImageToImageStencil()
+            maskToStencil.ThresholdByLower(0)
+            maskToStencil.SetInputData(maskVolumeNode.GetImageData())
 
-        stencil = vtk.vtkImageStencil()
+            stencil = vtk.vtkImageStencil()
 
-        if operationMode == "FILL_INSIDE_AND_OUTSIDE":
-            # Set input to constant value
-            thresh = vtk.vtkImageThreshold()
-            thresh.SetInputData(inputVolumeNode.GetImageData())
-            thresh.ThresholdByLower(0)
-            thresh.SetInValue(fillValues[1])
-            thresh.SetOutValue(fillValues[1])
-            thresh.SetOutputScalarType(inputVolumeNode.GetImageData().GetScalarType())
-            thresh.Update()
-            stencil.SetInputData(thresh.GetOutput())
+            if operationMode == "FILL_INSIDE_AND_OUTSIDE":
+                # Set input to constant value
+                thresh = vtk.vtkImageThreshold()
+                thresh.SetInputData(inputVolumeNode.GetImageData())
+                thresh.ThresholdByLower(0)
+                thresh.SetInValue(fillValues[1])
+                thresh.SetOutValue(fillValues[1])
+                thresh.SetOutputScalarType(inputVolumeNode.GetImageData().GetScalarType())
+                thresh.Update()
+                stencil.SetInputData(thresh.GetOutput())
+            else:
+                stencil.SetInputData(inputVolumeNode.GetImageData())
+
+            stencil.SetStencilConnection(maskToStencil.GetOutputPort())
+            stencil.SetReverseStencil(operationMode == "FILL_OUTSIDE")
+            stencil.SetBackgroundValue(fillValues[0])
+            stencil.Update()
+            outputVolumeNode.SetAndObserveImageData(stencil.GetOutput())
         else:
-            stencil.SetInputData(inputVolumeNode.GetImageData())
+            # Soft edge
 
-        stencil.SetStencilConnection(maskToStencil.GetOutputPort())
-        stencil.SetReverseStencil(operationMode == "FILL_OUTSIDE")
-        stencil.SetBackgroundValue(fillValues[0])
-        stencil.Update()
+            thresh = vtk.vtkImageThreshold()
+            maskMin = 0
+            maskMax = 255
+            thresh.SetOutputScalarTypeToUnsignedChar()
+            thresh.SetInputData(maskVolumeNode.GetImageData())
+            thresh.ThresholdByLower(0)
+            thresh.SetInValue(maskMin)
+            thresh.SetOutValue(maskMax)
+            thresh.Update()
 
-        outputVolumeNode.SetAndObserveImageData(stencil.GetOutput())
+            gaussianFilter = vtk.vtkImageGaussianSmooth()
+            spacing = maskVolumeNode.GetSpacing()
+            standardDeviationPixel = [1.0, 1.0, 1.0]
+            for idx in range(3):
+                standardDeviationPixel[idx] = softEdgeMm / spacing[idx]
+            gaussianFilter.SetInputConnection(thresh.GetOutputPort())
+            gaussianFilter.SetStandardDeviations(*standardDeviationPixel)
+            # Do not truncate the Gaussian kernel at the default 1.5 sigma,
+            # because it would result in edge artifacts.
+            # Larger value results in less edge artifact but increased computation time,
+            # so 3.0 is a good tradeoff.
+            gaussianFilter.SetRadiusFactor(3.0)
+            gaussianFilter.Update()
+
+            import vtk.util.numpy_support
+            maskImage = gaussianFilter.GetOutput()
+            nshape = tuple(reversed(maskImage.GetDimensions()))
+            maskArray = vtk.util.numpy_support.vtk_to_numpy(maskImage.GetPointData().GetScalars()).reshape(nshape)
+            # Normalize mask with the actual min/max values.
+            # Gaussian output is not always exactly the original minimum and maximum, so we get the actual min/max values.
+            maskMin = maskArray.min()
+            maskMax = maskArray.max()
+            mask = (maskArray.astype(float) - maskMin) / float(maskMax - maskMin)
+
+            inputArray = slicer.util.arrayFromVolume(inputVolumeNode)
+
+            if operationMode == "FILL_INSIDE_AND_OUTSIDE":
+                # Rescale the smoothed mask
+                resultArray = fillValues[0] + (fillValues[1] - fillValues[0]) * mask[:]
+            else:
+                # Compute weighted average between blanked out and input volume
+                if operationMode == "FILL_INSIDE":
+                    mask = 1.0 - mask
+                resultArray = inputArray[:] * mask[:] + float(fillValues[0]) * (1.0 - mask[:])
+
+            slicer.util.updateVolumeFromArray(outputVolumeNode, resultArray.astype(inputArray.dtype))
 
         # Set the same geometry and parent transform as the input volume
         ijkToRas = vtk.vtkMatrix4x4()

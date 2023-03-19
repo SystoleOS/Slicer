@@ -70,6 +70,12 @@ qSlicerVolumeRenderingModule::qSlicerVolumeRenderingModule(QObject* _parent)
 qSlicerVolumeRenderingModule::~qSlicerVolumeRenderingModule() = default;
 
 //-----------------------------------------------------------------------------
+QString qSlicerVolumeRenderingModule::title()const
+{
+  return tr("Volume Rendering");
+}
+
+//-----------------------------------------------------------------------------
 QString qSlicerVolumeRenderingModule::helpText()const
 {
   QString help = QString(
@@ -176,6 +182,5 @@ QStringList qSlicerVolumeRenderingModule::associatedNodeTypes() const
     << "vtkMRMLVolumePropertyNode"
     << "vtkMRMLShaderPropertyNode"
     << "vtkMRMLVolumeRenderingDisplayNode"
-    << "vtkMRMLAnnotationROINode" // volume rendering clipping box
     << "vtkMRMLMarkupsROINode"; // volume rendering clipping box
 }

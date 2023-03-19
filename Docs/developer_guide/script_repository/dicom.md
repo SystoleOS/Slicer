@@ -203,6 +203,39 @@ for exp in exportables:
 exporter.export(exportables)
 ```
 
+### Export DICOM series from the database to research file format
+
+You can export the entire Slicer DICOM database content to nrrd (or nifti, etc.) file format with filtering of data type and naming of the output file based on DICOM tags like this:
+
+```python
+outputFolder = "c:/tmp/exptest/"
+
+from DICOMLib import DICOMUtils
+patientUIDs = slicer.dicomDatabase.patients()
+for patientUID in patientUIDs:
+    loadedNodeIDs = DICOMUtils.loadPatientByUID(patientUID)
+    for loadedNodeID in loadedNodeIDs:
+        # Check if we want to save this node
+        node = slicer.mrmlScene.GetNodeByID(loadedNodeID)
+        # Only export images
+        if not node or not node.IsA('vtkMRMLScalarVolumeNode'):
+            continue
+        # Construct filename
+        shNode = slicer.mrmlScene.GetSubjectHierarchyNode()
+        seriesItem = shNode.GetItemByDataNode(node)
+        studyItem = shNode.GetItemParent(seriesItem)
+        patientItem = shNode.GetItemParent(studyItem)
+        filename = shNode.GetItemAttribute(patientItem, 'DICOM.PatientID')
+        filename += '_' + shNode.GetItemAttribute(studyItem, 'DICOM.StudyDate')
+        filename += '_' + shNode.GetItemAttribute(seriesItem, 'DICOM.SeriesNumber')
+        filename += '_' + shNode.GetItemAttribute(seriesItem, 'DICOM.Modality')
+        filename = slicer.app.ioManager().forceFileNameValidCharacters(filename) + ".nrrd"
+        # Save node
+        print(f'Write {node.GetName()} to {filename}')
+        success = slicer.util.saveNode(node, outputFolder+filename)
+    slicer.mrmlScene.Clear()
+```
+
 ### Customize table columns in DICOM browser
 
 Documentation of methods for changing DICOM browser columns: https://github.com/commontk/CTK/blob/master/Libs/DICOM/Core/ctkDICOMDatabase.h#L354-L375
@@ -248,7 +281,10 @@ dicomQuery.calledAETitle = "ANYAE"
 dicomQuery.host = "dicomserver.co.uk"
 dicomQuery.port = 11112
 dicomQuery.preferCGET = True
-dicomQuery.filters = {"Name":"Anon", "Modalities":"MR"}
+# Change filter parameters in the next line if
+# query does not find any series (try to use a different letter for "Name", such as "E")
+# or there are too many hits (try to make "Name" more specific, such as "An").
+dicomQuery.filters = {"Name":"A", "Modalities":"MR"}
 # temporary in-memory database for storing query results
 tempDb = ctk.ctkDICOMDatabase()
 tempDb.openDatabase("")
@@ -260,16 +296,17 @@ dicomRetrieve.callingAETitle = dicomQuery.callingAETitle
 dicomRetrieve.calledAETitle = dicomQuery.calledAETitle
 dicomRetrieve.host = dicomQuery.host
 dicomRetrieve.port = dicomQuery.port
-dicomRetrieve.setMoveDestinationAETitle("SLICER");
+dicomRetrieve.setMoveDestinationAETitle("SLICER")
 dicomRetrieve.setDatabase(slicer.dicomDatabase)
-for study in dicomQuery.studyInstanceUIDQueried:
-  print(f"ctkDICOMRetrieveTest2: Retrieving {study}")
+for study, series in dicomQuery.studyAndSeriesInstanceUIDQueried:
+  print(f"ctkDICOMRetrieveTest: Retrieving {study} - {series}")
   slicer.app.processEvents()
   if dicomQuery.preferCGET:
-    success = dicomRetrieve.getStudy(study)
+    success = dicomRetrieve.getSeries(study, series)
   else:
-    success = dicomRetrieve.moveStudy(study)
+    success = dicomRetrieve.moveSeries(study, series)
   print(f"  - {'success' if success else 'failed'}")
+
 slicer.dicomDatabase.updateDisplayedFields()
 ```
 

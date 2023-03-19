@@ -271,6 +271,19 @@ public slots:
   /// \param plugin Name of the plugin to disable
   void disablePlugin(QString plugin);
 
+  /// Deprecated. Use setPluginAllowlist instead.
+  void setPluginWhitelist(QStringList allowlist)
+    {
+    qWarning("qMRMLSubjectHierarchyTreeView::setPluginWhitelist is deprecated. Use setPluginAllowlist instead.");
+    this->setPluginAllowlist(allowlist);
+    }
+  /// Deprecated. Use setPluginBlocklist instead.
+  void setPluginBlacklist(QStringList blocklist)
+    {
+    qWarning("qMRMLSubjectHierarchyTreeView::setPluginBlacklist is deprecated. Use setPluginBlocklist instead.");
+    this->setPluginBlocklist(blocklist);
+    }
+
   /// Show hint to user about context menus
   /// \param visibility True if visibility context menu hint is to be shown, false for general context menu. False by default
   /// \return Flag indicating whether hint could be shown (i.e. there was an item in the tree is displayable)
@@ -300,7 +313,6 @@ signals:
 
 protected slots:
   virtual void onSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
-  virtual void onCurrentSelection(const QModelIndex &currentItemIndex);
 
   /// Updates subject hierarchy item expanded property when item is expanded
   virtual void onItemExpanded(const QModelIndex &expandedItemIndex);

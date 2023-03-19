@@ -36,7 +36,7 @@ if(NOT DEFINED ITK_DIR AND NOT Slicer_USE_SYSTEM_${proj})
 
   ExternalProject_SetIfNotDefined(
     Slicer_${proj}_GIT_TAG
-    "46a71c744d4856a5166df227e13c76e8c3ef55cc" # slicer-v5.3rc03-2022-02-10-be81e62
+    "9745ba2fae8abf31175deae87ff3e55e81c0a663" # slicer-v5.3rc04-2022-09-19-62eb5ca
     QUIET
     )
 
@@ -144,6 +144,7 @@ if(NOT DEFINED ITK_DIR AND NOT Slicer_USE_SYSTEM_${proj})
       -DModule_ITKIOMINC:BOOL=ON
       -DModule_IOScanco:BOOL=ON
       -DModule_MorphologicalContourInterpolation:BOOL=ON
+      -DModule_GrowCut:BOOL=ON
       -DModule_SimpleITKFilters:BOOL=${Slicer_USE_SimpleITK}
       -DModule_GenericLabelInterpolator:BOOL=ON
       -DModule_AdaptiveDenoising:BOOL=ON

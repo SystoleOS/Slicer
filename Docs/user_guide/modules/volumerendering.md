@@ -68,7 +68,7 @@ See [video demo/tutorial of these steps](https://youtu.be/xZwyW6SaoM4?t=12) for 
   - Crop: Simple controls for the cropping box (ROI). More controls are available in the "Advanced..." section. Enable/Disable cropping of the volume. Show/Hide the cropping box. Reset the box ROI to the volume's bounds.
   - Rendering: Select a volume rendering method. A default method can be set in the application settings Volume Rendering panel.
     - VTK CPU Ray Casting: Available on all computers, regardless of capabilities of graphics hardware. The volume rendering is entirely realized on the CPU, therefore it is slower than other options.
-    - VTK GPU Ray Casting (default): Uses graphics hardware for rendering, typically much faster than CPU volume rendering. This is the recommended method for computers that have sufficiant graphics capabilities. It supports surface smoothing to remove staircase artifacts.
+    - VTK GPU Ray Casting (default): Uses graphics hardware for rendering, typically much faster than CPU volume rendering. This is the recommended method for computers that have sufficient graphics capabilities. It supports surface smoothing to remove staircase artifacts.
     - VTK Multi-Volume: Uses graphics hardware for rendering. Can render multiple overlapping volumes but it has several limitations (see details in [limitations](#limitations) section at the bottom of this page.
 - Advanced: More controls to control the volume rendering. Contains 3 tabs: "Techniques", "Volume Properties" and "ROI"
   - Techniques: Advanced properties of the current volume rendering method.
@@ -114,8 +114,25 @@ See [video demo/tutorial of these steps](https://youtu.be/xZwyW6SaoM4?t=12) for 
 - To render multiple overlapping volumes, select "VTK Multi-Volume" rendering in "Display" section. This renderer is still experimental and has limitations such as:
   - Cropping is not supported (cropping ROI is ignored)
   - RGB volume rendering is not supported (volume does not appear)
+  - Only "Composite with shading" rendering technique is supported (volume does not appear if "Maximum Intensity Projection" or "Minimum Intensity Projection" technique is selected)
 - To reduce staircase artifacts during rendering, choose enable "Surface smoothing" in Advanced/Techniques/Advanced rendering properties section, or choose "Normal" or "Maximum" as quality.
-- The volume must not be under a warping (affine or non-linear) transformation. To render a warped volume, the transform must be hardened on the volume.
+- The volume must not be under a warping (affine or non-linear) transformation. To render a warped volume, the transform must be hardened on the volume. (see [related issue](https://github.com/Slicer/Slicer/issues/6648))
+- If the application crashes when rotating or zooming a volume: This indicates that you get a TDR error, i.e., the operating system shuts down applications that keep the graphics card busy for too long. This happens because the size of the volume is too large for your GPU to comfortably handle. There are several ways to work around this:
+  - Option A: Run the code snippet in the Python console (<kbd>Ctrl</kbd>-<kbd>3</kbd>) to split the volume to smaller chunks (that way you have a better chance that the graphics card will not be unresponsive for too long) _after_ enabling volume rendering.
+    ```python
+    threeDViewWidget = slicer.app.layoutManager().threeDWidget(0)
+    vrDisplayableManager = threeDViewWidget.threeDView().displayableManagerByClassName('vtkMRMLVolumeRenderingDisplayableManager')
+    vrMapper = vrDisplayableManager.GetVolumeMapper(getNode('skull'))
+    vrMapper.SetPartitions(1,1,2)
+    ```
+  - Option B: Crop and downsample your volume using Crop volume and volume render this smaller volume.
+  - Option C: Increase TDR delay value in registry (see details [here](https://docs.microsoft.com/en-us/windows-hardware/drivers/display/tdr-registry-keys))
+  - Option D: Use CPU volume rendering.
+  - Option E: Upgrade your computer with a stronger graphics card.
+
+## Information for developers
+
+See examples and other developer information in [Developer guide](../../developer_guide/modules/volumerendering) and [Script repository](../../developer_guide/script_repository.md#volumes).
 
 ## Contributors
 

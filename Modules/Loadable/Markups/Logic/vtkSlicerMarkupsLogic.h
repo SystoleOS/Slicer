@@ -59,7 +59,8 @@ class VTK_SLICER_MARKUPS_MODULE_LOGIC_EXPORT vtkSlicerMarkupsLogic :
 {
 public:
 
-  enum Events{
+  enum Events
+  {
     MarkupRegistered = vtkCommand::UserEvent + 1,
     MarkupUnregistered
   };
@@ -143,6 +144,20 @@ public:
   char* LoadMarkupsFromFcsv(const char* fileName, const char* nodeName=nullptr, vtkMRMLMessageCollection* userMessages=nullptr);
   char* LoadMarkupsFromJson(const char* fileName, const char* nodeName=nullptr, vtkMRMLMessageCollection* userMessages=nullptr);
 
+  /// Load a legacy annotation file, return nullptr on error, node ID string
+  /// otherwise. Adds the appropriate storage and display nodes to the scene
+  /// as well. fileType is from this class's enum
+  char* LoadAnnotation(const char *filename, const char *name, int annotationFileType);
+
+  /// Enumeration listing valid annotation file types to load using LoadAnnotation
+  enum
+    {
+    AnnotationNone = 0,
+    AnnotationFiducial,
+    AnnotationRuler,
+    AnnotationROI,
+    };
+
   /// Utility methods to operate on all control points in a markups node
   /// @{
   void SetAllControlPointsVisibility(vtkMRMLMarkupsNode *node, bool flag);
@@ -179,12 +194,22 @@ public:
   bool MoveNthControlPointToNewListAtIndex(int n, vtkMRMLMarkupsNode *markupsNode,
                                    vtkMRMLMarkupsNode *newMarkupsNode, int newIndex);
 
-  /// Searches the scene for annotation fidicual nodes, collecting a list
+  /// Searches the scene for annotation fiducial nodes, collecting a list
   /// of annotation hierarchy nodes. Then iterates through those hierarchy nodes
   /// and moves the fiducials that are under them into new markups nodes. Leaves
   /// the top level hierarchy nodes intact as they may be parents to ruler or
   /// ROIs but deletes the 1:1 hierarchy nodes.
-  void ConvertAnnotationFiducialsToMarkups();
+  /// If addedNodeIds or removedNodeIds are specified then IDs of data and hierarchy nodes
+  /// added or removed during conversion in the main scene are added to these arrays.
+  void ConvertAnnotationFiducialsToMarkups(vtkStringArray* addedNodeIds=nullptr, vtkStringArray* removedNodeIds=nullptr);
+
+  /// Searches the scene for annotation ruler and ROI nodes and converts each to
+  /// markup line or ROI node.
+  /// If addedNodeIds or removedNodeIds are specified then IDs of data and hierarchy nodes
+  /// added or removed during conversion in the main scene are added to these arrays.
+  void ConvertAnnotationLinesROIsToMarkups(vtkStringArray* addedNodeIds=nullptr, vtkStringArray* removedNodeIds=nullptr);
+
+  void ConvertAnnotationHierarchyToSubjectHierarchy(vtkMRMLScene* scene);
 
   /// Iterate over the control points in the list and reset the control point labels using
   /// the current ControlPointLabelFormat setting. Try to keep current numbering.
@@ -406,6 +431,7 @@ protected:
   void UpdateFromMRMLScene() override;
   void OnMRMLSceneNodeAdded(vtkMRMLNode* node) override;
   void OnMRMLSceneNodeRemoved(vtkMRMLNode* node) override;
+  void OnMRMLSceneEndImport() override;
 
 private:
 

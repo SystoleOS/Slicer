@@ -20,12 +20,41 @@ More details are provided in the [DICOM module documentation](modules/dicom.md).
 
 ## Non-DICOM data
 
-Non-DICOM data, covering all types of data ranging from images (nrrd, nii.gz, ...) and models (stl, ply, obj, ...) to tables (csv, txt) and point lists (json).
+Non-DICOM data, covering all types of data ranging from images (nrrd, nii.gz, ...) and models (stl, ply, obj, ...) to tables (csv, txt), point lists (json), etc.
 
-  - Loading can happen in two ways: drag&drop file on the application window, or by using the Load Data button on the toolbar ![](../../Base/QTGUI/Resources/Icons/Medium/SlicerLoadData.png).
-  - Saving happens with the Save Data toolbar button ![](../../Base/QTGUI/Resources/Icons/Medium/SlicerSave.png).
+### Load data
+
+To load data:
+- drag&drop file on the application window, or
+- in application menu: `File` -> `Add Data` (or `Add Data` toolbar button) ![](../../Base/QTGUI/Resources/Icons/Medium/SlicerLoadData.png)
+
+![](https://github.com/Slicer/Slicer/releases/download/docs-resources/data_loading_and_saving_load_dialog.png)
+
+### Save data
+
+To save the entire scene (all data, visualization and processing settings, etc.):
+- in application menu `File` -> `Save Data`, or
+- `Save Data` toolbar button ![](../../Base/QTGUI/Resources/Icons/Medium/SlicerSave.png)
+
+:::{tip}
+
+The entire workspace, including all data and settings can be saved into a single, independent, self-contained `.mrb` file by clicking on the small package icon at the top-left corner. A new copy of all files is written and zipped into a single file, therefore saving takes longer time than an incremental saving of only the modified files.
+
+:::
 
 ![](https://github.com/Slicer/Slicer/releases/download/docs-resources/data_loading_and_saving_save_dialog.png)
+
+### Export data
+
+To export selected data sets - for sharing with others or for loading into other applications: go to `Data` module, right-click on an item, and choose `Export to file...`. Settings used for exporting (file format, filename, options) do not modify settings used for saving.
+
+![](https://github.com/Slicer/Slicer/releases/download/docs-resources/data_loading_and_saving_export_dialog.png)
+
+:::{tip}
+
+Multiple nodes can be exported at once by placing them into a folder and then by exporting the folder. When exporting an entire folder hierarchy the `Export folder structure` option can be enabled to have the directory structure in the output directory match the subject hierarchy folder structure.
+
+:::
 
 ## Supported Data Formats
 
@@ -92,7 +121,7 @@ Surface or volumetric meshes.
 - [**VTK Polygonal Data**](https://vtk.org/wp-content/uploads/2015/04/file-formats.pdf) (.vtk, .vtp): Default coordinate system: LPS. Coordinate system (LPS/RAS) can be specified in header. Full color (RGB or RGBA) meshes can be read and written (color must be assigned as point scalar data of `unsigned char` type and 3 or 4 components). Texture image can be applied using "Texture model" module (in SlicerIGT extension).
 - [**VTK Unstructured Grid Data**](https://vtk.org/wp-content/uploads/2015/04/file-formats.pdf) (.vtk, .vtu): Volumetric mesh. Default coordinate system: LPS. Coordinate system (LPS/RAS) can be specified in header.
 - **STereoLithography** (.stl): Format most commonly used for 3D printing. Default coordinate system: LPS. Coordinate system (LPS/RAS) can be specified in header.
-- **Wavefront OBJ** (.obj): Default coordinate system: LPS. Coordinate system (LPS/RAS) can be specified in header. Texture image can be applied using "Texture model" module (in SlicerIGT extension). The non-standard [technique of saving vertex color as additinal values after coordinates](https://web.archive.org/web/20220508010504/www.paulbourke.net/dataformats/obj/colour.html) is not supported - if vertex coloring is needed then convert to PLY, VTK, or VTP format using another software.
+- **Wavefront OBJ** (.obj): Default coordinate system: LPS. Coordinate system (LPS/RAS) can be specified in header. Texture image can be applied using "Texture model" module (in SlicerIGT extension). The non-standard [technique of saving vertex color as additional values after coordinates](https://web.archive.org/web/20220508010504/www.paulbourke.net/dataformats/obj/colour.html) is not supported - if vertex coloring is needed then convert to PLY, VTK, or VTP format using another software.
 - **Stanford Triangle Format** (.ply): Default coordinate system: LPS. Coordinate system (LPS/RAS) can be specified in header. Full color (RGB or RGBA) meshes can be read and written (color must be assigned to vertex data in `uchar` type properties named `red`, `green`, `blue`, and optional `alpha`). Texture image can be applied using "Texture model" module (in SlicerIGT extension).
 - **BYU** (.byu, .g; reading only): Coordinate system: LPS.
 - **UCD** (.ucd; reading only): Coordinate system: LPS.
@@ -127,7 +156,7 @@ Surface or volumetric meshes.
 
 - **Markups JSON** (.mkp.json): point list, line, curve, closed curve, plane, etc. Default coordinate system: LPS. Coordinate system (LPS/RAS) can be specified in image header. JSON schema is available [here](https://github.com/Slicer/Slicer/tree/main/Modules/Loadable/Markups/Resources/Schema).
 - **Markups CSV** (.fcsv): legacy file format for storing point list. Default coordinate system: LPS. Coordinate system (LPS/RAS) can be specified in image header.
-- **Annotation CSV** (.acsv): legacy file format for storing annotation ruler, ROI.
+- **Annotation CSV** (.acsv): legacy file format for storing markups line, ROI.
 
 ### Scenes
 
@@ -140,7 +169,9 @@ Surface or volumetric meshes.
 
 - **Text** (.txt, .xml., json)
 - **Table** (.csv, .tsv)
-- [**Color table**](https://www.slicer.org/wiki/Documentation/Nightly/Modules/Colors#File_format) (.ctbl, .txt)
+- Color tables:
+  - [**Slicer color table**](https://www.slicer.org/wiki/Documentation/Nightly/Modules/Colors#File_format) (.ctbl, .txt)
+  - ITK-Snap label description file (.txt, .label) (reading only) This can be used for loading segmentations that were created in ITK-Snap. The color table must be loaded in the scene first. Then, when the label image file is loaded then in `Add Data` window select `Segmentation` in the `Description` column and select the loaded color table in the `Color node` column.
 - [**Volume rendering properties**](../developer_guide/modules/volumerendering.md) (.vp)
 - [**Volume rendering shader properties**](../developer_guide/modules/volumerendering.md) (.sp)
 - **Terminology** (.term.json, .json): dictionary of standard DICOM or other terms

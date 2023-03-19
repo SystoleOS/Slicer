@@ -18,6 +18,9 @@ or http://www.slicer.org/copyright/copyright.txt for details.
 #include "vtkMRMLGridTransformNode.h"
 #include "vtkMRMLLinearTransformNode.h"
 #include "vtkMRMLMarkupsNode.h"
+#include "vtkMRMLMarkupsPlaneNode.h"
+#include "vtkMRMLMarkupsROINode.h"
+#include "vtkMRMLMessageCollection.h"
 #include "vtkMRMLScalarVolumeDisplayNode.h"
 #include "vtkMRMLScalarVolumeNode.h"
 #include "vtkMRMLScene.h"
@@ -96,36 +99,37 @@ bool vtkSlicerTransformLogic::hardenTransform(vtkMRMLTransformableNode* transfor
 }
 
 //----------------------------------------------------------------------------
-vtkMRMLTransformNode* vtkSlicerTransformLogic::AddTransform(const char* filename, vtkMRMLScene *scene)
+vtkMRMLTransformNode* vtkSlicerTransformLogic::AddTransform(const char* filename, vtkMRMLScene *scene,
+  vtkMRMLMessageCollection* userMessages/*=nullptr*/)
 {
   vtkNew<vtkMRMLTransformStorageNode> storageNode;
 
   if (scene == nullptr)
-  {
+    {
     vtkErrorMacro("scene == nullptr in vtkSlicerTransformLogic::AddTransform");
     return nullptr;
-  }
+    }
 
   // check for local or remote files
   int useURI = 0; // false;
   if (scene->GetCacheManager() != nullptr)
-  {
+    {
     useURI = scene->GetCacheManager()->IsRemoteReference(filename);
-  }
+    }
 
   const char *localFile;
   if (useURI)
-  {
+    {
     vtkDebugMacro("AddTransforn: file name is remote: " << filename);
     storageNode->SetURI(filename);
     // reset filename to the local file name
     localFile = ((scene)->GetCacheManager())->GetFilenameFromURI(filename);
-  }
+    }
   else
-  {
+    {
     storageNode->SetFileName(filename);
     localFile = filename;
-  }
+    }
 
   const std::string fname(localFile);
   // the model name is based on the file name (itksys call should work even if
@@ -133,10 +137,11 @@ vtkMRMLTransformNode* vtkSlicerTransformLogic::AddTransform(const char* filename
   const std::string name = itksys::SystemTools::GetFilenameName(fname);
 
   if (!storageNode->SupportedFileType(name.c_str()))
-  {
-    vtkErrorMacro("Unsupported transform file format: " << filename);
+    {
+    vtkErrorToMessageCollectionMacro(userMessages, "vtkSlicerTransformLogic::AddTransform",
+      "Unsupported transform file format: " << filename);
     return nullptr;
-  }
+    }
 
   // check to see which node can read this type of file
   vtkSmartPointer<vtkMRMLTransformNode> tnode;
@@ -147,7 +152,12 @@ vtkMRMLTransformNode* vtkSlicerTransformLogic::AddTransform(const char* filename
   generalTransform->SetScene(scene);
   if (!storageNode->ReadData(generalTransform.GetPointer()))
   {
-    vtkErrorMacro("Failed to read transform from file: " << filename);
+    if (userMessages)
+      {
+      userMessages->AddMessages(storageNode->GetUserMessages());
+      }
+    vtkErrorToMessageCollectionMacro(userMessages, "vtkSlicerTransformLogic::AddTransform",
+      "Failed to read transform from file: " << filename);
     return nullptr;
   }
 
@@ -158,6 +168,7 @@ vtkMRMLTransformNode* vtkSlicerTransformLogic::AddTransform(const char* filename
   // term we should get rid of specialized transform node classes and just use
   // vtkMRMLTransformNode (anyway, transform classes are not meaningful when transforms
   // are composited by hardening and we have mixed transforms).
+  storageNode->GetUserMessages()->ClearMessages();
   switch (GetTransformKind(generalTransform.GetPointer()))
   {
   case TRANSFORM_LINEAR:
@@ -177,6 +188,11 @@ vtkMRMLTransformNode* vtkSlicerTransformLogic::AddTransform(const char* filename
     tnode = generalTransform.GetPointer();
   }
 
+  if (userMessages)
+    {
+    userMessages->AddMessages(storageNode->GetUserMessages());
+    }
+
   const std::string basename(storageNode->GetFileNameWithoutExtension(fname.c_str()));
   const std::string uname(scene->GetUniqueNameByString(basename.c_str()));
   tnode->SetName(uname.c_str());
@@ -186,12 +202,6 @@ vtkMRMLTransformNode* vtkSlicerTransformLogic::AddTransform(const char* filename
   tnode->SetAndObserveStorageNodeID(storageNode->GetID());
 
   return tnode;
-}
-
-int vtkSlicerTransformLogic::SaveTransform(const char* vtkNotUsed(filename),
-  vtkMRMLTransformNode *vtkNotUsed(transformNode))
-{
-  return 1;
 }
 
 //----------------------------------------------------------------------------
@@ -1277,7 +1287,8 @@ bool vtkSlicerTransformLogic::GetVisualization2d(vtkPolyData* output, vtkMRMLTra
 }
 
 //----------------------------------------------------------------------------
-bool vtkSlicerTransformLogic::GetVisualization3d(vtkPolyData* output, vtkMRMLTransformDisplayNode* displayNode, vtkMRMLNode* regionNode)
+bool vtkSlicerTransformLogic::GetVisualization3d(vtkPolyData* output,
+  vtkMRMLTransformDisplayNode* displayNode, vtkMRMLNode* regionNode, vtkMRMLMarkupsNode* glyphPointsNode/*=nullptr*/)
 {
   if (displayNode == nullptr || output == nullptr || regionNode == nullptr)
     {
@@ -1287,6 +1298,8 @@ bool vtkSlicerTransformLogic::GetVisualization3d(vtkPolyData* output, vtkMRMLTra
   vtkNew<vtkMatrix4x4> ijkToRAS;
   int regionSize_IJK[3] = { 0 };
   vtkMRMLSliceNode* sliceNode = vtkMRMLSliceNode::SafeDownCast(regionNode);
+  vtkMRMLMarkupsROINode* markupsRoiNode = vtkMRMLMarkupsROINode::SafeDownCast(regionNode);
+  vtkMRMLMarkupsPlaneNode* markupsPlaneNode = vtkMRMLMarkupsPlaneNode::SafeDownCast(regionNode);
   vtkMRMLDisplayableNode* displayableNode = vtkMRMLDisplayableNode::SafeDownCast(regionNode);
   if (sliceNode != nullptr)
     {
@@ -1316,6 +1329,38 @@ bool vtkSlicerTransformLogic::GetVisualization3d(vtkPolyData* output, vtkMRMLTra
     regionSize_IJK[1] = numOfPointsY;
     regionSize_IJK[2] = 0;
     }
+  else if (markupsPlaneNode != nullptr)
+    {
+    double roiDiameter_Object[3] = { 0.0, 0.0, 0.0 };
+    markupsPlaneNode->GetSize(roiDiameter_Object);
+    double planeBounds[4] = {0.0, 0.0, 0.0, 0.0};
+    markupsPlaneNode->GetPlaneBounds(planeBounds);
+    double roiCorner_Object[4] = { planeBounds[0], planeBounds[2], 0.0, 1.0 };
+    double roiCorner_World[4] = { 0.0, 0.0, 0.0, 1.0 };
+    markupsPlaneNode->GetObjectToWorldMatrix(ijkToRAS); // IJK = object, RAS = world
+    ijkToRAS->MultiplyPoint(roiCorner_Object, roiCorner_World);
+    ijkToRAS->SetElement(0, 3, roiCorner_World[0]);
+    ijkToRAS->SetElement(1, 3, roiCorner_World[1]);
+    ijkToRAS->SetElement(2, 3, roiCorner_World[2]);
+    regionSize_IJK[0] = roiDiameter_Object[0];
+    regionSize_IJK[1] = roiDiameter_Object[1];
+    regionSize_IJK[2] = roiDiameter_Object[2];
+    }
+  else if (markupsRoiNode != nullptr)
+    {
+    double roiDiameter_Object[3] = { 0.0, 0.0, 0.0 };
+    markupsRoiNode->GetSize(roiDiameter_Object);
+    double roiCorner_Object[4] = { -roiDiameter_Object[0] / 2.0, -roiDiameter_Object[1] / 2.0, -roiDiameter_Object[2] / 2.0, 1.0 };
+    double roiCorner_World[4] = { 0.0, 0.0, 0.0, 1.0 };
+    markupsRoiNode->GetObjectToWorldMatrix()->MultiplyPoint(roiCorner_Object, roiCorner_World);
+    ijkToRAS->DeepCopy(markupsRoiNode->GetObjectToWorldMatrix());
+    ijkToRAS->SetElement(0, 3, roiCorner_World[0]);
+    ijkToRAS->SetElement(1, 3, roiCorner_World[1]);
+    ijkToRAS->SetElement(2, 3, roiCorner_World[2]);
+    regionSize_IJK[0] = roiDiameter_Object[0];
+    regionSize_IJK[1] = roiDiameter_Object[1];
+    regionSize_IJK[2] = roiDiameter_Object[2];
+    }
   else if (displayableNode != nullptr)
     {
     double bounds_RAS[6] = { 0 };
@@ -1333,7 +1378,6 @@ bool vtkSlicerTransformLogic::GetVisualization3d(vtkPolyData* output, vtkMRMLTra
     return false;
     }
   vtkSmartPointer<vtkPoints> samplePoints_RAS;
-  vtkMRMLMarkupsNode* glyphPointsNode = vtkMRMLMarkupsNode::SafeDownCast(regionNode);
   if (glyphPointsNode != nullptr)
     {
     samplePoints_RAS = vtkSmartPointer<vtkPoints>::New();

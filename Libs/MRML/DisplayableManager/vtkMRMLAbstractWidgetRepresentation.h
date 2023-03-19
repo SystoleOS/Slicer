@@ -45,6 +45,7 @@
 #include "vtkWidgetRepresentation.h"
 
 #include "vtkMRMLAbstractViewNode.h"
+#include "vtkMRMLApplicationLogic.h"
 
 #include <vector>
 
@@ -67,7 +68,7 @@ public:
   * (i.e., not implementing the Render() methods properly) or leaking graphics resources
   * (i.e., not implementing ReleaseGraphicsResources() properly).
   */
-  double *GetBounds() VTK_SIZEHINT(6) override { return nullptr; }
+  double* GetBounds() VTK_SIZEHINT(6) override { return nullptr; }
   void GetActors(vtkPropCollection *) override {}
   void GetActors2D(vtkPropCollection *) override {}
   void GetVolumes(vtkPropCollection *) override {}
@@ -92,6 +93,14 @@ public:
   */
   virtual void SetRenderer(vtkRenderer *ren);
   virtual vtkRenderer* GetRenderer();
+  //@}
+
+  //@{
+  /**
+  * Set the application logic. Used for retrieving custom font file, etc.
+  */
+  virtual void SetApplicationLogic(vtkMRMLApplicationLogic* appLogic);
+  virtual vtkMRMLApplicationLogic* GetApplicationLogic();
   //@}
 
   //@{
@@ -149,6 +158,8 @@ public:
 
   /// The renderer in which this widget is placed
   vtkWeakPointer<vtkRenderer> Renderer;
+
+  vtkWeakPointer<vtkMRMLApplicationLogic> ApplicationLogic;
 
   bool NeedToRender;
 

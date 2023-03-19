@@ -3,8 +3,9 @@ linkify-it-py
 lxml
 myst-parser
 pygments
-sphinx
+# Workaround for readthedocs bug (https://github.com/readthedocs/sphinx_rtd_theme/issues/1343)
+sphinx~=5.0,!=5.2.0.post0
 sphinx-issues
-sphinx-markdown-tables
+sphinx_markdown_tables>=0.0.17
 sphinx-notfound-page
 sphinx_rtd_theme>=0.5.2

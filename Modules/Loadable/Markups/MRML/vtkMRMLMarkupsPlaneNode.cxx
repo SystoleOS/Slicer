@@ -913,6 +913,8 @@ double* vtkMRMLMarkupsPlaneNode::GetSize()
 //----------------------------------------------------------------------------
 void vtkMRMLMarkupsPlaneNode::SetSize(double x, double y)
 {
+  MRMLNodeModifyBlocker blocker(this);
+
   if (this->Size[0] == x && this->Size[1] == y)
     {
     return;
@@ -948,6 +950,7 @@ void vtkMRMLMarkupsPlaneNode::SetSize(double x, double y)
   this->PlaneBounds[2] *= this->Size[1];
   this->PlaneBounds[3] *= this->Size[1];
 
+  this->UpdateAllMeasurements();
   this->Modified();
 }
 
@@ -1012,6 +1015,8 @@ void vtkMRMLMarkupsPlaneNode::SetPlaneBounds(double x0, double x1, double y0, do
     return;
     }
 
+  MRMLNodeModifyBlocker blocker(this);
+
   this->PlaneBounds[0] = std::min(x0, x1);
   this->PlaneBounds[1] = std::max(x0, x1);
   this->PlaneBounds[2] = std::min(y0, y1);
@@ -1020,6 +1025,7 @@ void vtkMRMLMarkupsPlaneNode::SetPlaneBounds(double x0, double x1, double y0, do
   this->Size[0] = std::max(0.0, this->PlaneBounds[1] - this->PlaneBounds[0]);
   this->Size[1] = std::max(0.0, this->PlaneBounds[3] - this->PlaneBounds[2]);
 
+  this->UpdateAllMeasurements();
   this->Modified();
 }
 
@@ -1377,7 +1383,9 @@ void vtkMRMLMarkupsPlaneNode::UpdatePlaneFromPointNormal()
     }
   baseToNodeTransform->Translate(origin_Node);
   this->BaseToNodeMatrix->DeepCopy(baseToNodeTransform->GetMatrix());
-
+  // this->BaseToNodeMatrix modified event is ignored if we get here from a MRML node callback,
+  // so we need to call Modified() to ensure that node modification is notified.
+  this->Modified();
   if (this->GetNumberOfDefinedControlPoints(true/*include preview*/) >= 1 && this->Size[0] >= 0.0 && this->Size[1] >= 0.0)
     {
     this->SetIsPlaneValid(true);
@@ -1427,6 +1435,9 @@ void vtkMRMLMarkupsPlaneNode::UpdatePlaneFrom3Points()
       }
     }
   this->BaseToNodeMatrix->DeepCopy(baseToNodeMatrix);
+  // this->BaseToNodeMatrix modified event is ignored if we get here from a MRML node callback,
+  // so we need to call Modified() to ensure that node modification is notified.
+  this->Modified();
 
   this->SetIsPlaneValid(true);
   this->UpdatePlaneSize();
@@ -1506,15 +1517,20 @@ void vtkMRMLMarkupsPlaneNode::UpdatePlaneFromPlaneFit()
       this->SetSize(0.0, 0.0);
       }
     this->SetIsPlaneValid(false);
-    return;
     }
+  else
+    {
+    // The orientation of the coordinate system is adjusted so that the z axis aligns with the normal of the
+    // best fit plane defined by the control points.
+    vtkNew<vtkMatrix4x4> bestFitMatrix_Node;
+    bool valid = this->GetClosestFitPlaneFromControlPoints(this->BaseToNodeMatrix);
+    this->SetIsPlaneValid(valid);
+    this->UpdatePlaneSize();
+   }
 
-  // The orientation of the coordinate system is adjusted so that the z axis aligns with the normal of the
-  // best fit plane defined by the control points.
-  vtkNew<vtkMatrix4x4> bestFitMatrix_Node;
-  bool valid = this->GetClosestFitPlaneFromControlPoints(this->BaseToNodeMatrix);
-  this->SetIsPlaneValid(valid);
-  this->UpdatePlaneSize();
+  // this->BaseToNodeMatrix modified event is ignored if we get here from a MRML node callback,
+  // so we need to call Modified() to ensure that node modification is notified.
+  this->Modified();
 }
 
 //----------------------------------------------------------------------------

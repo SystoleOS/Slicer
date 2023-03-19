@@ -35,6 +35,8 @@
 
 // MRML includes
 #include <vtkMRMLApplicationLogic.h>
+#include <vtkMRMLDisplayableNode.h>
+#include <vtkMRMLDisplayNode.h>
 #include <vtkMRMLMessageCollection.h>
 #include <vtkMRMLNode.h>
 #include <vtkMRMLTransformableNode.h>
@@ -575,7 +577,8 @@ bool qSlicerCoreIOManager::loadNodes(const qSlicerIO::IOFileType& fileType,
   // If no readers were able to read and load the file(s), success will remain false
   bool success = false;
   int numberOfUserMessagesBefore = userMessages ? userMessages->GetNumberOfMessages() : 0;
-  QString userMessagePrefix = QString("Loading %1 - ").arg(parameters["fileName"].toString());
+  //: %1 is the filename
+  QString userMessagePrefix = tr("Loading %1").arg(parameters["fileName"].toString()) + " - ";
 
   QStringList nodes;
   foreach (qSlicerFileReader* reader, readers)
@@ -610,7 +613,7 @@ bool qSlicerCoreIOManager::loadNodes(const qSlicerIO::IOFileType& fileType,
   if (!success && userMessages != nullptr && userMessages->GetNumberOfMessages() == numberOfUserMessagesBefore)
     {
     // Make sure that at least one message is logged if reading failed.
-    userMessages->AddMessage(vtkCommand::ErrorEvent, (QString(tr("%1 load failed.")).arg(userMessagePrefix)).toStdString());
+    userMessages->AddMessage(vtkCommand::ErrorEvent, (tr("%1 load failed.").arg(userMessagePrefix)).toStdString());
     }
 
   loadedFileParameters.insert("nodeIDs", nodes);
@@ -776,15 +779,28 @@ bool qSlicerCoreIOManager::saveNodes(qSlicerIO::IOFileType fileType,
   const QList<qSlicerFileWriter*> writers = d->writers(fileType, parameters, scene);
   if (writers.isEmpty())
     {
-    qWarning() << "No writer found to write file" << fileName
-               << "of type" << fileType;
+    qCritical() << Q_FUNC_INFO << "error: No writer found to write file" << fileName << "of type" << fileType;
+    if (userMessages)
+      {
+      userMessages->AddMessage(vtkCommand::ErrorEvent,
+        (tr("No writer found to write file %1 of type %2.").arg(fileName).arg(fileType)).toStdString());
+      }
     return false;
     }
 
-  // Create the directory that the file will be saved to, if it does not exist
-  if (!QFileInfo(fileName).dir().mkpath(".")) // Note that if the directory already exists, mkpath simply returns true
+  // Create the directory that the file will be saved to, if it does not exist.
+  // Note: We must check if the directory exist and if it does then we don't call mkpath, because
+  // mkpath incorrectly returns false (meaning: failed to create folder) if the directory
+  // is the root folder (for example "D:\").
+  if (!QFileInfo(fileName).dir().exists() && !QFileInfo(fileName).dir().mkpath("."))
     {
-    qWarning() << Q_FUNC_INFO << ": Unable to create directory" << QFileInfo(fileName).absolutePath();
+    qCritical() << Q_FUNC_INFO << "error: Unable to create directory" << QFileInfo(fileName).absolutePath();
+    if (userMessages)
+      {
+      userMessages->AddMessage(vtkCommand::ErrorEvent,
+        (tr("Unable to create directory '%1'").arg(QFileInfo(fileName).absolutePath())).toStdString());
+      }
+    return false;
     }
 
   QStringList nodes;
@@ -811,6 +827,12 @@ bool qSlicerCoreIOManager::saveNodes(qSlicerIO::IOFileType fileType,
   if (!writeSuccess)
     {
     // no appropriate writer was found
+    qCritical() << Q_FUNC_INFO << "error: Saving failed with all writers found for file" << fileName << "of type" << fileType;
+    if (userMessages)
+      {
+      userMessages->AddMessage(vtkCommand::ErrorEvent,
+        (tr("Saving failed with all writers found for file '%1' of type '%2'.").arg(fileName).arg(fileType)).toStdString());
+      }
     return false;
     }
 
@@ -819,6 +841,11 @@ bool qSlicerCoreIOManager::saveNodes(qSlicerIO::IOFileType fileType,
     {
     // the writer did not report error
     // but did not report any successfully written nodes either
+    qCritical() << Q_FUNC_INFO << "error: No nodes were saved in scene";
+    if (userMessages)
+      {
+      userMessages->AddMessage(vtkCommand::ErrorEvent, tr("No nodes were saved in the scene").toStdString());
+      }
     return false;
     }
 
@@ -968,6 +995,25 @@ bool qSlicerCoreIOManager::exportNodes(
         }
       success = false;
       continue;
+      }
+
+    // Some data files store display properties (for example: markups), therefore we need to copy the display node as well.
+    vtkMRMLDisplayableNode* displayableNode = vtkMRMLDisplayableNode::SafeDownCast(storableNode);
+    vtkMRMLDisplayableNode* temporaryDisplayableNode = vtkMRMLDisplayableNode::SafeDownCast(temporaryStorableNode);
+    if (displayableNode && temporaryDisplayableNode && displayableNode->GetDisplayNode())
+      {
+      vtkMRMLDisplayNode* temporaryDisplayNode = vtkMRMLDisplayNode::SafeDownCast(
+        temporaryScene->AddNewNodeByClass(displayableNode->GetDisplayNode()->GetClassName()));
+      if (temporaryDisplayNode)
+        {
+        temporaryDisplayNode->CopyContent(displayableNode->GetDisplayNode(), false);
+        temporaryDisplayableNode->SetAndObserveDisplayNodeID(temporaryDisplayNode->GetID());
+        }
+      else
+        {
+        userMessages->AddMessage(vtkCommand::WarningEvent,
+          (tr("Unable to save display properties for %1 in temporary scene.").arg(storableNode->GetName())).toStdString());
+        }
       }
 
     // Finally, applying saving logic to the the temporary scene

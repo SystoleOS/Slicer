@@ -61,7 +61,7 @@ vtkMRMLCameraWidget::vtkMRMLCameraWidget()
   this->SetKeyboardEventTranslation(WidgetStateIdle, vtkEvent::ShiftModifier, 0, 0, "End", WidgetEventCameraRotateToPosterior);
 
   this->SetKeyboardEventTranslation(WidgetStateIdle, vtkEvent::NoModifier, 0, 0, "KP_3", WidgetEventCameraRotateToLeft);
-  this->SetKeyboardEventTranslation(WidgetStateIdle, vtkEvent::NoModifier, 0, 0, "Next", WidgetEventCameraRotateToLeft); //= PageDown
+  this->SetKeyboardEventTranslation(WidgetStateIdle, vtkEvent::NoModifier, 0, 0, "Next", WidgetEventCameraRotateToLeft); // PageDown key
   this->SetKeyboardEventTranslation(WidgetStateIdle, vtkEvent::ShiftModifier, 0, 0, "KP_3", WidgetEventCameraRotateToRight);
   this->SetKeyboardEventTranslation(WidgetStateIdle, vtkEvent::ShiftModifier, 0, 0, "Next", WidgetEventCameraRotateToRight);
 
@@ -1128,11 +1128,11 @@ bool vtkMRMLCameraWidget::ProcessMaximizeView(vtkMRMLInteractionEventData* event
     }
   if (isMaximized)
     {
-    layoutNode->SetMaximizedViewNode(nullptr);
+    layoutNode->RemoveMaximizedViewNode(viewNode);
     }
   else
     {
-    layoutNode->SetMaximizedViewNode(viewNode);
+    layoutNode->AddMaximizedViewNode(viewNode);
     }
 
   // Maximize/restore takes away the focus without resetting

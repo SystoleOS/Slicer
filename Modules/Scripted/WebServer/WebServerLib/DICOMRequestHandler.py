@@ -5,7 +5,7 @@ import urllib
 import slicer
 
 
-class DICOMRequestHandler(object):
+class DICOMRequestHandler:
     """
     Implements the mapping between DICOMweb endpoints
     and ctkDICOMDatabase api calls.
@@ -23,11 +23,11 @@ class DICOMRequestHandler(object):
     def logMessage(self, *args):
         logging.debug(args)
 
-    def canHandleRequest(self, uri, requestBody):
+    def canHandleRequest(self, method, uri, requestBody):
         parsedURL = urllib.parse.urlparse(uri)
         return 0.5 if parsedURL.path.startswith(b'/dicom') else 0.0
 
-    def handleRequest(self, uri, requestBody):
+    def handleRequest(self, method, uri, requestBody):
         """
         Dispatches various dicom requests
         :param parsedURL: the REST path and arguments
@@ -37,7 +37,10 @@ class DICOMRequestHandler(object):
         contentType = b'text/plain'
         responseBody = None
         splitPath = parsedURL.path.split(b'/')
-        if len(splitPath) > 4 and splitPath[4].startswith(b"series"):
+        if len(splitPath) > 6 and splitPath[6].startswith(b"instances"):
+            self.logMessage("handling instances")
+            contentType, responseBody = self.handleInstances(parsedURL, requestBody)
+        elif len(splitPath) > 4 and splitPath[4].startswith(b"series"):
             self.logMessage("handling series")
             contentType, responseBody = self.handleSeries(parsedURL, requestBody)
         elif len(splitPath) > 2 and splitPath[2].startswith(b"studies"):
@@ -68,7 +71,6 @@ class DICOMRequestHandler(object):
         responseBody = b"[{}]"
         if len(splitPath) == 3:
             # studies qido search
-            representativeSeries = None
             studyResponseString = b"["
             for patient in slicer.dicomDatabase.patients():
                 if studyCount > offset + limit:
@@ -79,6 +81,8 @@ class DICOMRequestHandler(object):
                         continue
                     if studyCount > offset + limit:
                         break
+                    # Get summary information of all the series (number of instances, modalities) and a representative series
+                    representativeSeriesDataset = None
                     series = slicer.dicomDatabase.seriesForStudy(study)
                     numberOfStudyRelatedSeries = len(series)
                     numberOfStudyRelatedInstances = 0
@@ -86,28 +90,37 @@ class DICOMRequestHandler(object):
                     for serie in series:
                         seriesInstances = slicer.dicomDatabase.instancesForSeries(serie)
                         numberOfStudyRelatedInstances += len(seriesInstances)
-                        if len(seriesInstances) > 0:
-                            representativeSeries = serie
+                        if len(seriesInstances) == 0:
+                            continue
+                        try:
+                            filename = slicer.dicomDatabase.fileForInstance(seriesInstances[0])
+                            dataset = pydicom.dcmread(filename, stop_before_pixels=True)
+                            if representativeSeriesDataset is None:
+                                # Use the first valid data set as representative series data
+                                representativeSeriesDataset = dataset
+                        except Exception as e:
+                            self.logMessage(f'Error while attempting to read instance {seriesInstances[0]} from file "{filename}": {e}')
+                            dataset = None
+                        if dataset is not None:
                             try:
-                                dataset = pydicom.dcmread(slicer.dicomDatabase.fileForInstance(seriesInstances[0]), stop_before_pixels=True)
                                 modalitiesInStudy.add(dataset.Modality)
                             except AttributeError as e:
-                                print('Could not get instance information for %s' % seriesInstances[0])
-                                print(e)
-                    if representativeSeries is None:
-                        print('Could not find any instances for study %s' % study)
+                                self.logMessage(f'Modality information was not found in {filename} ({seriesInstances[0]})')
+                    if representativeSeriesDataset is None:
+                        self.logMessage('Could not find any instances for study %s' % study)
                         continue
-                    instances = slicer.dicomDatabase.instancesForSeries(representativeSeries)
-                    firstInstance = instances[0]
-                    dataset = pydicom.dcmread(slicer.dicomDatabase.fileForInstance(firstInstance), stop_before_pixels=True)
+                    if not modalitiesInStudy:
+                        modalitiesInStudy = ['OT']
+                    # Assemble study response from representative series
+                    dataset = representativeSeriesDataset
                     studyDataset = pydicom.dataset.Dataset()
-                    studyDataset.SpecificCharacterSet = [u'ISO_IR 100']
+                    studyDataset.SpecificCharacterSet = ['ISO_IR 100']
                     studyDataset.StudyDate = dataset.StudyDate
                     studyDataset.StudyTime = dataset.StudyTime
-                    studyDataset.StudyDescription = dataset.StudyDescription
+                    studyDataset.StudyDescription = dataset.StudyDescription if hasattr(studyDataset, 'StudyDescription') else None
                     studyDataset.StudyInstanceUID = dataset.StudyInstanceUID
                     studyDataset.AccessionNumber = dataset.AccessionNumber
-                    studyDataset.InstanceAvailability = u'ONLINE'
+                    studyDataset.InstanceAvailability = 'ONLINE'
                     studyDataset.ModalitiesInStudy = list(modalitiesInStudy)
                     studyDataset.ReferringPhysicianName = dataset.ReferringPhysicianName
                     studyDataset[self.retrieveURLTag] = pydicom.dataelem.DataElement(
@@ -116,7 +129,7 @@ class DICOMRequestHandler(object):
                     studyDataset.PatientID = dataset.PatientID
                     studyDataset.PatientBirthDate = dataset.PatientBirthDate
                     studyDataset.PatientSex = dataset.PatientSex
-                    studyDataset.StudyID = dataset.StudyID
+                    studyDataset.StudyID = dataset.StudyID if hasattr(studyDataset, 'StudyID') else None
                     studyDataset[self.numberOfStudyRelatedSeriesTag] = pydicom.dataelem.DataElement(
                         self.numberOfStudyRelatedSeriesTag, "IS", str(numberOfStudyRelatedSeries))
                     studyDataset[self.numberOfStudyRelatedInstancesTag] = pydicom.dataelem.DataElement(
@@ -136,12 +149,75 @@ class DICOMRequestHandler(object):
             for serie in series:
                 seriesInstances = slicer.dicomDatabase.instancesForSeries(serie)
                 for instance in seriesInstances:
-                    dataset = pydicom.dcmread(slicer.dicomDatabase.fileForInstance(instance), stop_before_pixels=True)
+                    try:
+                        filename = slicer.dicomDatabase.fileForInstance(instance)
+                        dataset = pydicom.dcmread(filename, stop_before_pixels=True)
+                    except Exception as e:
+                        self.logMessage(f'Error while attempting to read instance {instance} from file "{filename}": {e}')
+                        continue
                     jsonDataset = dataset.to_json()
                     responseBody += jsonDataset.encode() + b","
             if responseBody.endswith(b','):
                 responseBody = responseBody[:-1]
             responseBody += b']'
+        return contentType, responseBody
+
+    def handleInstances(self, parsedURL, requestBody):
+        """
+        Handle series requests by returning json
+        :param parsedURL: the REST path and arguments
+        :param requestBody: the binary that came with the request
+        """
+        contentType = b'application/json'
+        splitPath = parsedURL.path.split(b'/')
+        responseBody = b"[{}]"
+        if len(splitPath) == 7:  # .../instances
+            # instance qido search
+            seriesUID = splitPath[5].decode()
+            instancesResponseString = b"["
+            instances = slicer.dicomDatabase.instancesForSeries(seriesUID)
+            for instance in instances:
+                try:
+                    filename = slicer.dicomDatabase.fileForInstance(instance)
+                    dataset = pydicom.dcmread(filename, stop_before_pixels=True)
+                except Exception as e:
+                    self.logMessage(f'Error while attempting to read instance {instance} from file "{filename}": {e}')
+                    continue
+                instanceDataset = pydicom.dataset.Dataset()
+                instanceDataset.SpecificCharacterSet = ['ISO_IR 100']
+                instanceDataset.SOPClassUID = dataset.SOPClassUID
+                instanceDataset.SOPInstanceUID = dataset.SOPInstanceUID
+                instanceDataset.InstanceAvailability = 'ONLINE'
+                instanceDataset[self.retrieveURLTag] = pydicom.dataelem.DataElement(
+                    0x00080190, "UR", "http://example.com")  # TODO: provide WADO-RS RetrieveURL
+                instanceDataset.StudyInstanceUID = dataset.StudyInstanceUID
+                instanceDataset.SeriesInstanceUID = dataset.SeriesInstanceUID
+                instanceDataset.InstanceNumber = dataset.InstanceNumber
+                instanceDataset.Rows = dataset.Rows
+                instanceDataset.Columns = dataset.Columns
+                instanceDataset.BitsAllocated = dataset.BitsAllocated
+                instanceDataset.BitsStored = dataset.BitsStored
+                instanceDataset.HighBit = dataset.HighBit
+                jsonDataset = instanceDataset.to_json(instanceDataset)
+                instancesResponseString += jsonDataset.encode() + b","
+            if instancesResponseString.endswith(b','):
+                instancesResponseString = instancesResponseString[:-1]
+            instancesResponseString += b']'
+            responseBody = instancesResponseString
+        elif len(splitPath) == 8:  # .../instances/NNN (download)
+            instanceUID = splitPath[7].decode()
+            contentType = b'application/dicom'
+            path = slicer.dicomDatabase.fileForInstance(instanceUID)
+            fp = open(path, 'rb')
+            responseBody = fp.read()
+            fp.close()
+        elif len(splitPath) == 9 and splitPath[8] == b'metadata':  # .../instances/NNN/metadata
+            self.logMessage('returning instance metadata')
+            contentType = b'application/json'
+            instanceUID = splitPath[7].decode()
+            dataset = pydicom.dcmread(slicer.dicomDatabase.fileForInstance(instanceUID), stop_before_pixels=True)
+            jsonDataset = dataset.to_json()
+            responseBody = b'[' + jsonDataset.encode() + b']'
         return contentType, responseBody
 
     def handleSeries(self, parsedURL, requestBody):
@@ -161,12 +237,27 @@ class DICOMRequestHandler(object):
             for serie in series:
                 instances = slicer.dicomDatabase.instancesForSeries(serie, 1)
                 firstInstance = instances[0]
-                dataset = pydicom.dcmread(slicer.dicomDatabase.fileForInstance(firstInstance), stop_before_pixels=True)
+                try:
+                    filename = slicer.dicomDatabase.fileForInstance(firstInstance)
+                    dataset = pydicom.dcmread(filename, stop_before_pixels=True)
+                except Exception as e:
+                    self.logMessage(f'Error while attempting to read instance {firstInstance} from file "{filename}": {e}')
+                    continue
                 seriesDataset = pydicom.dataset.Dataset()
-                seriesDataset.SpecificCharacterSet = [u'ISO_IR 100']
-                seriesDataset.Modality = dataset.Modality
+                seriesDataset.SpecificCharacterSet = ['ISO_IR 100']
                 seriesDataset.SeriesInstanceUID = dataset.SeriesInstanceUID
-                seriesDataset.SeriesNumber = dataset.SeriesNumber
+                try:
+                    # Required (type 1) field, but we don't disqualify the series if it does not have it
+                    seriesDataset.Modality = dataset.Modality
+                except AttributeError as e:
+                    self.logMessage(f'Modality information was not found in {filename} ({firstInstance})')
+                    seriesDataset.Modality = 'OT'
+                try:
+                    # Required (type 2) field, but we don't disqualify the series if it does not have it
+                    seriesDataset.SeriesNumber = dataset.SeriesNumber
+                except AttributeError as e:
+                    self.logMessage(f'Series number was not found in {filename} ({firstInstance})')
+                    seriesDataset.SeriesNumber = ''
                 if hasattr(dataset, "PerformedProcedureStepStartDate"):
                     seriesDataset.PerformedProcedureStepStartDate = dataset.PerformedProcedureStepStartDate
                 if hasattr(dataset, "PerformedProcedureStepStartTime"):
@@ -184,7 +275,12 @@ class DICOMRequestHandler(object):
             seriesUID = splitPath[5].decode()
             seriesInstances = slicer.dicomDatabase.instancesForSeries(seriesUID)
             for instance in seriesInstances:
-                dataset = pydicom.dcmread(slicer.dicomDatabase.fileForInstance(instance), stop_before_pixels=True)
+                try:
+                    filename = slicer.dicomDatabase.fileForInstance(instance)
+                    dataset = pydicom.dcmread(filename, stop_before_pixels=True)
+                except Exception as e:
+                    self.logMessage(f'Error while attempting to read instance {instance} from file "{filename}": {e}')
+                    continue
                 jsonDataset = dataset.to_json()
                 responseBody += jsonDataset.encode() + b","
             if responseBody.endswith(b','):

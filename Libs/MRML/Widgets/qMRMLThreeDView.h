@@ -36,7 +36,7 @@ class vtkMRMLViewNode;
 class vtkCollection;
 
 /// \brief 3D view for view nodes.
-/// For performance reasons, the view block refreshs when the scene is in
+/// For performance reasons, the view block refreshes when the scene is in
 /// batch process state.
 /// \sa qMRMLThreeDWidget, qMRMLThreeDViewControllerWidget, qMRMLSliceView
 class QMRML_WIDGETS_EXPORT qMRMLThreeDView : public ctkVTKRenderView
@@ -107,8 +107,12 @@ public slots:
   /// Set the current \a viewNode to observe
   void setMRMLViewNode(vtkMRMLViewNode* newViewNode);
 
-  /// Look from a given axis, need a mrml view node to be set
-  void lookFromViewAxis(const ctkAxesWidget::Axis& axis);
+  /// \deprecated Use lookFromAxis instead.
+  void lookFromViewAxis(const ctkAxesWidget::Axis& axis)
+  {
+    qWarning("This function is deprecated. Use lookFromAxis(const ctkAxesWidget::Axis& axis) instead.");
+    this->lookFromAxis(axis);
+  };
 
   /// Reimplemented to hide items to not take into
   /// account when computing the boundaries

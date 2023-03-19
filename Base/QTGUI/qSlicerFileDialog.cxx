@@ -75,7 +75,7 @@ QStringList qSlicerFileDialog::nameFilters(qSlicerIO::IOFileType fileType)
       extensions << ctk::nameFilterToExtensions(nameFilter);
       }
     }
-  filters.insert(0, QString("All (") + extensions.join(" ") + QString(")"));
+  filters.insert(0, tr("All") + " (" + extensions.join(" ") + ")");
   return filters;
 }
 
@@ -213,7 +213,7 @@ ctkFileDialog* qSlicerStandardFileDialog::createFileDialog(
   if (ioProperties["fileMode"].toBool())
     {
     fileDialog->setOption(QFileDialog::ShowDirsOnly);
-    fileDialog->setFileMode(QFileDialog::DirectoryOnly);
+    fileDialog->setFileMode(QFileDialog::Directory);
     }
 
   fileDialog->setObjectName(ioProperties["objectName"].toString());

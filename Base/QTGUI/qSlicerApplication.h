@@ -25,6 +25,7 @@
 class QPalette;
 
 // CTK includes
+#include <ctkErrorLogModel.h>
 #include <ctkPimpl.h>
 #include <ctkSettingsDialog.h>
 
@@ -91,6 +92,8 @@ public:
   /// Get Python Manager
   Q_INVOKABLE qSlicerPythonManager * pythonManager();
   Q_INVOKABLE ctkPythonConsole * pythonConsole();
+  /// Log messages at this or higher level will be displayed in the Python console.
+  Q_INVOKABLE ctkErrorLogLevel::LogLevel pythonConsoleLogLevel()const;
 #endif
 
   #ifdef Slicer_USE_QtTesting
@@ -184,6 +187,11 @@ public slots:
   void openExtensionsCatalogWebsite();
 #endif
 
+#ifdef Slicer_BUILD_APPLICATIONUPDATE_SUPPORT
+  /// Opens the Application Download website in the systems default web browser.
+  void openApplicationDownloadWebsite();
+#endif
+
   /// Number of recent log files to keep. Older log files are deleted automatically.
   int numberOfRecentLogFilesToKeep();
 
@@ -220,6 +228,11 @@ public slots:
   /// Override the qSlicerCoreApplication implementation to also show error messages in a popup window.
   bool loadFiles(const QStringList& filePaths, vtkMRMLMessageCollection* userMessages = nullptr) override;
 
+#ifdef Slicer_USE_PYTHONQT
+  /// Log messages at this or higher level will be displayed in the Python console.
+  void setPythonConsoleLogLevel(ctkErrorLogLevel::LogLevel logLevel);
+#endif
+
 signals:
 
   /// Emitted when the startup phase has been completed.
@@ -243,6 +256,12 @@ protected slots:
 
   /// Request editing of a MRML node
   void editNode(vtkObject*, void*, unsigned long) override;
+
+#ifdef Slicer_USE_PYTHONQT
+  /// Add log message to Python console
+  void logToPythonConsole(const QDateTime& currentDateTime, const QString& threadId,
+    ctkErrorLogLevel::LogLevel logLevel, const QString& origin, const ctkErrorLogContext& context, const QString& text);
+#endif
 
 protected:
   /// Reimplemented from qSlicerCoreApplication

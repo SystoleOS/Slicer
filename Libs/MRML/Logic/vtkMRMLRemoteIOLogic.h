@@ -47,11 +47,15 @@ public:
   /// and used when calling AddDataIOToScene
   /// and RemoveDataIOFromScene
   /// The Get methods can be used elsewhere, but the set methods
-  /// should only be used for debuggin
+  /// should only be used for debugging
   vtkGetObjectMacro (CacheManager, vtkCacheManager);
   virtual void SetCacheManager(vtkCacheManager*);
   vtkGetObjectMacro (DataIOManager, vtkDataIOManager);
   virtual void SetDataIOManager(vtkDataIOManager*);
+
+  /// CA Certificates path for https protocol.
+  vtkSetStringMacro(CaCertificatesPath);
+  vtkGetStringMacro(CaCertificatesPath);
 
 protected:
   vtkMRMLRemoteIOLogic();
@@ -60,8 +64,9 @@ protected:
   vtkMRMLRemoteIOLogic(const vtkMRMLRemoteIOLogic&);
   void operator=(const vtkMRMLRemoteIOLogic&);
 
-  vtkCacheManager *          CacheManager;
-  vtkDataIOManager *         DataIOManager;
+  vtkCacheManager* CacheManager{nullptr};
+  vtkDataIOManager* DataIOManager{nullptr};
+  char* CaCertificatesPath{nullptr};
 };
 
 #endif

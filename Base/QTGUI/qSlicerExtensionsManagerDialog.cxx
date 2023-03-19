@@ -66,7 +66,7 @@ void qSlicerExtensionsManagerDialogPrivate::init()
     q, SLOT(onBatchProcessingChanged()));
 
   QPushButton * restartButton = this->ButtonBox->button(QDialogButtonBox::Ok);
-  restartButton->setText("Restart");
+  restartButton->setText(qSlicerExtensionsManagerDialog::tr("Restart"));
 
   q->setRestartRequested(false);
 
@@ -232,4 +232,11 @@ void qSlicerExtensionsManagerDialog::reject()
     {
     Superclass::reject(); // close window
     }
+}
+
+// --------------------------------------------------------------------------
+void qSlicerExtensionsManagerDialog::setFocusToSearchBox()
+{
+  Q_D(qSlicerExtensionsManagerDialog);
+  d->ExtensionsManagerWidget->setFocusToSearchBox();
 }

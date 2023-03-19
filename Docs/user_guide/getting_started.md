@@ -83,7 +83,6 @@ brew uninstall slicer-preview       # to uninstall
 
 **Notes:**
 - Slicer is expected to work on the vast majority of desktop and server Linux distributions. The system is required to provide at least GLIBC 2.17 and GLIBCCC 3.4.19. For more details, read [here](https://www.python.org/dev/peps/pep-0599/#the-manylinux2014-policy).
-- The Extension Manager uses QtWebengine to display the list of extensions. If your linux kernel does not fulfill [sandboxing requirements](https://doc.qt.io/Qt-5/qtwebengine-platform-notes.html#sandboxing-support) then you can turn off sandboxing by this command: `export QTWEBENGINE_DISABLE_SANDBOX=1`
 - Getting command-line arguments and process output containing non-ASCII characters requires the system to use a UTF-8 locale. If the system uses a different locale then the `export LANG="C.UTF-8"` command may be used before launching the application to switch to an acceptable locale.
 
 #### Debian / Ubuntu
@@ -164,7 +163,7 @@ You can customize views (show orientation marker, ruler, change orientation, tra
 
 #### Save data
 
-Data sets loaded into the application can be saved using Save data dialog or exported to DICOM format using DICOM module. Detailes are described in [Data loading and saving section](data_loading_and_saving.md).
+All data in the scene can be saved at once using `File` menu -> `Save data`, or selected data sets can be exported from the `Data` module by right-clicking and selecting `Export to file...` or `Export to DICOM...` . Details are described in the [Data loading and saving section](data_loading_and_saving.md).
 
 #### Extensions
 
@@ -203,9 +202,8 @@ The application has a large and very friendly and helpful user community. We hav
 
 Terms used in various fields of medical and biomedical image computing and clinical images are not always consistent. This section defines terms that are commonly used in 3D Slicer, especially those that may have different meaning in other contexts.
 
-- **Annotation**: Simple geometric objects and measurements that the user can place in viewers. Annotations module can be used to create such objects, but it is deprecated - being replaced by Markups module.
 - **Bounds**: Describes bounding box of a spatial object along 3 axes. Defined in VTK by 6 floating-point values: `X_min`, `X_max`, `Y_min`, `Y_max`, `Z_min`, `Z_max`.
--** Brightness/contras**t: Specifies linear mapping of voxel values to brightness of a displayed pixel. Brightness is the linear offset, contrast is the multiplier. In medical imaging, this linear mapping is more commonly specified by window/level values.
+- **Brightness/contrast**: Specifies linear mapping of voxel values to brightness of a displayed pixel. Brightness is the linear offset, contrast is the multiplier. In medical imaging, this linear mapping is more commonly specified by window/level values.
 - **Cell**: Data cells are simple topological elements of meshes, such as lines, polygons, tetrahedra, etc.
 - **Color legend** (or color bar, scalar bar): a widget overlaid on slice or 3D views that displays a color legend, indicating meaning of colors.
 - **Coordinate system** (or coordinate frame, reference frame, space): Specified by position of origin, axis directions, and distance unit. All coordinate systems in 3D Slicer are right-handed.
@@ -215,14 +213,14 @@ Terms used in various fields of medical and biomedical image computing and clini
 - **Extent**: Range of integer coordinates along 3 axes. Defined in VTK by 6 values, for IJK axes: `I_min`, `I_max`, `J_min`, `J_max`, `K_min`, `K_max`. Both minimum and maximum values are inclusive, therefore size of an array is `(I_max - I_min + 1)` x `(J_max - J_min + 1)` x `(K_max - K_min + 1)`.
 - **Fiducial**: Represents a point in 3D space. The term originates from image-guided surgery, where "fiducial markers" are used to mark point positions.
 - **Frame**: One time point in a time sequence. To avoid ambiguity, this term is not used to refer to a slice of a volume.
-- **Geometry**: Specify location and shape of an object in 3D space. See "Volume" term for definition of image geometry.
+- **Geometry**: Specifies location and shape of an object in 3D space. See "Volume" term for definition of image geometry.
 - **Image intensity**: Typically refers to the value of a voxel. Displayed pixel brightness and color is computed from this value based on the chosen window/level and color lookup table.
-- **IJK**: Voxel coordinate system axes. Integer coordinate values correspond to voxel center positions. IJK values are often used as coordinate location within a 3D array. By VTK convention, and I indexes the column, J indexes the row, K indexes the slice. Note that numpy uses the opposite ordering convention, where `a[K][J][I]`. Sometimes this memory layout is described as I being the fastest moving index and K being the slowest moving.
+- **IJK**: Voxel coordinate system axes. Integer coordinate values correspond to voxel center positions. IJK values are often used as coordinate values to designate an element within a 3D array. By VTK convention, and I indexes the column, J indexes the row, K indexes the slice. Note that numpy uses the opposite ordering convention, where `a[K][J][I]`. Sometimes this memory layout is described as I being the fastest moving index and K being the slowest moving.
 - **ITK**: [Insight Toolkit](https://itk.org/). Software library that Slicer uses for most image processing operations.
 - **Labelmap** (or labelmap volume, labelmap volume node): Volume node that has discrete (integer) voxel values. Typically each value corresponds to a specific structure or region. This allows compact representation of non-overlapping regions in a single 3D array. Most software use a single labelmap to store an image segmentation, but Slicer uses a dedicated segmentation node, which can contain multiple representations (multiple labelmaps to allow storing overlapping segments; closed surface representation for quick 3D visualization, etc.).
 - **LPS**: Left-posterior-superior anatomical coordinate system. Most commonly used coordinate system in medical image computing. Slicer stores all data in LPS coordinate system on disk (and converts to/from RAS when writing to or reading from disk).
 - **Markups**: Simple geometric objects and measurements that the user can place in viewers. [Markups module](modules/markups.md) can be used to create such objects. There are several types, such as point list, line, curve, plane, ROI.
-- **Reference volume**: Voxel values of this volume is used during segmentation by those effects that rely on intensity of an underlying volume.
+- **Source volume**: Voxel values of this volume is used during segmentation by those effects that rely on intensity of an underlying volume.
 - **MRML**: [Medical Reality Markup Language](https://en.wikipedia.org/wiki/Medical_Reality_Markup_Language): Software library for storage, visualization, and processing of information objects that may be used in medical applications. The library is designed to be reusable in various software applications, but 3D Slicer is the only major application that is known to use it.
 - **Model** (or model node): MRML node storing surface mesh (consists of triangle, polygon, or other 2D cells) or volumetric mesh (consists of tetrahedral, wedge, or other 3D cells)
 - **Module** (or Slicer module): A Slicer module is a software component consisting of a graphical user interface (that is displayed in the module panel when the module is selected), a logic (that implements algorithms that operate on MRML nodes), and may provide new MRML node types, displayable managers (that are responsible for displaying those nodes in views), input/output plugins (that are responsible for load/save MRML nodes in files), and various other plugins. Modules are typically independent and only communicate with each other via modifying MRML nodes, but sometimes a module use features provided by other modules by calling methods in its logic.
@@ -233,7 +231,7 @@ Terms used in various fields of medical and biomedical image computing and clini
 - **Region of interest (ROI)**: Specifies a box-shaped region in 3D. Can be used for cropping volumes, clipping models, etc.
 - **Registration**: The process of aligning objects in space. Result of the registration is a transform, which transforms the "moving" object to the "fixed" object.
 - **Resolution**: Voxel size of a volume, typically specified in mm/pixel. It is rarely used in the user interface because its meaning is slightly misleading: high resolution value means large spacing, which means coarse (low) image resolution.
-- **Ruler**: It may refer to: 1. View ruler: The line that is displayed as an overlay in viewers to serve as a size reference. 2. Annotation ruler: deprecated distance measurement tool (use "Markups line" instead).
+- **Ruler**: It may refer to: 1. View ruler: The line that is displayed as an overlay in viewers to serve as a size reference. 2. Markups line: distance measurement tool.
 - **Scalar component**: One element of a vector. Number of scalar components means the length of the vector.
 - **Scalar value**: A simple number. Typically floating-point.
 - **Scene** (or MRML scene): This is the data structure that contains all the data that is currently loaded into the application and additional information about how they should be displayed or used. The term originates [computer graphics](https://en.wikipedia.org/wiki/Rendering_(computer_graphics)).

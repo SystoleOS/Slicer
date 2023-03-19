@@ -39,7 +39,10 @@ public:
   /// Specify editable node types
   QStringList associatedNodeTypes()const override;
 
-  qSlicerGetTitleMacro(QTMODULE_TITLE);
+  qSlicerGetTitleMacro(tr("Annotations"));
+
+  /// Open the screen capture dialog
+  void grabSnapShot();
 
 protected:
 

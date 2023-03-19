@@ -190,7 +190,7 @@ void qSlicerMainWindowPrivate::setupUi(QMainWindow * mainWindow)
   // ModuleSelector ToolBar
   //----------------------------------------------------------------------------
   // Create a Module selector
-  this->ModuleSelectorToolBar = new qSlicerModuleSelectorToolBar("Module Selection",q);
+  this->ModuleSelectorToolBar = new qSlicerModuleSelectorToolBar(qSlicerMainWindow::tr("Module Selection"),q);
   this->ModuleSelectorToolBar->setObjectName(QString::fromUtf8("ModuleSelectorToolBar"));
   this->ModuleSelectorToolBar->setAllowedAreas(Qt::TopToolBarArea | Qt::BottomToolBarArea);
   this->ModuleSelectorToolBar->setModuleManager(moduleManager);
@@ -292,13 +292,15 @@ void qSlicerMainWindowPrivate::setupUi(QMainWindow * mainWindow)
   //----------------------------------------------------------------------------
   // Instantiate and assign the layout manager to the slicer application
   this->LayoutManager = new qSlicerLayoutManager(layoutFrame);
+  // Prevent updates until the main window is shown to avoid detached viewports appear too early.
+  this->LayoutManager->setEnabled(false);
   this->LayoutManager->setScriptedDisplayableManagerDirectory(
       qSlicerApplication::application()->slicerHome() + "/bin/Python/mrmlDisplayableManager");
   qSlicerApplication::application()->setLayoutManager(this->LayoutManager);
 #ifdef Slicer_USE_QtTesting
   // we store this layout manager to the Object state property for QtTesting
   qSlicerApplication::application()->testingUtility()->addObjectStateProperty(
-      qSlicerApplication::application()->layoutManager(), QString("layout"));
+      qSlicerApplication::application()->layoutManager(), QString(/*no tr*/"layout"));
   qSlicerApplication::application()->testingUtility()->addObjectStateProperty(
       this->ModuleSelectorToolBar->modulesMenu(), QString("currentModule"));
 #endif
@@ -440,7 +442,7 @@ void qSlicerMainWindowPrivate::setupUi(QMainWindow * mainWindow)
     {
     if (QSettings().value("Python/DockableWindow").toBool())
       {
-      this->PythonConsoleDockWidget = new QDockWidget(qSlicerMainWindow::tr("Python Interactor"));
+      this->PythonConsoleDockWidget = new QDockWidget(qSlicerMainWindow::tr("Python Console"));
       this->PythonConsoleDockWidget->setObjectName("PythonConsoleDockWidget");
       this->PythonConsoleDockWidget->setAllowedAreas(Qt::AllDockWidgetAreas);
       this->PythonConsoleDockWidget->setWidget(q->pythonConsole());
@@ -452,7 +454,7 @@ void qSlicerMainWindowPrivate::setupUi(QMainWindow * mainWindow)
     else
       {
       ctkPythonConsole* pythonConsole = q->pythonConsole();
-      pythonConsole->setWindowTitle("Slicer Python Interactor");
+      pythonConsole->setWindowTitle(qSlicerMainWindow::tr("Slicer Python Console"));
       pythonConsole->resize(600, 280);
       pythonConsole->hide();
       this->PythonConsoleToggleViewAction = new QAction("", this->ViewMenu);
@@ -463,9 +465,9 @@ void qSlicerMainWindowPrivate::setupUi(QMainWindow * mainWindow)
     QObject::connect(q->pythonConsole(), SIGNAL(aboutToExecute(const QString&)),
       q, SLOT(onPythonConsoleUserInput(const QString&)));
     // Set up show/hide action
-    this->PythonConsoleToggleViewAction->setText(qSlicerMainWindow::tr("&Python Interactor"));
+    this->PythonConsoleToggleViewAction->setText(qSlicerMainWindow::tr("&Python Console"));
     this->PythonConsoleToggleViewAction->setToolTip(qSlicerMainWindow::tr(
-      "Show Python Interactor window for controlling the application's data, user interface, and internals"));
+      "Show Python Console window for controlling the application's data, user interface, and internals"));
     this->PythonConsoleToggleViewAction->setShortcuts({qSlicerMainWindow::tr("Ctrl+3"), qSlicerMainWindow::tr("Ctrl+`")});
     QObject::connect(this->PythonConsoleToggleViewAction, SIGNAL(toggled(bool)),
       q, SLOT(onPythonConsoleToggled(bool)));
@@ -485,9 +487,9 @@ void qSlicerMainWindowPrivate::setupUi(QMainWindow * mainWindow)
   // Setting the left and right dock widget area to occupy the bottom corners
   // means the module panel is able to have more vertical space since it is the
   // usual left/right dockable widget. Since the module panel is typically not a
-  // majority of the width dimension, this means the python interactor in the
+  // majority of the width dimension, this means the python console in the
   // bottom widget area still has a wide aspect ratio.
-  // If application window is narrow then the Python interactor can be docked to the top
+  // If application window is narrow then the Python console can be docked to the top
   // to use the full width of the application window.
   q->setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
   q->setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
@@ -566,7 +568,7 @@ void qSlicerMainWindowPrivate::setupRecentlyLoadedMenu(const QList<qSlicerIO::IO
   // Add separator and clear action
   this->RecentlyLoadedMenu->addSeparator();
   QAction * clearAction = this->RecentlyLoadedMenu->addAction(
-    "Clear History", q, SLOT(onFileRecentLoadedActionTriggered()));
+    qSlicerMainWindow::tr("Clear History"), q, SLOT(onFileRecentLoadedActionTriggered()));
   clearAction->setProperty("clearMenu", QVariant(true));
 }
 
@@ -741,6 +743,51 @@ void qSlicerMainWindowPrivate::setErrorLogIconHighlighted(bool highlighted)
 }
 
 //-----------------------------------------------------------------------------
+void qSlicerMainWindowPrivate::addFavoriteModule(const QString& moduleName)
+{
+  Q_Q(qSlicerMainWindow);
+  int index = this->FavoriteModules.indexOf(moduleName);
+  if (index < 0)
+    {
+    return;
+    }
+
+  qSlicerAbstractCoreModule* coreModule =
+    qSlicerApplication::application()->moduleManager()->module(moduleName);
+  qSlicerAbstractModule* module = qobject_cast<qSlicerAbstractModule*>(coreModule);
+  if (!module)
+    {
+    return;
+    }
+
+  QAction * action = module->action();
+  if (!action || action->icon().isNull())
+    {
+    return;
+    }
+
+  Q_ASSERT(action->data().toString() == module->name());
+  Q_ASSERT(action->text() == module->title());
+
+  // find the location of where to add the action.
+  // Note: FavoriteModules is sorted
+  QAction* beforeAction = nullptr; // 0 means insert at end
+  foreach(QAction* toolBarAction, this->ModuleToolBar->actions())
+    {
+    bool isActionAFavoriteModule =
+      (this->FavoriteModules.indexOf(toolBarAction->data().toString()) != -1);
+    if (isActionAFavoriteModule &&
+      this->FavoriteModules.indexOf(toolBarAction->data().toString()) > index)
+      {
+      beforeAction = toolBarAction;
+      break;
+      }
+    }
+  this->ModuleToolBar->insertAction(beforeAction, action);
+  action->setParent(this->ModuleToolBar);
+}
+
+//-----------------------------------------------------------------------------
 // qSlicerMainWindow methods
 
 //-----------------------------------------------------------------------------
@@ -772,17 +819,21 @@ qSlicerMainWindow::~qSlicerMainWindow()
   // There is no need to render anything so remove the volumes from the views.
   // It is maybe not the best place to do that but I couldn't think of anywhere
   // else.
-  vtkCollection* sliceLogics = d->LayoutManager ? d->LayoutManager->mrmlSliceLogics() : nullptr;
-  for (int i = 0; i < sliceLogics->GetNumberOfItems(); ++i)
+  qSlicerLayoutManager* layoutManager = qSlicerApplication::application()->layoutManager();
+  vtkCollection* sliceLogics = layoutManager ? layoutManager->mrmlSliceLogics() : nullptr;
+  if (sliceLogics)
     {
-    vtkMRMLSliceLogic* sliceLogic = vtkMRMLSliceLogic::SafeDownCast(sliceLogics->GetItemAsObject(i));
-    if (!sliceLogic)
+    for (int i = 0; i < sliceLogics->GetNumberOfItems(); ++i)
       {
-      continue;
+      vtkMRMLSliceLogic* sliceLogic = vtkMRMLSliceLogic::SafeDownCast(sliceLogics->GetItemAsObject(i));
+      if (!sliceLogic)
+        {
+        continue;
+        }
+      sliceLogic->GetSliceCompositeNode()->SetReferenceBackgroundVolumeID(nullptr);
+      sliceLogic->GetSliceCompositeNode()->SetReferenceForegroundVolumeID(nullptr);
+      sliceLogic->GetSliceCompositeNode()->SetReferenceLabelVolumeID(nullptr);
       }
-    sliceLogic->GetSliceCompositeNode()->SetReferenceBackgroundVolumeID(nullptr);
-    sliceLogic->GetSliceCompositeNode()->SetReferenceForegroundVolumeID(nullptr);
-    sliceLogic->GetSliceCompositeNode()->SetReferenceLabelVolumeID(nullptr);
     }
 }
 
@@ -826,7 +877,7 @@ void qSlicerMainWindow::on_ShowStatusBarAction_triggered(bool toggled)
 //---------------------------------------------------------------------------
 void qSlicerMainWindow::on_FileFavoriteModulesAction_triggered()
 {
-  qSlicerApplication::application()->openSettingsDialog("Modules");
+  qSlicerApplication::application()->openSettingsDialog(qSlicerApplication::tr("Modules"));
 }
 
 //---------------------------------------------------------------------------
@@ -891,12 +942,19 @@ void qSlicerMainWindow::on_SDBSaveToDirectoryAction_triggered()
     std::cout << "No directory name chosen!" << std::endl;
     return;
     }
-  // pass in a screen shot
-  QWidget* widget = qSlicerApplication::application()->layoutManager()->viewport();
-  QImage screenShot = ctk::grabVTKWidget(widget);
+
   qSlicerIO::IOProperties properties;
+
+  // pass in a screen shot
+  qSlicerLayoutManager* layoutManager = qSlicerApplication::application()->layoutManager();
+  if (layoutManager)
+    {
+    QWidget* widget = layoutManager->viewport();
+    QImage screenShot = ctk::grabVTKWidget(widget);
+    properties["screenShot"] = screenShot;
+    }
+
   properties["fileName"] = saveDirName;
-  properties["screenShot"] = screenShot;
   qSlicerCoreApplication::application()->coreIOManager()
     ->saveNodes(QString("SceneFile"), properties);
 }
@@ -941,7 +999,7 @@ void qSlicerMainWindow::on_FileCloseSceneAction_triggered()
     qSlicerCoreApplication::application()->mrmlScene()->SetURL("");
     // Set default scene file format to .mrml
     qSlicerCoreIOManager* coreIOManager = qSlicerCoreApplication::application()->coreIOManager();
-    coreIOManager->setDefaultSceneFileType("MRML Scene (.mrml)");
+    coreIOManager->setDefaultSceneFileType(tr("MRML Scene") + " (.mrml)");
     }
 }
 
@@ -982,31 +1040,45 @@ void qSlicerMainWindow::on_ModuleHomeAction_triggered()
 //---------------------------------------------------------------------------
 void qSlicerMainWindow::setLayout(int layout)
 {
-  qSlicerApplication::application()->layoutManager()->setLayout(layout);
+  qSlicerLayoutManager* layoutManager = qSlicerApplication::application()->layoutManager();
+  if (!layoutManager)
+    {
+    return;
+    }
+  layoutManager->setLayout(layout);
 }
 
 //---------------------------------------------------------------------------
-vtkMRMLAbstractViewNode* qSlicerMainWindow::layoutMaximizedViewNode()
+void qSlicerMainWindow::removeAllMaximizedViewNodes()
 {
-  return qSlicerApplication::application()->layoutManager()->maximizedViewNode();
-}
-
-//---------------------------------------------------------------------------
-void qSlicerMainWindow::setLayoutMaximizedViewNode(vtkMRMLAbstractViewNode* viewNode)
-{
-  qSlicerApplication::application()->layoutManager()->setMaximizedViewNode(viewNode);
+  qSlicerLayoutManager* layoutManager = qSlicerApplication::application()->layoutManager();
+  if (!layoutManager)
+    {
+    return;
+    }
+  layoutManager->removeAllMaximizedViewNodes();
 }
 
 //---------------------------------------------------------------------------
 void qSlicerMainWindow::setLayoutNumberOfCompareViewRows(int num)
 {
-  qSlicerApplication::application()->layoutManager()->setLayoutNumberOfCompareViewRows(num);
+  qSlicerLayoutManager* layoutManager = qSlicerApplication::application()->layoutManager();
+  if (!layoutManager)
+    {
+    return;
+    }
+  layoutManager->setLayoutNumberOfCompareViewRows(num);
 }
 
 //---------------------------------------------------------------------------
 void qSlicerMainWindow::setLayoutNumberOfCompareViewColumns(int num)
 {
-  qSlicerApplication::application()->layoutManager()->setLayoutNumberOfCompareViewColumns(num);
+  qSlicerLayoutManager* layoutManager = qSlicerApplication::application()->layoutManager();
+  if (!layoutManager)
+    {
+    return;
+    }
+  layoutManager->setLayoutNumberOfCompareViewColumns(num);
 }
 
 //-----------------------------------------------------------------------------
@@ -1142,6 +1214,16 @@ void qSlicerMainWindow::showEvent(QShowEvent *event)
   if (!d->WindowInitialShowCompleted)
     {
     d->WindowInitialShowCompleted = true;
+
+    // Show layout (updates were disabled until now to prevent detached viewports
+    // appear before the main window appears).
+    qSlicerLayoutManager* layoutManager = qSlicerApplication::application()->layoutManager();
+    if (layoutManager)
+      {
+      layoutManager->setEnabled(true);
+      layoutManager->refresh();
+      }
+
     this->disclaimer();
     this->pythonConsoleInitialDisplay();
 
@@ -1169,7 +1251,7 @@ void qSlicerMainWindow::pythonConsoleInitialDisplay()
     {
     return;
     }
-  if (app->commandOptions()->showPythonInteractor() && d->PythonConsoleDockWidget)
+  if (app->commandOptions()->showPythonConsole() && d->PythonConsoleDockWidget)
     {
     d->PythonConsoleDockWidget->show();
     }
@@ -1239,6 +1321,7 @@ void qSlicerMainWindow::setupMenuActions()
   d->ViewLayoutFourByTwoSliceAction->setData(vtkMRMLLayoutNode::SlicerLayoutFourByTwoSliceView);
   d->ViewLayoutFiveByTwoSliceAction->setData(vtkMRMLLayoutNode::SlicerLayoutFiveByTwoSliceView);
   d->ViewLayoutThreeByThreeSliceAction->setData(vtkMRMLLayoutNode::SlicerLayoutThreeByThreeSliceView);
+  d->ViewLayoutDualMonitorFourUpViewAction->setData(vtkMRMLLayoutNode::SlicerLayoutDualMonitorFourUpView);
 
   d->ViewLayoutCompare_2_viewersAction->setData(2);
   d->ViewLayoutCompare_3_viewersAction->setData(3);
@@ -1301,12 +1384,11 @@ void qSlicerMainWindow::setupMenuActions()
 void qSlicerMainWindow::on_LoadDICOMAction_triggered()
 {
   qSlicerLayoutManager * layoutManager = qSlicerApplication::application()->layoutManager();
-
   if (!layoutManager)
     {
     return;
     }
-  layoutManager->setCurrentModule("DICOM");
+  layoutManager->setCurrentModule(/*no tr*/"DICOM");
 }
 
 //---------------------------------------------------------------------------
@@ -1453,45 +1535,10 @@ void qSlicerMainWindow::on_ViewExtensionsManagerAction_triggered()
 void qSlicerMainWindow::onModuleLoaded(const QString& moduleName)
 {
   Q_D(qSlicerMainWindow);
-
-  qSlicerAbstractCoreModule* coreModule =
-    qSlicerApplication::application()->moduleManager()->module(moduleName);
-  qSlicerAbstractModule* module = qobject_cast<qSlicerAbstractModule*>(coreModule);
-  if (!module)
+  // Add action to favorite module toolbar (if it is a favorite module)
+  if (d->FavoriteModules.contains(moduleName))
     {
-    return;
-    }
-
-  // Module ToolBar
-  QAction * action = module->action();
-  if (!action || action->icon().isNull())
-    {
-    return;
-    }
-
-  Q_ASSERT(action->data().toString() == module->name());
-  Q_ASSERT(action->text() == module->title());
-
-  // Add action to ToolBar if it's an "allowed" action
-  int index = d->FavoriteModules.indexOf(module->name());
-  if (index != -1)
-    {
-    // find the location of where to add the action.
-    // Note: FavoriteModules is sorted
-    QAction* beforeAction = nullptr; // 0 means insert at end
-    foreach(QAction* toolBarAction, d->ModuleToolBar->actions())
-      {
-      bool isActionAFavoriteModule =
-        (d->FavoriteModules.indexOf(toolBarAction->data().toString()) != -1);
-      if ( isActionAFavoriteModule &&
-          d->FavoriteModules.indexOf(toolBarAction->data().toString()) > index)
-        {
-        beforeAction = toolBarAction;
-        break;
-        }
-      }
-    d->ModuleToolBar->insertAction(beforeAction, action);
-    action->setParent(d->ModuleToolBar);
+    d->addFavoriteModule(moduleName);
     }
 }
 
@@ -1548,7 +1595,7 @@ void qSlicerMainWindow::onLayoutActionTriggered(QAction* action)
   if (found && !action->data().isNull())
     {
     this->setLayout(action->data().toInt());
-    this->setLayoutMaximizedViewNode(nullptr);
+    this->removeAllMaximizedViewNodes();
     }
 }
 
@@ -1561,7 +1608,7 @@ void qSlicerMainWindow::onLayoutCompareActionTriggered(QAction* action)
 
   // we need to communicate both the layout change and the number of viewers.
   this->setLayout(d->ViewLayoutCompareAction->data().toInt());
-  this->setLayoutMaximizedViewNode(nullptr);
+  this->removeAllMaximizedViewNodes();
   this->setLayoutNumberOfCompareViewRows(action->data().toInt());
 }
 
@@ -1574,7 +1621,7 @@ void qSlicerMainWindow::onLayoutCompareWidescreenActionTriggered(QAction* action
 
   // we need to communicate both the layout change and the number of viewers.
   this->setLayout(d->ViewLayoutCompareWidescreenAction->data().toInt());
-  this->setLayoutMaximizedViewNode(nullptr);
+  this->removeAllMaximizedViewNodes();
   this->setLayoutNumberOfCompareViewColumns(action->data().toInt());
 }
 
@@ -1587,7 +1634,7 @@ void qSlicerMainWindow::onLayoutCompareGridActionTriggered(QAction* action)
 
   // we need to communicate both the layout change and the number of viewers.
   this->setLayout(d->ViewLayoutCompareGridAction->data().toInt());
-  this->setLayoutMaximizedViewNode(nullptr);
+  this->removeAllMaximizedViewNodes();
   this->setLayoutNumberOfCompareViewRows(action->data().toInt());
   this->setLayoutNumberOfCompareViewColumns(action->data().toInt());
 }
@@ -1638,7 +1685,11 @@ void qSlicerMainWindow::restoreGUIState(bool force/*=false*/)
     {
     this->restoreGeometry(settings.value("geometry").toByteArray());
     this->restoreState(settings.value("windowState").toByteArray());
-    d->LayoutManager->setLayout(settings.value("layout").toInt());
+    qSlicerLayoutManager* layoutManager = qSlicerApplication::application()->layoutManager();
+    if (layoutManager)
+      {
+      layoutManager->setLayout(settings.value("layout").toInt());
+      }
     }
   settings.endGroup();
   d->FavoriteModules << settings.value("Modules/FavoriteModules").toStringList();
@@ -1662,7 +1713,11 @@ void qSlicerMainWindow::saveGUIState(bool force/*=false*/)
     {
     settings.setValue("geometry", this->saveGeometry());
     settings.setValue("windowState", this->saveState());
-    settings.setValue("layout", d->LayoutManager->layout());
+    qSlicerLayoutManager* layoutManager = qSlicerApplication::application()->layoutManager();
+    if (layoutManager)
+      {
+      settings.setValue("layout", layoutManager->layout());
+      }
     }
   settings.endGroup();
   qSlicerMainWindowPrivate::writeRecentlyLoadedFiles(d->RecentlyLoadedFileProperties);
@@ -1755,4 +1810,23 @@ void qSlicerMainWindow::setExtensionUpdatesAvailable(bool updateAvailable)
     d->ViewExtensionsManagerAction->setIcon(QIcon(":/Icons/ExtensionDefaultIcon.png"));
     }
 #endif
+}
+
+//---------------------------------------------------------------------------
+void qSlicerMainWindow::on_FavoriteModulesChanged()
+{
+  Q_D(qSlicerMainWindow);
+
+  // Update favorite module name list
+  d->FavoriteModules = QSettings().value("Modules/FavoriteModules").toStringList();
+
+  // Update favorite module toolbar
+  d->ModuleToolBar->clear();
+  foreach(QString moduleName, d->FavoriteModules)
+    {
+    if (d->FavoriteModules.contains(moduleName))
+      {
+      d->addFavoriteModule(moduleName);
+      }
+    }
 }

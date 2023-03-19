@@ -1,10 +1,16 @@
 import logging
 import mimetypes
 import os
+import re
 
 
-class StaticPagesRequestHandler(object):
+class StaticPagesRequestHandler:
     """Serves static pages content (files) from the configured docroot
+
+    uriRewriteRules member variable contain a list of string pairs. iI each pair,
+        the first one is a regexp match pattern, the second is a format string that uses the matching
+        results to create the rewritten uri. For example, add .html and remove subpaths using this rule:
+        `("(.*)/browse.*", "{0}/browse.html")`
     """
 
     def __init__(self, docroot):
@@ -13,16 +19,17 @@ class StaticPagesRequestHandler(object):
         :param logMessage: callable to log messages
         """
 
+        self.uriRewriteRules = []
         self.docroot = docroot
         self.logMessage('docroot: %s' % self.docroot)
 
     def logMessage(self, *args):
         logging.debug(args)
 
-    def canHandleRequest(self, uri, requestBody):
+    def canHandleRequest(self, method, uri, requestBody):
         return 0.1
 
-    def handleRequest(self, uri, requestBody):
+    def handleRequest(self, method, uri, requestBody):
         """Return directory listing or binary contents of files
         TODO: other header fields like modified time
 
@@ -30,6 +37,14 @@ class StaticPagesRequestHandler(object):
         :param requestBody: binary data passed with the http request
         :return: tuple of content type (based on file ext) and request body binary (contents of file)
         """
+
+        # rewrite URL paths according to rules
+        for match, replace in self.uriRewriteRules:
+            matched = re.match(match, uri.decode())
+            if matched:
+                uri = replace.format(*matched.groups()).encode()
+                self.logMessage(f"Path rewritten to: {uri}")
+
         contentType = b'text/plain'
         responseBody = None
         if uri.startswith(b'/'):
@@ -56,6 +71,6 @@ class StaticPagesRequestHandler(object):
                 fp = open(path, 'rb')
                 responseBody = fp.read()
                 fp.close()
-            except IOError:
+            except OSError:
                 responseBody = None
         return contentType, responseBody

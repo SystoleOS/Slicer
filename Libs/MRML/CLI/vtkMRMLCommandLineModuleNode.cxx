@@ -28,6 +28,7 @@ Version:   $Revision: 1.2 $
 #include <vtkObjectFactory.h>
 
 // STD includes
+#include <mutex>
 #include <sstream>
 
 
@@ -39,6 +40,11 @@ class ModuleDescriptionMap : public std::map<std::string, ModuleDescription> {};
 class vtkMRMLCommandLineModuleNode::vtkInternal
 {
 public:
+
+  // This mutex allows the thread-safe reading/writing of node properties.
+  // This is needed because process output and error texts may be written
+  // in a worker thread.
+  std::recursive_mutex NodeAccessMutex;
 
   ModuleDescription ModuleDescriptionObject;
 
@@ -63,7 +69,9 @@ public:
   /// Flag to trigger or not the StatusModifiedEvent
   mutable bool InvokeStatusModifiedEvent;
 
-  /// Output messages of last execution (printed to stdout)
+  /// Output text of last execution (without progress info)
+  ///
+  /// \sa vtkSlicerCLIModuleLogic::RemoveProgressInfoFromProcessOutput
   std::string OutputText;
   /// Error messages of last execution (printed to stderr)
   std::string ErrorText;
@@ -143,9 +151,9 @@ void vtkMRMLCommandLineModuleNode::WriteXML(ostream& of, int nIndent)
     {
     // iterate over each parameter in this group
     std::vector<ModuleParameter>::const_iterator pbeginit
-      = (*pgit).GetParameters().begin();
+      = pgit->GetParameters().begin();
     std::vector<ModuleParameter>::const_iterator pendit
-      = (*pgit).GetParameters().end();
+      = pgit->GetParameters().end();
     std::vector<ModuleParameter>::const_iterator pit;
 
     for (pit = pbeginit; pit != pendit; ++pit)
@@ -153,8 +161,8 @@ void vtkMRMLCommandLineModuleNode::WriteXML(ostream& of, int nIndent)
       // two calls, as the mrml node method saves the new string in a member
       // variable and it was getting over written when used twice before the
       // buffer was flushed.
-      of << " " << this->URLEncodeString ( (*pit).GetName().c_str() );
-      of  << "=\"" << this->URLEncodeString ( (*pit).GetValue().c_str() ) << "\"";
+      of << " " << this->URLEncodeString ( pit->GetName().c_str() );
+      of  << "=\"" << this->URLEncodeString ( pit->GetValue().c_str() ) << "\"";
       }
     }
 
@@ -287,11 +295,11 @@ void vtkMRMLCommandLineModuleNode::PrintSelf(ostream& os, vtkIndent indent)
   std::vector<ModuleParameterGroup>::const_iterator pgendit = this->GetModuleDescription().GetParameterGroups().end();
   for (std::vector<ModuleParameterGroup>::const_iterator pgit = pgbeginit; pgit != pgendit; ++pgit)
     {
-    std::vector<ModuleParameter>::const_iterator pbeginit = (*pgit).GetParameters().begin();
-    std::vector<ModuleParameter>::const_iterator pendit = (*pgit).GetParameters().end();
+    std::vector<ModuleParameter>::const_iterator pbeginit = pgit->GetParameters().begin();
+    std::vector<ModuleParameter>::const_iterator pendit = pgit->GetParameters().end();
     for (std::vector<ModuleParameter>::const_iterator pit = pbeginit; pit != pendit; ++pit)
       {
-      os << indent << " " << (*pit).GetName() << " = " << (*pit).GetValue() << "\n";
+      os << indent << " " << pit->GetName() << " = " << pit->GetValue() << "\n";
       }
     }
 }
@@ -324,6 +332,9 @@ void vtkMRMLCommandLineModuleNode::SetModuleDescription(const ModuleDescription&
 
   // Set an attribute on the node so that we can select nodes that
   // have the same command line module (program)
+  // The title is intentionally not translated, to allow using the scene regardless of the chosen
+  // application GUI language. It would be more appropriate to use the module name, but we
+  // use the module title for compatibility with existing scenes.
   this->SetAttribute("CommandLineModule", description.GetTitle().c_str());
 
   this->Modified();
@@ -699,7 +710,7 @@ const char* vtkMRMLCommandLineModuleNode::GetRegisteredModuleNameByIndex( int id
   int count = 0;
   while ( mit != vtkInternal::RegisteredModules.end() )
     {
-    if ( count == idx ) { return (*mit).first.c_str(); }
+    if ( count == idx ) { return mit->first.c_str(); }
     ++mit;
     ++count;
     }
@@ -715,7 +726,7 @@ ModuleDescription vtkMRMLCommandLineModuleNode
 
   if (mit != vtkMRMLCommandLineModuleNode::vtkInternal::RegisteredModules.end())
     {
-    return (*mit).second;
+    return mit->second;
     }
 
   return ModuleDescription();
@@ -1043,25 +1054,38 @@ void vtkMRMLCommandLineModuleNode::Modified()
 }
 
 //----------------------------------------------------------------------------
-const std::string vtkMRMLCommandLineModuleNode::GetErrorText() const
+std::string vtkMRMLCommandLineModuleNode::GetErrorText() const
 {
-  return this->Internal->ErrorText;
+  std::string text;
+    {
+    std::lock_guard<std::recursive_mutex> lock(this->Internal->NodeAccessMutex);
+    text = this->Internal->ErrorText;
+    }
+  return text;
 }
 
 //----------------------------------------------------------------------------
-const std::string vtkMRMLCommandLineModuleNode::GetOutputText() const
+std::string vtkMRMLCommandLineModuleNode::GetOutputText() const
 {
-  return this->Internal->OutputText;
+  std::string text;
+    {
+    std::lock_guard<std::recursive_mutex> lock(this->Internal->NodeAccessMutex);
+    text = this->Internal->OutputText;
+    }
+  return text;
 }
 
 //----------------------------------------------------------------------------
 void vtkMRMLCommandLineModuleNode::SetErrorText(const std::string& text, bool modify)
 {
-  if (this->Internal->ErrorText == text)
-    {
-    return;
-    }
-  this->Internal->ErrorText = text;
+  {
+    std::lock_guard<std::recursive_mutex> lock(this->Internal->NodeAccessMutex);
+    if (this->Internal->ErrorText == text)
+      {
+      return;
+      }
+    this->Internal->ErrorText = text;
+  }
   if (modify)
     {
     this->Modified();
@@ -1071,13 +1095,39 @@ void vtkMRMLCommandLineModuleNode::SetErrorText(const std::string& text, bool mo
 //----------------------------------------------------------------------------
 void vtkMRMLCommandLineModuleNode::SetOutputText(const std::string& text, bool modify)
 {
-  if (this->Internal->OutputText == text)
-    {
-    return;
-    }
-  this->Internal->OutputText = text;
+  {
+    std::lock_guard<std::recursive_mutex> lock(this->Internal->NodeAccessMutex);
+    if (this->Internal->OutputText == text)
+      {
+      return;
+      }
+    this->Internal->OutputText = text;
+  }
   if (modify)
     {
     this->Modified();
     }
+}
+
+//----------------------------------------------------------------------------
+void vtkMRMLCommandLineModuleNode::StartContinuousOutputUpdate()
+{
+  this->ContinuousOutputUpdateInProgressCount++;
+}
+
+//----------------------------------------------------------------------------
+void vtkMRMLCommandLineModuleNode::EndContinuousOutputUpdate()
+{
+  this->ContinuousOutputUpdateInProgressCount--;
+  if (this->ContinuousOutputUpdateInProgressCount < 0)
+    {
+    vtkWarningMacro("Unexpected EndContinuousOutputUpdate");
+    this->ContinuousOutputUpdateInProgressCount = 0;
+    }
+}
+
+//----------------------------------------------------------------------------
+bool vtkMRMLCommandLineModuleNode::IsContinuousOutputUpdate()
+{
+  return (this->ContinuousOutputUpdateInProgressCount > 0);
 }

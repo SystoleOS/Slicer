@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>Reformat</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_4">
    <item row="0" column="0">
@@ -46,7 +46,7 @@
         <bool>false</bool>
        </property>
        <property name="nodeTypes" stdset="0">
-        <stringlist>
+        <stringlist notr="true">
          <string>vtkMRMLSliceNode</string>
         </stringlist>
        </property>

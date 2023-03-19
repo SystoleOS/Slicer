@@ -184,7 +184,14 @@ public:
   QSharedPointer<qSlicerExtensionsManagerModel> ExtensionsManagerModel;
 #endif
 
+#ifdef Slicer_BUILD_APPLICATIONUPDATE_SUPPORT
+  QSharedPointer<qSlicerApplicationUpdateManager> ApplicationUpdateManager;
+#endif
+
   QProcessEnvironment                         Environment;
+
+  QLocale                                     ApplicationLocale;
+  QString                                     ApplicationLocaleName;
 
 #ifdef Slicer_BUILD_DICOM_SUPPORT
   /// Application-wide database instance

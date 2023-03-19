@@ -1,18 +1,22 @@
 cmake_minimum_required(VERSION 3.16.3...3.19.7 FATAL_ERROR)
 
+if("${CMAKE_VERSION}" VERSION_GREATER_EQUAL "3.25.0" AND "${CMAKE_VERSION}" VERSION_LESS_EQUAL "3.25.2")
+  message(FATAL_ERROR "CMake version is ${CMAKE_VERSION} and using CMake >=3.25.0,<=3.25.2 is not supported.\nSee https://gitlab.kitware.com/cmake/cmake/-/issues/24567")
+endif()
+
 #-----------------------------------------------------------------------------
 # Setting C++ Standard
 #-----------------------------------------------------------------------------
 set(_msg "Setting C++ standard")
 message(STATUS "${_msg}")
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
+  set(CMAKE_CXX_STANDARD 17)
 endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 message(STATUS "${_msg} - C++${CMAKE_CXX_STANDARD}")
-if(NOT CMAKE_CXX_STANDARD MATCHES "^(14|17|20)$")
-  message(FATAL_ERROR "CMAKE_CXX_STANDARD must be set to 14, 17 or 20")
+if(NOT CMAKE_CXX_STANDARD MATCHES "^(17|20)$")
+  message(FATAL_ERROR "CMAKE_CXX_STANDARD must be set to 17 or 20")
 endif()
 
 #-----------------------------------------------------------------------------
@@ -43,7 +47,7 @@ if(NOT DEFINED Slicer_VERSION_MAJOR)
   set(Slicer_VERSION_MAJOR "5")
 endif()
 if(NOT DEFINED Slicer_VERSION_MINOR)
-  set(Slicer_VERSION_MINOR "1")
+  set(Slicer_VERSION_MINOR "3")
 endif()
 if(NOT DEFINED Slicer_VERSION_PATCH)
   set(Slicer_VERSION_PATCH "0")
@@ -282,6 +286,9 @@ mark_as_superbuild(Slicer_BUILD_QT_DESIGNER_PLUGINS)
 option(Slicer_BUILD_EXTENSIONMANAGER_SUPPORT "Build Slicer extensions manager" ON)
 mark_as_superbuild(Slicer_BUILD_EXTENSIONMANAGER_SUPPORT)
 
+option(Slicer_BUILD_APPLICATIONUPDATE_SUPPORT "Build Slicer with application update support" ON)
+mark_as_superbuild(Slicer_BUILD_APPLICATIONUPDATE_SUPPORT)
+
 option(Slicer_BUILD_MULTIMEDIA_SUPPORT "Build Slicer with Multimedia support" ON)
 mark_as_superbuild(Slicer_BUILD_MULTIMEDIA_SUPPORT)
 
@@ -313,6 +320,8 @@ set(_commit_count_offsets
   # (https://github.com/Slicer/Slicer.git).
   "3037"
   # Allocate revisions for patch releases between v5.0.0 and v5.1.0
+  "100"
+  # Allocate revisions for patch releases between v5.2.0 and v5.3.0
   "100"
   )
 list(JOIN _commit_count_offsets "+" _commit_count_offsets_expr)
@@ -462,6 +471,8 @@ endif()
 include(SlicerFunctionInstallLibrary)
 include(SlicerFunctionAddPythonQtResources)
 
+set(Slicer_QRCC_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Scripts/qrcc.py" CACHE INTERNAL "Path to qrcc.py script used in slicerFunctionAddPythonQtResources() CMake function")
+
 #-----------------------------------------------------------------------------
 # Internationalization
 #-----------------------------------------------------------------------------
@@ -591,7 +602,7 @@ endif()
   set(Slicer_REQUIRED_QT_MODULES
     Core Widgets
     Network OpenGL
-    PrintSupport # Required by "Annotations" module
+    PrintSupport
     UiTools #no dll
     Xml XmlPatterns
     Svg Sql
@@ -618,7 +629,9 @@ endif()
       WebChannel
       )
   endif()
-  if(Slicer_BUILD_EXTENSIONMANAGER_SUPPORT)
+  # Both "extension manager" and "application update" require qRestApi external
+  # project itself depending on Qt's Script module
+  if(Slicer_BUILD_EXTENSIONMANAGER_SUPPORT OR Slicer_BUILD_APPLICATIONUPDATE_SUPPORT)
     list(APPEND Slicer_REQUIRED_QT_MODULES Script)
   endif()
   if(Slicer_BUILD_I18N_SUPPORT)
@@ -646,7 +659,7 @@ mark_as_superbuild(Slicer_USE_SYSTEM_QT:BOOL)
 #-----------------------------------------------------------------------------
 # Qt plugins (designer, imageformats, ...) relative directories
 #-----------------------------------------------------------------------------
-set(Slicer_QtPlugins_DIR "lib/QtPlugins")
+set(Slicer_QtPlugins_DIR "${CMAKE_INSTALL_LIBDIR}/QtPlugins")
 set(Slicer_INSTALL_QtPlugins_DIR "${Slicer_INSTALL_ROOT}${Slicer_QtPlugins_DIR}")
 
 #-----------------------------------------------------------------------------
@@ -816,6 +829,7 @@ if(BUILD_TESTING)
     COPYONLY)
 
   add_subdirectory(CMake/Testing)
+  add_subdirectory(Extensions/CMake/Testing)
 
   if(Slicer_BUILD_CLI_SUPPORT)
     set(SEM_LAUNCH_COMMAND ${Slicer_LAUNCH_COMMAND})

@@ -175,9 +175,14 @@ void vtkMRMLMarkupsNode::CopyContent(vtkMRMLNode* aSource, bool deepCopy/*=true*
 
   vtkMRMLCopyBeginMacro(aSource);
   vtkMRMLCopyBooleanMacro(Locked);
+  vtkMRMLCopyBooleanMacro(FixedNumberOfControlPoints);
   vtkMRMLCopyStdStringMacro(ControlPointLabelFormat);
   vtkMRMLCopyOwnedMatrix4x4Macro(InteractionHandleToWorldMatrix);
   vtkMRMLCopyEndMacro();
+
+  // No public set macros, therefore cannot use copy macros
+  this->RequiredNumberOfControlPoints = source->RequiredNumberOfControlPoints;
+  this->MaximumNumberOfControlPoints = source->MaximumNumberOfControlPoints;
 
   this->TextList->DeepCopy(source->TextList);
 
@@ -206,6 +211,10 @@ void vtkMRMLMarkupsNode::CopyContent(vtkMRMLNode* aSource, bool deepCopy/*=true*
     }
 
   // Copy control points
+  // Disable wasFixedNumberOfControlPoints while copying points
+  // (it would prevent removing and recreating points).
+  int wasFixedNumberOfControlPoints = this->FixedNumberOfControlPoints;
+  this->FixedNumberOfControlPoints = false;
   this->CurveInputPoly->GetPoints()->Reset();
   this->RemoveAllControlPoints();
   int numMarkups = source->GetNumberOfControlPoints();
@@ -216,6 +225,7 @@ void vtkMRMLMarkupsNode::CopyContent(vtkMRMLNode* aSource, bool deepCopy/*=true*
     (*controlPointCopy) = (*controlPoint);
     this->AddControlPoint(controlPointCopy, false);
     }
+  this->FixedNumberOfControlPoints = wasFixedNumberOfControlPoints;
 
   // Copy measurements
   this->RemoveAllMeasurements();
@@ -334,35 +344,38 @@ void vtkMRMLMarkupsNode::PrintSelf(ostream& os, vtkIndent indent)
     os << "unlimited\n";
     }
   os << indent << "NumberOfControlPoints: " << this->GetNumberOfControlPoints() << "\n";
-
-  for (int controlPointIndex = 0; controlPointIndex < this->GetNumberOfControlPoints(); controlPointIndex++)
+  if (this->GetNumberOfControlPoints() > 0)
     {
-    ControlPoint* controlPoint = this->GetNthControlPoint(controlPointIndex);
-    if (!controlPoint)
+    os << indent << "ControlPoints:\n";
+    for (int controlPointIndex = 0; controlPointIndex < this->GetNumberOfControlPoints(); controlPointIndex++)
       {
-      continue;
-      }
-    os << indent << "Control Point " << controlPointIndex << ":\n";
-    os << indent << indent << "ID: " << controlPoint->ID.c_str() << "\n";
-    os << indent << indent << "Label: " << controlPoint->Label.c_str() << "\n";
-    os << indent << indent << "Description: " << controlPoint->Description.c_str() << "\n";
-    os << indent << indent << "Associated node id: " << controlPoint->AssociatedNodeID.c_str() << "\n";
-    os << indent << indent << "Selected: " << controlPoint->Selected << "\n";
-    os << indent << indent << "Locked: " << controlPoint->Locked << "\n";
-    os << indent << indent << "Visibility: " << controlPoint->Visibility << "\n";
-    os << indent << indent << "PositionStatus: " << controlPoint->PositionStatus << "\n";
-    os << indent << indent << "Position: " << controlPoint->Position[0] << ", " <<
-          controlPoint->Position[1] << ", " << controlPoint->Position[2] << "\n";
-    os << indent << indent << "Orientation: ";
-    for (int i = 0; i < 9; i++)
-      {
-      if (i > 0)
+      ControlPoint* controlPoint = this->GetNthControlPoint(controlPointIndex);
+      if (!controlPoint)
         {
-        os << ",  ";
+        continue;
         }
-      os << controlPoint->OrientationMatrix[i];
+      os << indent.GetNextIndent() << "ControlPoint[" << controlPointIndex << "]:\n";
+      os << indent.GetNextIndent().GetNextIndent() << "ID: " << controlPoint->ID.c_str() << "\n";
+      os << indent.GetNextIndent().GetNextIndent() << "Label: " << controlPoint->Label.c_str() << "\n";
+      os << indent.GetNextIndent().GetNextIndent() << "Description: " << controlPoint->Description.c_str() << "\n";
+      os << indent.GetNextIndent().GetNextIndent() << "Associated node id: " << controlPoint->AssociatedNodeID.c_str() << "\n";
+      os << indent.GetNextIndent().GetNextIndent() << "Selected: " << (controlPoint->Selected ? "true" : "false") << "\n";
+      os << indent.GetNextIndent().GetNextIndent() << "Locked: " << (controlPoint->Locked ? "true" : "false") << "\n";
+      os << indent.GetNextIndent().GetNextIndent() << "Visibility: " << (controlPoint->Visibility ? "true" : "false") << "\n";
+      os << indent.GetNextIndent().GetNextIndent() << "PositionStatus: " << vtkMRMLMarkupsNode::GetPositionStatusAsString(controlPoint->PositionStatus) << "\n";
+      os << indent.GetNextIndent().GetNextIndent() << "Position: [" << controlPoint->Position[0] << ", " <<
+            controlPoint->Position[1] << ", " << controlPoint->Position[2] << "]\n";
+      os << indent.GetNextIndent().GetNextIndent() << "Orientation: [";
+      for (int i = 0; i < 9; i++)
+        {
+        if (i > 0)
+          {
+          os << ",  ";
+          }
+        os << controlPoint->OrientationMatrix[i];
+        }
+      os << "]\n";
       }
-    os << "\n";
     }
 
   if  (this->GetNumberOfMeasurements()>0)
@@ -371,7 +384,7 @@ void vtkMRMLMarkupsNode::PrintSelf(ostream& os, vtkIndent indent)
     for (int measurementIndex = 0; measurementIndex < this->GetNumberOfMeasurements(); measurementIndex++)
       {
       vtkMRMLMeasurement* m = this->GetNthMeasurement(measurementIndex);
-      os << indent << indent << m->GetName() << ": " << m->GetValueWithUnitsAsPrintableString() << std::endl;
+      os << indent.GetNextIndent().GetNextIndent() << m->GetName() << ": " << m->GetValueWithUnitsAsPrintableString() << std::endl;
       }
     }
 
@@ -604,10 +617,10 @@ int vtkMRMLMarkupsNode::AddControlPoint(ControlPoint *controlPoint, bool autoLab
     }
 
   if (this->GetFixedNumberOfControlPoints())
-      {
-      vtkErrorMacro("AddNControlPoints: Markup node control point number is locked.");
-      return -1;
-      }
+    {
+    vtkErrorMacro("AddNControlPoints: Markup node control point number is locked.");
+    return -1;
+    }
   // generate a unique id based on list policy
   if (controlPoint->ID.empty())
     {
@@ -2942,13 +2955,6 @@ void vtkMRMLMarkupsNode::SetFixedNumberOfControlPoints(bool fixed)
     return;
     }
   this->FixedNumberOfControlPoints = fixed;
-
-  // Update MaximumNumberOfControlPoints
-  int fixedPointNumber = fixed ? this->GetNumberOfControlPoints() : this->GetRequiredNumberOfControlPoints();
-  if (fixedPointNumber >= 0)
-    {
-    this->MaximumNumberOfControlPoints = fixedPointNumber;
-    }
 
   this->Modified();
   this->InvokeCustomModifiedEvent(vtkMRMLMarkupsNode::FixedNumberOfControlPointsModifiedEvent);

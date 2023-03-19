@@ -51,6 +51,9 @@ class ctkPythonConsole;
 #ifdef Slicer_BUILD_EXTENSIONMANAGER_SUPPORT
 class qSlicerExtensionsManagerModel;
 #endif
+#ifdef Slicer_BUILD_APPLICATIONUPDATE_SUPPORT
+class qSlicerApplicationUpdateManager;
+#endif
 class vtkDataIOManagerLogic;
 class vtkSlicerApplicationLogic;
 class vtkMRMLAbstractLogic;
@@ -90,9 +93,11 @@ class Q_SLICER_BASE_QTCORE_EXPORT qSlicerCoreApplication : public QApplication
   Q_PROPERTY(QString revision READ revision CONSTANT)
   Q_PROPERTY(int majorVersion READ majorVersion CONSTANT)
   Q_PROPERTY(int minorVersion READ minorVersion CONSTANT)
+  Q_PROPERTY(QLocale applicationLocale READ applicationLocale CONSTANT)
+  Q_PROPERTY(QString applicationLocaleName READ applicationLocaleName CONSTANT)
   Q_PROPERTY(QString documentationBaseUrl READ documentationBaseUrl)
   Q_PROPERTY(QString documentationVersion READ documentationVersion CONSTANT)
-  Q_PROPERTY(QString documentationLanguage READ documentationLanguage)
+  Q_PROPERTY(QString documentationLanguage READ documentationLanguage CONSTANT)
   Q_PROPERTY(QString platform READ platform CONSTANT)
   Q_PROPERTY(QString arch READ arch CONSTANT)
   Q_PROPERTY(QString os READ os CONSTANT)
@@ -358,6 +363,15 @@ public:
   void setExtensionsManagerModel(qSlicerExtensionsManagerModel* model);
 #endif
 
+#ifdef Slicer_BUILD_APPLICATIONUPDATE_SUPPORT
+  /// Get extensions manager model
+  Q_INVOKABLE qSlicerApplicationUpdateManager* applicationUpdateManager()const;
+
+  /// Set the application updates model
+  /// \note qSlicerCoreApplication takes ownership of the object
+  void setapplicationUpdateManager(qSlicerApplicationUpdateManager* model);
+#endif
+
   /// Get errorLogModel
   Q_INVOKABLE ctkErrorLogAbstractModel* errorLogModel()const;
 
@@ -443,7 +457,21 @@ public:
 
   /// Return the documentation language that can be used in URLs.
   /// Returns "en" if internationalization is disabled.
+  /// Currently, it is always the same as the name of the application locale name.
+  /// \sa applicationLocaleName
   QString documentationLanguage()const;
+
+  /// Return the locale that is used for displaying localized content to users.
+  /// en_US locale is used if internationalization is disabled.
+  /// \sa applicationLocaleName, QLocale
+  QLocale applicationLocale()const;
+
+  /// Return the locale name that is used for displaying localized content to users.
+  /// en_US locale is used if internationalization is disabled.
+  /// It is different from applicationLocale in that this is just a string (so it cannot be readily
+  /// used for string formatting) and it may specify just a country code without a region.
+  /// \sa applicationLocale, QLocale
+  QString applicationLocaleName()const;
 
   /// Return the documentation base URL.
   /// By default, {documentationbaseurl}/user_guide/modules/{lowercasemodulename}.html
@@ -512,11 +540,16 @@ public:
   /// \sa translationFolders(), loadTranslations
   Q_INVOKABLE static void loadLanguage();
 
-  /// Load certificates bundled into '<slicerHome>/<SLICER_SHARE_DIR>/Slicer.crt'.
+  /// Load SSL certificates bundle.
+  /// Path to the certificates bundle file can be retrieved using caCertificatesPath() method.
   /// For more details, see Slicer/Base/QTCore/Resources/Certs/README
-  /// Returns \a False if 'Slicer.crt' failed to be loaded.
+  /// Returns \a False if the certificate failed to be loaded.
   /// \sa QSslSocket::defaultCaCertificates()
   Q_INVOKABLE static bool loadCaCertificates(const QString& slicerHome);
+
+  /// Return path of certificates bundle.
+  /// The path is '<slicerHome>/<SLICER_SHARE_DIR>/Slicer.crt'.
+  Q_INVOKABLE static QString caCertificatesPath(const QString& slicerHome);
 
   Q_INVOKABLE int registerResource(const QByteArray& data);
 

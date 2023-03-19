@@ -1,7 +1,6 @@
 
 #-----------------------------------------------------------------------------
 set(MODULE_NAME "Markups")
-set(MODULE_TITLE "${MODULE_NAME}")
 
 string(TOUPPER ${MODULE_NAME} MODULE_NAME_UPPER)
 
@@ -43,6 +42,10 @@ set(MODULE_SRCS
   qSlicer${MODULE_NAME}SettingsPanel.h
   qSlicer${MODULE_NAME}Writer.cxx
   qSlicer${MODULE_NAME}Writer.h
+  qSlicerAnnotationsReader.cxx  # for reading legacy annotation files
+  qSlicerAnnotationsReader.h
+  qSlicerAnnotationsIOOptionsWidget.cxx
+  qSlicerAnnotationsIOOptionsWidget.h
   )
 
 set(MODULE_MOC_SRCS
@@ -51,11 +54,14 @@ set(MODULE_MOC_SRCS
   qSlicer${MODULE_NAME}Reader.h
   qSlicer${MODULE_NAME}SettingsPanel.h
   qSlicer${MODULE_NAME}Writer.h
+  qSlicerAnnotationsIOOptionsWidget.h
+  qSlicerAnnotationsReader.h
   )
 
 set(MODULE_UI_SRCS
   Resources/UI/qSlicer${MODULE_NAME}Module.ui
   Resources/UI/qSlicer${MODULE_NAME}SettingsPanel.ui
+  Resources/UI/qSlicerAnnotationModuleIOOptionsWidget.ui
   )
 
 set(MODULE_TARGET_LIBRARIES
@@ -76,7 +82,6 @@ set(MODULE_RESOURCES
 #-----------------------------------------------------------------------------
 slicerMacroBuildLoadableModule(
   NAME ${MODULE_NAME}
-  TITLE ${MODULE_TITLE}
   EXPORT_DIRECTIVE ${MODULE_EXPORT_DIRECTIVE}
   INCLUDE_DIRECTORIES ${MODULE_INCLUDE_DIRECTORIES}
   SRCS ${MODULE_SRCS}

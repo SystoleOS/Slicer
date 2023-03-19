@@ -129,7 +129,7 @@ Module logic methods can be explored by using the `help` Python function (`help(
 
 ### Adding reusable widgets provided by modules
 
-Most Slicer core modules provide a set of resuable, conigurable GUI widgets that can help developers in building their module's user interface.
+Most Slicer core modules provide a set of reusable, configurable GUI widgets that can help developers in building their module's user interface.
 
 For example, Volumes module offers a widget that can display and edit basic properties of volume nodes:
 
@@ -164,6 +164,27 @@ sliceNode = slicer.mrmlScene.GetNodeByID('vtkMRMLSliceNodeRed')
 sliceNode.SetSliceResolutionMode(slicer.vtkMRMLSliceNode.SliceResolutionMatchVolumes)
 ```
 
+## How to connect GUI widget events to Python code
+
+Slicer uses [Qt](https://www.qt.io/) toolkit for providing graphical user interface (GUI). Qt is made available in Python via [PythonQt](https://mevislab.github.io/pythonqt/). Using this Python wrapper, a GUI widget event - it is called a `signal` in Qt - can be connected to a Python function using the syntax: *someQtWidgetObject*.*signalName*.connect(*slotName*).
+
+For example, a QProgressBar will have [these signals](https://doc.qt.io/qt-5/qprogressbar.html#signals) such as valueChanged. Therefore a Python function can be connected like this:
+
+```python
+def printMyNewValue(value):
+  print("The progress bar value is now: {}".format(value))
+
+import qt
+progress_bar = qt.QProgressBar()
+progress_bar.setMaximum(10)
+progress_bar.valueChanged.connect(printMyNewValue)
+progress_bar.setValue(4)  # will then print "The progress bar value is now: 4"
+```
+
+Where to get a list of signals for a widget object? You can find the specification of signals in the header files or the generated documentation. Typically, the first hit on Google search for the class name brings up the documentation page or header file of the class.
+
+Where to get examples? Since Slicer is open-source and there are about 200 extensions to it, mostly developed in Python, hosted on github, there is a very high chance that there are already examples for using the signal you need. You can search in all Python code in entire GitHub for a usage example by typing the name of the class and signal. For example you can [search for `ctkPathLineEdit currentPathChanged` in Python code](https://github.com/search?l=Python&q=ctkPathLineEdit+currentPathChanged&type=Code).
+
 ## How to run an external Python script as a CLI module
 
 A standalone Python script (that does not use any Slicer application features) can run from Slicer as a CLI module. Slicer generates a graphical user interface from the parameter definition XML file. See a complete example [here](https://github.com/lassoan/SlicerPythonCLIExample).
@@ -190,7 +211,8 @@ See more information in Python documentation: https://docs.python.org/3/tutorial
 
 ## How to include Python modules in an extension
 
-Sometimes, it is convenient to add Python modules to the Slicer scripted loadable modules.
+Sometimes a Python scripted module grows big and it becomes inconvenient to have all the source code in a single .py file. Since all the .py files in a folder that is listed among "additional module paths" are expected to be Slicer modules, these additional files cannot be simply placed in the same folder as in the Slicer module. Instead, all additional .py files can be put in a subfolder, as a regular Python module.
+
 For example, the files associated with a Slicer module could look like this:
 
     .
@@ -207,8 +229,8 @@ So that the following code can run within `MySlicerModule.py`:
 from MySlicerModuleLib import utils, cool_maths
 ```
 
-By default, only the Slicer module (`MySlicerModule.py`) will be downloaded when installing the extension using the [Extensions Manager](https://www.slicer.org/wiki/Documentation/4.10/SlicerApplication/ExtensionsManager) (see [a related issue on GitHub](https://github.com/Slicer/ExtensionsIndex/issues/1749)).
-To make sure all the necessary files are downloaded, the `CMakeLists.txt` file associated with the Slicer module needs to be modified.
+By default, only the Slicer module (`MySlicerModule.py`) will be included in the package distributed via the [Extensions Manager](../user_guide/extensions_manager) (see [a related issue on GitHub](https://github.com/Slicer/ExtensionsIndex/issues/1749)).
+To make sure all the necessary files are included in the package, the `CMakeLists.txt` file associated with the Slicer module needs to be modified.
 Initially, the second section of `CMakeLists.txt` will look like this:
 
     set(MODULE_PYTHON_SCRIPTS
@@ -220,9 +242,7 @@ In our example:
 
     set(MODULE_PYTHON_SCRIPTS
       ${MODULE_NAME}.py
-      ${MODULE_NAME}Lib/__init__
-      ${MODULE_NAME}Lib/utils
-      ${MODULE_NAME}Lib/cool_maths
+      ${MODULE_NAME}Lib/__init__.py
+      ${MODULE_NAME}Lib/cool_maths.py
+      ${MODULE_NAME}Lib/utils.py
       )
-
-Note that the `.py` extension is not necessary.

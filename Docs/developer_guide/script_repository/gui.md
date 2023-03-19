@@ -107,7 +107,7 @@ volumeNode.GetDisplayNode().SetWindowLevelMinMax(100, 200)
   -  its input is intentionally defined vaguely (it can be either node ID or name and you can use wildcards such as `*`), which is good because it make it simpler to use, but the uncertain behavior is not good for general-purpose use in a module
   -  throws an exception so that the developer knows immediately that there was a typo or other unexpected error
 - `slicer.mrmlScene.GetNodeByID()` is more appropriate when a module needs to access a MRML node:
-  - its behavior is more predictable: it only accepts node ID as input. `slicer.mrmlScene.GetFirstNodeByName()` can be used to get a node by its name, but since multiple nodes in the scene can have the same name, it is not recommended to keep reference to a node by its name. Since node IDs may change when a scene is saved and reloaded, node ID should not be stored persistently, but [node references](mrml_overview.md#mrml-node-references) must be used instead
+  - its behavior is more predictable: it only accepts node ID as input. `slicer.mrmlScene.GetFirstNodeByName()` can be used to get a node by its name, but since multiple nodes in the scene can have the same name, it is not recommended to keep reference to a node by its name. Since node IDs may change when a scene is saved and reloaded, node ID should not be stored persistently, but [node references](developer_guide/mrml_overview.md#mrml-node-references) must be used instead
   - if node is not found it returns `None` (instead of throwing an exception), because this is often not considered an error in module code (it is just used to check existence of a node) and using return value for not-found nodes allows simpler syntax
 
 :::
@@ -257,7 +257,7 @@ for volumeNode in volumeNodes:
     volumeStorageNode.SetFileName(volumeStorageNode.GetFileName().replace(originalFileExtension, requiredFileExtension))
 ```
 
-To set all volume nodes to save uncompressed by default (add this to [.slicerrc.py file ](../user_guide/settings.md#application-startup-file) so it takes effect for the whole session):
+To set all volume nodes to save uncompressed by default (add this to [.slicerrc.py file ](user_guide/settings.md#application-startup-file) so it takes effect for the whole session):
 
 ```python
 #set the default volume storage to not compress by default
@@ -402,6 +402,14 @@ Crosshair node stores two positions: Cursor position is the current position of 
 
 :::
 
+### Change the crosshair color
+
+```python
+# Get the crosshair node
+crosshairNode = slicer.util.getNode("Crosshair")
+# Set the crosshair color to Red
+crosshairNode.SetCrosshairColor(1.0, 0.0, 0.0)
+```
 ### Display mouse pointer coordinates in alternative coordinate system
 
 The Data probe only shows coordinate values in the world coordinate system. You can make the world coordinate system mean anything you want (e.g., MNI) by applying a transform to the volume that transforms it into that space. See more details in [here ](https://discourse.slicer.org/t/setting-an-mni-origo-to-a-volume/16164/4).
@@ -458,7 +466,7 @@ slicer.mrmlScene.AddNode(invertedocean)
 
 ### Show color legend for a volume node
 
-Display color legend for a volume node in slice views:
+Display color legend for a volume node in slice views (and in 3D views, if the slice is displayed in 3D):
 
 ```python
 volumeNode = getNode('MRHead')
@@ -696,7 +704,7 @@ for sliceViewName in layoutManager.sliceViewNames():
 
 ### Change default slice view orientation
 
-You can left-right "flip" slice view orientation presets (show patient left side on left/right side of the screen) by copy-pasting the script below to your [.slicerrc.py file](../user_guide/settings.md#application-startup-file).
+You can left-right "flip" slice view orientation presets (show patient left side on left/right side of the screen) by copy-pasting the script below to your [.slicerrc.py file](user_guide/settings.md#application-startup-file).
 
 ```python
 # Axial slice axes:
@@ -729,7 +737,7 @@ for sliceNode in sliceNodes:
 
 ### Set all slice views linked by default
 
-You can make slice views linked by default (when application starts or the scene is cleared) by copy-pasting the script below to your [.slicerrc.py file ](../user_guide/settings.md#application-startup-file).
+You can make slice views linked by default (when application starts or the scene is cleared) by copy-pasting the script below to your [.slicerrc.py file](user_guide/settings.md#application-startup-file).
 
 ```python
 # Set linked slice views  in all existing slice composite nodes and in the default node
@@ -746,7 +754,7 @@ for sliceCompositeNode in sliceCompositeNodes:
 
 ### Set crosshair jump mode to centered by default
 
-You can change default slice jump mode (when application starts or the scene is cleared) by copy-pasting the script below to your [.slicerrc.py file ](../user_guide/settings.md#application-startup-file).
+You can change default slice jump mode (when application starts or the scene is cleared) by copy-pasting the script below to your [.slicerrc.py file](user_guide/settings.md#application-startup-file).
 
 ```python
 crosshair=slicer.mrmlScene.GetFirstNodeByClass("vtkMRMLCrosshairNode")
@@ -800,6 +808,13 @@ threeDView.yaw()
 viewNode = slicer.app.layoutManager().threeDWidget(0).mrmlViewNode()
 viewNode.SetBackgroundColor(1,0,0)
 viewNode.SetBackgroundColor2(1,0,0)
+```
+
+### Change box color in 3D view
+
+```python
+viewNode = slicer.app.layoutManager().threeDWidget(0).mrmlViewNode()
+viewNode.SetBoxColor(1,0,0)
 ```
 
 ### Show a slice view outside the view layout
@@ -936,7 +951,7 @@ See more information on physically based rendering in VTK here: https://blog.kit
 
 ### Customize keyboard shortcuts
 
-Keyboard shortcuts can be specified for activating any Slicer feature by adding a couple of lines to your [.slicerrc.py file](../user_guide/settings.md#application-startup-file).
+Keyboard shortcuts can be specified for activating any Slicer feature by adding a couple of lines to your [.slicerrc.py file](user_guide/settings.md#application-startup-file).
 
 For example, this script registers <kbd>Ctrl+b</kbd>, <kbd>Ctrl+n</kbd>, <kbd>Ctrl+m</kbd>, <kbd>Ctrl+,</kbd> keyboard shortcuts to switch between red, yellow, green, and 4-up view layouts.
 
@@ -1125,12 +1140,10 @@ On some systems, *shell=True* must be specified as well.
 extensionName = 'SlicerIGT'
 em = slicer.app.extensionsManagerModel()
 if not em.isExtensionInstalled(extensionName):
-  extensionMetaData = em.retrieveExtensionMetadataByName(extensionName)
-  url = f"{em.serverUrl().toString()}/api/v1/item/{extensionMetaData['_id']}/download"
-  extensionPackageFilename = slicer.app.temporaryPath+'/'+extensionMetaData['_id']
-  slicer.util.downloadFile(url, extensionPackageFilename)
-  em.interactive = False  # Disable popups (automatically install dependencies)
-  em.installExtension(extensionPackageFilename)
+  em.interactive = False  # prevent display of popups
+  em.updateExtensionsMetadataFromServer(True, True)  # update extension metadata from server now
+  if not em.downloadAndInstallExtensionByName(extensionName, True, True):  # install dependencies, wait for installation to finish
+    raise ValueError(f"Failed to install {extensionName} extension")
   slicer.util.restart()
 ```
 

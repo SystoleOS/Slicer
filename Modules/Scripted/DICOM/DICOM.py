@@ -109,11 +109,27 @@ This work is supported by NA-MIC, NAC, BIRN, NCIGT, and the Slicer Community.
                 'moduleAboutToBeUnloaded(QString)', self._onModuleAboutToBeUnloaded)
 
     def onURLReceived(self, urlString):
-        """Process DICOM view requests. Example:
+        """Process DICOM view requests.
+
+        Required query path: viewer/
+        Query parameters:
+          - studyUID: study instance UID (required)
+          - dicomweb_endpoint: DICOMweb server address (required)
+          - access_token: token for accessing the server (optional)
+          - bulk_retrieve: set to 0 for slower retrieve but better compatibility
+            with simple servers (optional, valid values are 0 and 1, default 1)
+
+        Example 1 (server supports bulk retrieve):
+
         slicer://viewer/?studyUID=2.16.840.1.113669.632.20.121711.10000158860
           &access_token=k0zR6WAPpNbVguQ8gGUHp6
           &dicomweb_endpoint=http%3A%2F%2Fdemo.kheops.online%2Fapi
           &dicomweb_uri_endpoint=%20http%3A%2F%2Fdemo.kheops.online%2Fapi%2Fwado
+
+        Example 2 (server does not support bulk retrieve):
+
+        slicer://viewer/?studyUID=1.2.826.0.1.3680043.8.498.77209180964150541470378654317482622226&dicomweb_endpoint=http%3A%2F%2F130.15.7.119:2016%2Fdicom&bulk_retrieve=0
+
         """
 
         url = qt.QUrl(urlString)
@@ -132,6 +148,10 @@ This work is supported by NA-MIC, NAC, BIRN, NCIGT, and the Slicer Community.
             logging.debug("DICOM module ignores URL without studyUID query parameter: " + urlString)
             return
 
+        bulkRetrieve = True
+        if "bulk_retrieve" in queryMap:
+            bulkRetrieve = int(queryMap["bulk_retrieve"]) > 0
+
         logging.info("DICOM module received URL: " + urlString)
 
         accessToken = None
@@ -144,7 +164,8 @@ This work is supported by NA-MIC, NAC, BIRN, NCIGT, and the Slicer Community.
         importedSeriesInstanceUIDs = DICOMUtils.importFromDICOMWeb(
             dicomWebEndpoint=queryMap["dicomweb_endpoint"],
             studyInstanceUID=queryMap["studyUID"],
-            accessToken=accessToken)
+            accessToken=accessToken,
+            bulkRetrieve=bulkRetrieve)
 
         # Select newly loaded items to make it easier to load them
         self.browserWidget.dicomBrowser.setSelectedItems(ctk.ctkDICOMModel.SeriesType, importedSeriesInstanceUIDs)
@@ -470,7 +491,7 @@ class DICOMFileDialog:
         """If DICOM database is invalid then try to create a default one. If fails then show an error message.
         This method should only be used when user initiates DICOM import on the GUI, because the error message is
         shown in a popup, which would block execution of auomated processing scripts.
-        Returns True if a valid DICOM database is available (has been created succussfully or it was already available).
+        Returns True if a valid DICOM database is available (has been created successfully or it was already available).
         """
         if slicer.dicomDatabase and slicer.dicomDatabase.isOpen:
             # Valid DICOM database already exists
@@ -601,10 +622,23 @@ class DICOMWidget(ScriptedLoadableModuleWidget):
             viewArrangement = slicer.app.layoutManager().layoutLogic().GetLayoutNode().GetViewArrangement()
             self.ui.showBrowserButton.checked = (viewArrangement == slicer.vtkMRMLLayoutNode.SlicerLayoutDicomBrowserView)
 
-        # connect to the 'Show DICOM Browser' button
+        # connect 'Import DICOM files' and 'Show DICOM Browser' button
         self.ui.showBrowserButton.connect('clicked()', self.toggleBrowserWidget)
-
         self.ui.importButton.connect('clicked()', self.importFolder)
+
+        # Add import options menu to import button
+
+        importButtonMenu = qt.QMenu("Import options", self.ui.importButton)
+        importButtonMenu.toolTipsVisible = True
+        self.ui.importButton.setMenu(importButtonMenu)
+        importButtonMenu.connect('aboutToShow()', self.aboutToShowImportOptionsMenu)
+
+        self.copyOnImportAction = qt.QAction("Copy imported files to DICOM database", importButtonMenu)
+        self.copyOnImportAction.setToolTip("If enabled, all imported files are copied into the DICOM database."
+                                           " This is useful when importing from removable drives.")
+        self.copyOnImportAction.setCheckable(True)
+        importButtonMenu.addAction(self.copyOnImportAction)
+        self.copyOnImportAction.connect('toggled(bool)', self.copyOnImportToggled)
 
         self.ui.subjectHierarchyTree.setMRMLScene(slicer.mrmlScene)
         self.ui.subjectHierarchyTree.currentItemChanged.connect(self.onCurrentItemChanged)
@@ -769,6 +803,15 @@ class DICOMWidget(ScriptedLoadableModuleWidget):
         else:
             if self.browserWidget:
                 self.browserWidget.close()
+
+    def aboutToShowImportOptionsMenu(self):
+        self.copyOnImportAction.checked = (self.browserWidget.dicomBrowser.ImportDirectoryMode == ctk.ctkDICOMBrowser.ImportDirectoryCopy)
+
+    def copyOnImportToggled(self, copyOnImport):
+        if self.copyOnImportAction.checked:
+            self.browserWidget.dicomBrowser.ImportDirectoryMode = ctk.ctkDICOMBrowser.ImportDirectoryCopy
+        else:
+            self.browserWidget.dicomBrowser.ImportDirectoryMode = ctk.ctkDICOMBrowser.ImportDirectoryAddLink
 
     def importFolder(self):
         if not DICOMFileDialog.createDefaultDatabase():

@@ -49,13 +49,6 @@ qMRMLViewControllerBarPrivate::qMRMLViewControllerBarPrivate(
   : QObject(nullptr)
   , q_ptr(&object)
 {
-  this->PinButton = nullptr;
-  this->ViewLabel = nullptr;
-  this->PopupWidget = nullptr;
-  this->BarLayout = nullptr;
-  this->BarWidget = nullptr;
-  this->ControllerLayout = nullptr;
-  this->LayoutBehavior = qMRMLViewControllerBar::Popup;
 }
 
 //---------------------------------------------------------------------------
@@ -311,32 +304,22 @@ void qMRMLViewControllerBar::maximizeView()
     qCritical() << Q_FUNC_INFO << ": Invalid view node.";
     return;
     }
-  vtkMRMLLayoutNode* layoutNode = nullptr;
-  if (this->mrmlViewNode()->GetParentLayoutNode())
+
+  bool isMaximized = false;
+  bool canBeMaximized = false;
+  vtkMRMLLayoutNode* layoutNode = this->mrmlViewNode()->GetMaximizedState(isMaximized, canBeMaximized);
+  if (!layoutNode || !canBeMaximized)
     {
-    layoutNode = vtkMRMLLayoutNode::SafeDownCast(this->mrmlViewNode()->GetParentLayoutNode());
-    if (!layoutNode)
-      {
-      // the owner is not a real layout node, it means it is a standalone view, cannot be maximized
-      return;
-      }
-    }
-  if (!layoutNode)
-    {
-    layoutNode = vtkMRMLLayoutNode::SafeDownCast(this->mrmlScene()->GetFirstNodeByClass("vtkMRMLLayoutNode"));
-    }
-  if (!layoutNode)
-    {
-    qCritical() << Q_FUNC_INFO << ": Unable to get layout node.";
     return;
     }
-  if (layoutNode->GetMaximizedViewNode() == this->mrmlViewNode())
+
+  if (isMaximized)
     {
-    layoutNode->SetMaximizedViewNode(nullptr);
+    layoutNode->RemoveMaximizedViewNode(this->mrmlViewNode());
     }
   else
     {
-    layoutNode->SetMaximizedViewNode(this->mrmlViewNode());
+    layoutNode->AddMaximizedViewNode(this->mrmlViewNode());
     }
 }
 
@@ -371,8 +354,8 @@ void qMRMLViewControllerBar::updateWidgetFromMRMLView()
     d->ViewNode->GetMaximizedState(isMaximized, canBeMaximized);
     }
 
-  d->MaximizeViewButton->setVisible(canBeMaximized);
-  if (canBeMaximized)
+  d->MaximizeViewButton->setVisible(canBeMaximized && d->ShowMaximizeViewButton);
+  if (canBeMaximized && d->ShowMaximizeViewButton)
     {
     if (isMaximized)
       {
@@ -385,4 +368,19 @@ void qMRMLViewControllerBar::updateWidgetFromMRMLView()
       d->MaximizeViewButton->setIcon(d->ViewMaximizeIcon);
       }
     }
+}
+
+//-----------------------------------------------------------------------------
+bool qMRMLViewControllerBar::showMaximizeViewButton()const
+{
+  Q_D(const qMRMLViewControllerBar);
+  return d->ShowMaximizeViewButton;
+}
+
+//-----------------------------------------------------------------------------
+void qMRMLViewControllerBar::setShowMaximizeViewButton(bool show)
+{
+  Q_D(qMRMLViewControllerBar);
+  d->ShowMaximizeViewButton = show;
+  this->updateWidgetFromMRMLView();
 }

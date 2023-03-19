@@ -89,7 +89,7 @@ vtkSlicerVolumesLogic* qSlicerVolumesReader::logic()const
 //-----------------------------------------------------------------------------
 QString qSlicerVolumesReader::description()const
 {
-  return "Volume";
+  return tr("Volume");
 }
 
 //-----------------------------------------------------------------------------
@@ -103,10 +103,10 @@ QStringList qSlicerVolumesReader::extensions()const
 {
   // pic files are bio-rad images (see itkBioRadImageIO)
   return QStringList()
-    << "Volume (*.hdr *.nhdr *.nrrd *.mhd *.mha *.mnc *.nii *.nii.gz *.mgh *.mgz *.mgh.gz *.img *.img.gz *.pic)"
-    << "Dicom (*.dcm *.ima)"
-    << "Image (*.png *.tif *.tiff *.jpg *.jpeg)"
-    << "All Files (*)";
+    << tr("Volume") + " (*.hdr *.nhdr *.nrrd *.mhd *.mha *.mnc *.nii *.nii.gz *.mgh *.mgz *.mgh.gz *.img *.img.gz *.pic)"
+    << tr("Dicom") + " (*.dcm *.ima)"
+    << tr("Image") + " (*.png *.tif *.tiff *.jpg *.jpeg)"
+    << tr("All Files") + " (*)";
 }
 
 //-----------------------------------------------------------------------------
@@ -166,7 +166,9 @@ bool qSlicerVolumesReader::load(const IOProperties& properties)
       }
     }
   Q_ASSERT(d->Logic);
-  vtkMRMLVolumeNode* node = d->Logic->AddArchetypeVolume(
+  // Weak pointer is used because the node may be deleted if the scene is closed
+  // right after reading.
+  vtkWeakPointer<vtkMRMLVolumeNode> node = d->Logic->AddArchetypeVolume(
     fileName.toUtf8(),
     name.toUtf8(),
     options,
@@ -218,7 +220,7 @@ bool qSlicerVolumesReader::examineFileInfoList(QFileInfoList &fileInfoList, QFil
 {
 
   //
-  // Check each file to see if it's recognzied as part of a series.  If so,
+  // Check each file to see if it's recognized as part of a series.  If so,
   // keep it as the archetype and remove all the others from the list
   //
   foreach(QFileInfo fileInfo, fileInfoList)

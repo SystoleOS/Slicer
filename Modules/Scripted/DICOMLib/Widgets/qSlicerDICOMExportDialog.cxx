@@ -126,8 +126,6 @@ void qSlicerDICOMExportDialogPrivate::init()
     q, SLOT(onTagEdited()));
   connect(this->ExportButton, SIGNAL(clicked()),
     q, SLOT(onExport()));
-  connect(this->ExportSeriesRadioButton, SIGNAL(toggled(bool)),
-    q, SLOT(onExportSeriesRadioButtonToggled(bool)) );
   connect(this->SaveTagsCheckBox, SIGNAL(toggled(bool)),
     q, SLOT(onSaveTagsCheckBoxToggled(bool)) );
   connect(this->ExportToFolderCheckBox, SIGNAL(toggled(bool)),
@@ -257,7 +255,7 @@ void qSlicerDICOMExportDialog::examineSelectedItem()
     }
 
   // Get exportables from DICOM plugins for selection
-  QMap<QString,QList<qSlicerDICOMExportable*> > exportablesByPlugin;
+  QMultiMap<QString,qSlicerDICOMExportable*> exportablesByPlugin;
   foreach (vtkIdType selectedSeriesItemID, selectedSeriesItemIDs)
     {
     PythonQt::init();
@@ -291,24 +289,16 @@ void qSlicerDICOMExportDialog::examineSelectedItem()
         }
       exportable->setParent(this); // Take ownership to prevent destruction
       QString plugin = exportable->pluginClass();
-      if (!exportablesByPlugin.contains(plugin))
-        {
-        QList<qSlicerDICOMExportable*> firstExportableForPlugin;
-        firstExportableForPlugin.append(exportable);
-        exportablesByPlugin[plugin] = firstExportableForPlugin;
-        }
-      else
-        {
-        exportablesByPlugin[plugin].append(exportable);
-        }
+      exportablesByPlugin.insert(plugin, exportable);
     }
   }
   // Map the grouped exportables by confidence values so that the highest confidence is on top
-  QMap<double,QList<qSlicerDICOMExportable*> > exportablesByConfidence;
-  foreach(QList<qSlicerDICOMExportable*> exportablesForPlugin, exportablesByPlugin)
+  QMultiMap<double,QList<qSlicerDICOMExportable*> > exportablesByConfidence;
+  foreach(const QString& plugin, exportablesByPlugin.uniqueKeys())
     {
     // Geometric mean to emphasize larger values
     double meanConfidenceForPlugin = 0.0;
+    QList<qSlicerDICOMExportable*> exportablesForPlugin = exportablesByPlugin.values(plugin);
     foreach (qSlicerDICOMExportable* exportable, exportablesForPlugin)
       {
       meanConfidenceForPlugin += exportable->confidence();
@@ -317,11 +307,11 @@ void qSlicerDICOMExportDialog::examineSelectedItem()
 
     // Add exportable to map with confidence as key. Confidence value is subtracted
     // from 1 so that iterating through the map automatically orders the exportables.
-    exportablesByConfidence[1.0 - meanConfidenceForPlugin] = exportablesForPlugin;
+    exportablesByConfidence.insert(1.0 - meanConfidenceForPlugin, exportablesForPlugin);
     }
 
   // Populate the exportables list widget
-  foreach (double inverseConfidence, exportablesByConfidence.keys())
+  foreach (double inverseConfidence, exportablesByConfidence.uniqueKeys())
     {
     // Get exportable lists for the confidence number (there might be equality!)
     QList<QList<qSlicerDICOMExportable*> > exportableLists = exportablesByConfidence.values(inverseConfidence);
@@ -401,33 +391,6 @@ void qSlicerDICOMExportDialog::onTagEdited()
 }
 
 //-----------------------------------------------------------------------------
-void qSlicerDICOMExportDialog::onExportSeriesRadioButtonToggled(bool seriesOn)
-{
-  Q_D(qSlicerDICOMExportDialog);
-
-  // Export series
-  if (seriesOn)
-    {
-    d->groupBox_1SelectNode->setEnabled(true);
-    d->groupBox_2SelectExportType->setEnabled(true);
-    d->groupBox_3EditDICOMTags->setEnabled(true);
-    d->SaveTagsCheckBox->setEnabled(true);
-    d->ExportFrame->setEnabled(true);
-    d->ErrorLabel->setText(QString());
-    }
-  // Export entire scene
-  else
-    {
-    d->groupBox_1SelectNode->setEnabled(false);
-    d->groupBox_2SelectExportType->setEnabled(false);
-    d->groupBox_3EditDICOMTags->setEnabled(false);
-    d->SaveTagsCheckBox->setEnabled(false);
-    d->ExportFrame->setEnabled(false);
-    d->ErrorLabel->setText(QString());
-    }
-}
-
-//-----------------------------------------------------------------------------
 void qSlicerDICOMExportDialog::onExport()
 {
   Q_D(qSlicerDICOMExportDialog);
@@ -459,15 +422,7 @@ void qSlicerDICOMExportDialog::onExport()
     }
 
   // Call export function based on radio button choice
-  bool exportSuccess = false;
-  if (d->ExportSeriesRadioButton->isChecked())
-    {
-    exportSuccess = this->exportSeries(outputFolder);
-    }
-  else
-    {
-    exportSuccess = this->exportEntireScene(outputFolder);
-    }
+  bool exportSuccess = this->exportSeries(outputFolder);
 
   if (exportToDatabase)
     {
@@ -623,18 +578,4 @@ bool qSlicerDICOMExportDialog::exportSeries(const QDir& outputFolder)
     }
 
   return true;
-}
-
-//-----------------------------------------------------------------------------
-bool qSlicerDICOMExportDialog::exportEntireScene(const QDir& outputFolder)
-{
-  Q_D(qSlicerDICOMExportDialog);
-  PythonQt::init();
-  PythonQtObjectPtr exportContext = PythonQt::self()->getMainModule();
-  exportContext.evalScript( QString(
-    "import DICOMLib\n"
-    "exporter = DICOMLib.DICOMExportScene(saveDirectoryPath=%1)\n"
-    "success = exporter.export()\n").arg(qSlicerCorePythonManager::toPythonStringLiteral(outputFolder.absolutePath())) );
-  bool success = exportContext.getVariable("success").toBool();
-  return success;
 }

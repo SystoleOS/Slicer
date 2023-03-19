@@ -88,7 +88,7 @@ Note: Consumer file formats, such as jpg, png, and tiff are not well suited for 
   - Image Dimensions: The number of pixels in "IJK" space - this is the way the data is arranged in memory. The IJK indices (displayed in the DataProbe) go from 0 to dimension-1 in each direction.
   - Image Spacing: The physical distance between pixel centers when mapped to patient space expressed in millimeters.
   - Image Origin: The location of the center of the 0,0,0 (IJK) pixel expressed with respect to patient space. Patient space is organized with respect to the subject's Right, Anterior, and Superior anatomical directions. See [coordinate systems page](https://www.slicer.org/w/index.php/Coordinate_systems) for more information.
-  - IJK to RAS Direction Matrix: The trasnform matrix from the IJK to RAS coordinate systems
+  - IJK to RAS Direction Matrix: The transform matrix from the IJK to RAS coordinate systems
   - Center Volume: This button will apply a transform to the volume that shifts its center to the origin in patient space. Harden the transform on the volume to permanently change the image origin.
   - Scan Order: Describes the image orientation (how the IJK space is oriented with respect to patient RAS.
   - Number of Scalars: Most CT or MR scans have one scalar component (grayscale). Color images have three components (red, green, blue).
@@ -98,10 +98,10 @@ Note: Consumer file formats, such as jpg, png, and tiff are not well suited for 
   - Window/Level Presets: Loaded from DICOM headers defined by scanner or by technician.
   - Convert to label map / Convert to scalar volume: Convert the active volume between labelmap and scalar volume.
 - Display: Set of visualization controls appropriate for the currently selected volume. Not all controls are available for all volume types.
+  - Presets: Predefined volume display presets that set window/level and the lookup table for common visualization requirements.
   - Lookup Table: Select the color mapping for scalar volumes to colors.
   - Interpolate: When checked, slice views will display linearly interpolated slices through input volumes. Unchecked indicates nearest neighbor resampling
-  - Window Level Presets: Predefinied shortcuts to window/level and color table combinations for common visualization requirements.
-  - Window/Level Controls: Double slider with text input to define the range of input volume data that should be mapped to the display grayscale. Auto window level tries to estimate the intensity range of the foreground image data. On mouse over, a popup slides down to add support for large dynamic range by giving control over the range of the window level double slider.
+  - Window/Level Controls: Double slider with text input to define the range of input volume data that should be mapped to the display grayscale. Auto window level tries to estimate the intensity range of the foreground image data. An advanced options button can be clicked to display controls to add support for large dynamic range by giving control over the range of the window level double slider.
   - Threshold: Controls the range of the image that should be considered transparent when used in the foreground layer of the slice display. Same parameters also control transparency of slice models displayed in the 3D viewers.
   - Histogram: Shows the number of pixels (y axis) vs the image intensity (x axis) over a background of the current window/level and threshold mapping.
 - Diffusion Weighted Volumes: The following controls show up when a DWI volume is selected
@@ -125,7 +125,11 @@ Note: Consumer file formats, such as jpg, png, and tiff are not well suited for 
 - Vector to scalar volume: convert vector volume to scalar volume
 - Extensions:
   -  Image Maker: create a volume from scratch
-  - [Image Stacks](https://github.com/SlicerMorph/S_2020/blob/master/Day_1/ImageStacks/ImageStacks.md) provided by the [SlicerMorph](https://slicermorph.github.io/) extension.
+  - [Image Stacks](https://github.com/SlicerMorph/Tutorials/tree/main/ImageStacks#readme) provided by the [SlicerMorph](https://github.com/SlicerMorph/SlicerMorph/) extension.
+
+## Information for developers
+
+See examples and other developer information in [Developer guide](../../developer_guide/modules/volumes) and [Script repository](../../developer_guide/script_repository.md#volumes).
 
 ## Contributors
 

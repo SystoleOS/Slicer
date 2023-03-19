@@ -342,6 +342,9 @@ QString qSlicerAbstractCoreModule::defaultDocumentationLink()const
     return "";
     }
   QString url = app->moduleDocumentationUrl(this->name());
-  QString linkText = QString("<p>For more information see the <a href=\"%1\">online documentation</a>.</p>").arg(url);
+  QString linkText = QString("<p>")
+    + tr("For more information see the %1.").arg(
+        QString("<a href=\"%1\">%2</a>").arg(url).arg(tr("online documentation")))
+    + QString("</p>");
   return linkText;
 }

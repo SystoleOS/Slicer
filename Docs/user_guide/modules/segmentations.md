@@ -11,6 +11,8 @@ The Segmentations module manages segmentations. Each segmentation can contain mu
 
 Motivation, features, and details of the infrastructure are explained in paper *Cs. Pinter, A. Lasso, G. Fichtinger, "Polymorph segmentation representation for medical image computing", Computer Methods and Programs in Biomedicine, Volume 171, p19-26, 2019* ([pdf](http://perk.cs.queensu.ca/sites/perkd7.cs.queensu.ca/files/Pinter2019_Manuscript.pdf), [DOI](https://doi.org/10.1016/j.cmpb.2019.02.011)) and in presentation slides ([pdf](https://www.slicer.org/wiki/File:20160526_Segmentations.pdf), [pptx](https://www.slicer.org/wiki/File:20160526_Segmentations.pptx)).
 
+![](https://github.com/Slicer/Slicer/releases/download/docs-resources/image_segmentation_segmentations_module.png)
+
 ## Use cases
 
 ### Edit segmentation
@@ -22,6 +24,7 @@ Segmentation can be edited using [Segment Editor](segmenteditor.md) module.
 3D volumes in NRRD (.nrrd or .nhdr) and Nifti (.nii or .nii.gz) file formats can be directly loaded as segmentation:
 - Drag-and-drop the volume file to the application window (or use menu: `File` / `Add Data`, then select the file)
 - In `Description` column choose `Segmentation`
+- Optional: if a color table (specifying name and color for each label value) is available then load that first into the application and then select it as `Color node` in the `Options` section. Specification of the color table file format is available [here](../../developer_guide/modules/colors.md#color-table-file-format-txt-ctbl).
 - Click `OK`
 
 :::{tip}
@@ -67,11 +70,11 @@ Other mesh file formats can be loaded as model and then converted to segmentatio
 
 ### Editing a segmentation imported from model (surface mesh) file
 
-Selection of a `Reference volume` is required for editing a segmentation. The reference volume specifies the geometry (origin, spacing, axis directions, and extents) of the voxel grid that is used during editing.
+Selection of a `source volume` is required for editing a segmentation. The source volume specifies the geometry (origin, spacing, axis directions, and extents) of the voxel grid that is used during editing.
 
 If no volume is available then it can be created by the following steps:
 - Go to `Segment editor` module
-- Click `Specify geometry` button (on the right side of `Reference volume` node selector)
+- Click `Specify geometry` button (on the right side of `Source volume` node selector)
 - For `Source geometry` choose the segmentation (this specifies the extents, i.e., the bounding box so that the complete object is included)
 - Adjust `Spacing` values as needed. It is recommended to set the same value for all three axes. Using smaller values preserve more details but at the cost of increased memory usage and computation time.
 - Click `OK`
@@ -115,7 +118,7 @@ For exporting segmentation as NRRD or NIFTI file for external software that uses
 - Open `Export to files` section in `Segmentations` module (or in `Segment editor` module: choose `Export to files`, in the drop-down menu of `Segmentations` button)
 - In `File format` selector choose `NRRD` or `NIFTI`. NRRD format is recommended, as it is a simple, general-purpose file format. For neuroimaging, NIFTI file format may be a better choice, as it is the most commonly used research file format in that field.
 - Optional: choose Reference volume if you want your segmentation to match a selected volume's geometry (origin, spacing, axis directions) instead of the current segmentation geometry
-- Optional: check `Use color table values` checkbox and select a color table to set voxel values in the exported files from values specified in the color table. Without that, voxel values are based on the order of segments in the segmentation node.
+- Optional: check `Use color table values` checkbox and select a color table to set voxel values in the exported files from values specified in the color table. The label value is index of the color table entry that has the same name as the segment name. If a color table is not specified then, voxel values are based on the order of segments in the segment list (voxels that are outside of all segments are set to 0, voxels of the first segment are set to  1, voxels of the second segment are set to 2, etc).
 - Set additional options (destination folder, compression, etc.) as needed
 - Click `Export`
 
@@ -141,7 +144,7 @@ The supported representations are listed in the Representations section. Existin
 See Script repository's [Segmentations section](../../developer_guide/script_repository.md#segmentations) for examples.
 
 ### DICOM export
-- The master representation is used when exporting into DICOM, therefore you need to select a reference volume, create binary labelmap representation and set it as master
+- The master representation is used when exporting into DICOM, therefore you need to select a source volume, create binary labelmap representation and set it as master
 - DICOM Segmentation Object export if `QuantitativeReporting` extension is installed
 - Legacy DICOM RT structure set export is available if `SlicerRT` extension is installed. RT structure sets are not recommended for storing segmentations, as they cannot store arbitrarily complex 3D shapes.
 - Follow [these instructions](dicom.md#export-data-from-the-scene-to-dicom-database) for exporting data in DICOM format.

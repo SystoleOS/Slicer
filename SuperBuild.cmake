@@ -109,7 +109,7 @@ if(Slicer_BUILD_CLI_SUPPORT)
   list(APPEND Slicer_DEPENDENCIES SlicerExecutionModel)
 endif()
 
-if(Slicer_BUILD_EXTENSIONMANAGER_SUPPORT)
+if(Slicer_BUILD_EXTENSIONMANAGER_SUPPORT OR Slicer_BUILD_APPLICATIONUPDATE_SUPPORT)
   list(APPEND Slicer_DEPENDENCIES qRestAPI)
 endif()
 
@@ -202,7 +202,7 @@ endmacro()
 
 Slicer_Remote_Add(vtkAddon
   GIT_REPOSITORY "${EP_GIT_PROTOCOL}://github.com/Slicer/vtkAddon"
-  GIT_TAG 8b5c4b2336a4d2d2aaafe87db3642b5302ddcaa5
+  GIT_TAG 4413fde380b744ab221f7beb4410e11a5158b496
   OPTION_NAME Slicer_BUILD_vtkAddon
   )
 list_conditional_append(Slicer_BUILD_vtkAddon Slicer_REMOTE_DEPENDENCIES vtkAddon)
@@ -237,7 +237,7 @@ list_conditional_append(Slicer_BUILD_MultiVolumeExplorer Slicer_REMOTE_DEPENDENC
 
 Slicer_Remote_Add(MultiVolumeImporter
   GIT_REPOSITORY ${EP_GIT_PROTOCOL}://github.com/fedorov/MultiVolumeImporter.git
-  GIT_TAG db805948534563566f0a39c63e8d60fac0b63dcd
+  GIT_TAG c14758931e009419dd95963219e904e5b7d70bbf
   OPTION_NAME Slicer_BUILD_MultiVolumeImporter
   OPTION_DEPENDS "Slicer_BUILD_QTLOADABLEMODULES;Slicer_BUILD_MULTIVOLUME_SUPPORT;Slicer_USE_PYTHONQT"
   LABELS REMOTE_MODULE
@@ -337,7 +337,7 @@ list_conditional_append(Slicer_BUILD_LandmarkRegistration Slicer_REMOTE_DEPENDEN
 
 Slicer_Remote_Add(SurfaceToolbox
   GIT_REPOSITORY "${EP_GIT_PROTOCOL}://github.com/Slicer/SlicerSurfaceToolbox"
-  GIT_TAG 3515c3ccaf0380ef1efd7ccaaf71decb3584a263
+  GIT_TAG 0de80503e4bd47b5d46c11766e65186c470746cb
   OPTION_NAME Slicer_BUILD_SurfaceToolbox
   OPTION_DEPENDS "Slicer_USE_PYTHONQT"
   LABELS REMOTE_MODULE

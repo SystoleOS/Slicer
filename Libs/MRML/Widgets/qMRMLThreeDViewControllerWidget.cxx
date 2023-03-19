@@ -392,7 +392,7 @@ void qMRMLThreeDViewControllerWidget::setViewLabel(const QString& newViewLabel)
 QString qMRMLThreeDViewControllerWidget::viewLabel()const
 {
   Q_D(const qMRMLThreeDViewControllerWidget);
-  if (this->mrmlThreeDViewNode())
+  if (!this->mrmlThreeDViewNode())
     {
     qCritical() << Q_FUNC_INFO << " failed: must set view node first";
     return QString();
@@ -594,7 +594,7 @@ void qMRMLThreeDViewControllerWidget::setOrthographicModeEnabled(bool enabled)
 {
   Q_D(qMRMLThreeDViewControllerWidget);
 
-  if (!d->ViewLogic)
+  if (!d->ViewLogic || !this->mrmlThreeDViewNode())
     {
     return;
     }
@@ -615,7 +615,7 @@ void qMRMLThreeDViewControllerWidget::lookFromAxis(const ctkAxesWidget::Axis& ax
     }
 
   d->ViewLogic->StartCameraNodeInteraction(vtkMRMLCameraNode::LookFromAxis);
-  d->ThreeDView->lookFromViewAxis(axis);
+  d->ThreeDView->lookFromAxis(axis);
   d->ViewLogic->EndCameraNodeInteraction();
 }
 
@@ -822,6 +822,26 @@ void qMRMLThreeDViewControllerWidget::setBackgroundColor(
     newColor2 = newColor;
     }
   this->mrmlThreeDViewNode()->SetBackgroundColor2(newColor2.redF(), newColor2.greenF(), newColor2.blueF());
+  this->mrmlThreeDViewNode()->EndModify(wasModifying);
+
+  d->ViewLogic->EndViewNodeInteraction();
+}
+
+// --------------------------------------------------------------------------
+void qMRMLThreeDViewControllerWidget::setBoxColor(
+  const QColor& newColor)
+{
+  Q_D(qMRMLThreeDViewControllerWidget);
+  if (!this->mrmlThreeDViewNode())
+    {
+    return;
+    }
+
+  d->ViewLogic->StartViewNodeInteraction(vtkMRMLViewNode::BoxColorFlag);
+
+  int wasModifying = this->mrmlThreeDViewNode()->StartModify();
+  // The ThreeDView displayable manager will change the color of BoxAxisActor
+  this->mrmlThreeDViewNode()->SetBoxColor(newColor.redF(), newColor.greenF(), newColor.blueF());
   this->mrmlThreeDViewNode()->EndModify(wasModifying);
 
   d->ViewLogic->EndViewNodeInteraction();

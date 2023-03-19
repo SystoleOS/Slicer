@@ -145,12 +145,11 @@ bool qSlicerNodeWriter::write(const qSlicerIO::IOProperties& properties)
   QString fileName = properties["fileName"].toString();
   snode->SetFileName(fileName.toUtf8());
 
-  qSlicerCoreIOManager* coreIOManager =
-    qSlicerCoreApplication::application()->coreIOManager();
-
-  QString fileFormat =
-    properties.value("fileFormat", coreIOManager->completeSlicerWritableFileNameSuffix(node)).toString();
-  snode->SetWriteFileFormat(fileFormat.toUtf8());
+  QString fileFormat = properties.value("fileFormat").toString();
+  if (!fileFormat.isEmpty())
+    {
+    snode->SetWriteFileFormat(fileFormat.toUtf8());
+    }
   snode->SetURI(nullptr);
   if (properties.contains("useCompression"))
     {
@@ -188,7 +187,7 @@ vtkMRMLNode* qSlicerNodeWriter::getNodeByID(const char *id)const
       {
       vtkMRMLSceneViewNode *svNode = vtkMRMLSceneViewNode::SafeDownCast(*it);
       // skip "Master Scene View" since it contains the same nodes as the scene
-      if (svNode->GetName() && std::string("Master Scene View") == std::string(svNode->GetName()))
+      if (svNode->GetName() && std::string(/*no tr*/"Master Scene View") == std::string(svNode->GetName()))
         {
         continue;
         }

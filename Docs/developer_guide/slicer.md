@@ -1,17 +1,6 @@
-# slicer package
+# slicer
 
-## Submodules
-
-### slicer.ScriptedLoadableModule module
-
-```{eval-rst}
-.. automodule:: slicer.ScriptedLoadableModule
-    :members:
-    :undoc-members:
-    :show-inheritance:
-```
-
-### slicer.cli module
+## slicer.cli
 
 ```{eval-rst}
 .. automodule:: slicer.cli
@@ -20,7 +9,7 @@
     :show-inheritance:
 ```
 
-### slicer.logic module
+## slicer.logic
 
 ```{eval-rst}
 .. automodule:: slicer.logic
@@ -29,10 +18,19 @@
     :show-inheritance:
 ```
 
+## slicer.ScriptedLoadableModule
+
+```{eval-rst}
+.. automodule:: slicer.ScriptedLoadableModule
+    :members:
+    :undoc-members:
+    :show-inheritance:
+```
+
 % Commented out for now, because it breaks documentation building on Windows
 % (Sphinx returns with an error code and nothing is generated)
 %
-% ### slicer.slicerqt module
+% ## slicer.slicerqt
 %
 % ```{eval-rst}
 % .. automodule:: slicer.slicerqt
@@ -41,7 +39,7 @@
 %     :show-inheritance:
 % ```
 
-### slicer.testing module
+## slicer.testing
 
 ```{eval-rst}
 .. automodule:: slicer.testing
@@ -50,19 +48,10 @@
     :show-inheritance:
 ```
 
-### slicer.util module
+## slicer.util
 
 ```{eval-rst}
 .. automodule:: slicer.util
-    :members:
-    :undoc-members:
-    :show-inheritance:
-```
-
-## Module contents
-
-```{eval-rst}
-.. automodule:: slicer
     :members:
     :undoc-members:
     :show-inheritance:

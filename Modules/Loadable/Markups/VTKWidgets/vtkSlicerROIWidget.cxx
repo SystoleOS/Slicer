@@ -232,26 +232,14 @@ void vtkSlicerROIWidget::ScaleWidget(double eventPos[2], bool symmetricScale)
   else if (rep3d)
     {
     // 3D view
-    double eventPos_Display[2] = { 0. };
-    eventPos_Display[0] = this->LastEventPosition[0];
-    eventPos_Display[1] = this->LastEventPosition[1];
-
     if (!rep3d->GetPointPlacer()->ComputeWorldPosition(this->Renderer,
-      eventPos_Display, lastEventPos_World, eventPos_World,
-      orientation_World))
+      this->LastEventPosition, lastEventPos_World, orientation_World))
       {
       return;
       }
-    lastEventPos_World[0] = eventPos_World[0];
-    lastEventPos_World[1] = eventPos_World[1];
-    lastEventPos_World[2] = eventPos_World[2];
-
-    eventPos_Display[0] = eventPos[0];
-    eventPos_Display[1] = eventPos[1];
 
     if (!rep3d->GetPointPlacer()->ComputeWorldPosition(this->Renderer,
-      eventPos_Display, lastEventPos_World, eventPos_World,
-      orientation_World))
+      eventPos, lastEventPos_World, eventPos_World, orientation_World))
       {
       return;
       }

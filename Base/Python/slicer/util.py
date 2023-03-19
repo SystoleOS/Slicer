@@ -32,8 +32,11 @@ def exit(status=EXIT_SUCCESS):
     the error code will be overwritten.
 
     To make the application exit immediately, this code can be used.
-    Note that forcing the application to exit may result in
-    improperly released files and other resources.
+
+    ..warning::
+
+      Forcing the application to exit may result in
+      improperly released files and other resources.
 
     .. code-block:: python
 
@@ -97,12 +100,16 @@ def startupEnvironment():
     will not contain values found in the launcher settings.
 
     Similarly `key=value` environment variables also found in the launcher
-    settings are excluded. Note that if a value was associated with a key prior
-    starting Slicer, it will not be set in the environment returned by this
-    function.
+    settings are excluded.
 
     The function excludes both the Slicer launcher settings and the revision
     specific launcher settings.
+
+    .. warning::
+
+      If a value was associated with a key prior
+      starting Slicer, it will not be set in the environment returned by this
+      function.
     """
     import slicer
     startupEnv = slicer.app.startupEnvironment()
@@ -257,6 +264,7 @@ def findChildren(widget=None, name="", text="", title="", className=""):
 
     If no criteria are provided, the function will return all widgets descendants.
     If no widget is provided, slicer.util.mainWindow() is used.
+
     :param widget: parent widget where the widgets will be searched
     :param name: name attribute of the widget
     :param text: text attribute of the widget
@@ -449,9 +457,12 @@ def updateParameterEditWidgetsFromNode(parameterEditWidgets, parameterNode):
 
     The function is useful for implementing updateGUIFromParameterNode.
 
-    Note: Only a few widget classes are supported now. More will be added later. Report any missing classes at discourse.slicer.org.
-
     See example in :py:meth:`addParameterEditWidgetConnections` documentation.
+
+    .. note::
+
+      Only a few widget classes are supported now. More will be added later.
+      Report any missing classes at https://discourse.slicer.org.
     """
 
     for (widget, parameterName) in parameterEditWidgets:
@@ -480,7 +491,10 @@ def updateNodeFromParameterEditWidgets(parameterEditWidgets, parameterNode):
 
     The function is useful for implementing updateParameterNodeFromGUI.
 
-    Note: Only a few widget classes are supported now. More will be added later. Report any missing classes at discourse.slicer.org.
+    .. note::
+
+      Only a few widget classes are supported now. More will be added later.
+      Report any missing classes at https://discourse.slicer.org.
 
     See example in :py:meth:`addParameterEditWidgetConnections` documentation.
     """
@@ -663,7 +677,9 @@ def loadNodeFromFile(filename, filetype, properties={}, returnNode=False):
     """
     from slicer import app, vtkMRMLMessageCollection
     from vtk import vtkCollection
-    properties['fileName'] = filename
+
+    # We need to convert the path to string now, because Qt cannot convert a pathlib.Path object to string.
+    properties['fileName'] = str(filename)
 
     loadedNodesCollection = vtkCollection()
     userMessages = vtkMRMLMessageCollection()
@@ -700,7 +716,9 @@ def loadNodesFromFile(filename, filetype, properties={}, returnNode=False):
     """
     from slicer import app, vtkMRMLMessageCollection
     from vtk import vtkCollection
-    properties['fileName'] = filename
+
+    # We need to convert the path to string now, because Qt cannot convert a pathlib.Path object to string.
+    properties['fileName'] = str(filename)
 
     loadedNodesCollection = vtkCollection()
     userMessages = vtkMRMLMessageCollection()
@@ -831,15 +849,22 @@ def loadScalarOverlay(filename, modelNodeID, returnNode=False):
     return loadNodeFromFile(filename, 'ScalarOverlayFile', {'modelNodeId': modelNodeID}, returnNode)
 
 
-def loadSegmentation(filename, returnNode=False):
+def loadSegmentation(filename, properties={}, returnNode=False):
     """Load node from file.
 
     :param filename: full path of the file to load.
+    :param properties: dict object with any of the following keys
+
+        - name: this name will be used as node name for the loaded volume
+        - autoOpacities: automatically make large segments semi-transparent to make segments inside more visible
+          (only used when loading segmentation from image file)
+        - colorNodeID: use a color node (that already in the scene) to display the image
+          (only used when loading segmentation from image file)
     :param returnNode: Deprecated.
     :return: loaded node (if multiple nodes are loaded then a list of nodes).
       If returnNode is True then a status flag and loaded node are returned.
     """
-    return loadNodeFromFile(filename, 'SegmentationFile', {}, returnNode)
+    return loadNodeFromFile(filename, 'SegmentationFile', properties, returnNode)
 
 
 def loadTransform(filename, returnNode=False):
@@ -898,7 +923,7 @@ def loadVolume(filename, properties={}, returnNode=False):
     """Load node from file.
 
     :param filename: full path of the file to load.
-    :param properties:
+    :param properties: dict object with any of the following keys
       - name: this name will be used as node name for the loaded volume
       - labelmap: interpret volume as labelmap
       - singleFile: ignore all other files in the directory
@@ -906,6 +931,7 @@ def loadVolume(filename, properties={}, returnNode=False):
       - discardOrientation: ignore image axis directions
       - autoWindowLevel: compute window/level automatically
       - show: display volume in slice viewers after loading is completed
+      - colorNodeID: use a color node (that already in the scene) to display the image
       - fileNames: list of filenames to load the volume from
     :param returnNode: Deprecated.
     :return: loaded node (if multiple nodes are loaded then a list of nodes).
@@ -919,7 +945,7 @@ def loadSequence(filename, properties={}):
     """Load sequence (4D data set) from file.
 
     :param filename: full path of the file to load.
-    :param properties:
+    :param properties: dict object with any of the following keys
       - name: this name will be used as node name for the loaded volume
       - show: display volume in slice viewers after loading is completed
       - colorNodeID: color node to set in the proxy nodes's display node
@@ -1124,6 +1150,7 @@ def selectModule(module):
     """Set currently active module.
 
     Throws a RuntimeError exception in case of failure (no such module or the application runs without a main window).
+
     :param module: module name or object
     :raises RuntimeError: in case of failure
     """
@@ -1260,10 +1287,8 @@ def getModuleLogic(module):
 
 
 def modulePath(moduleName):
-    """Get module logic object.
+    """Return the path where the module was discovered and loaded from.
 
-    Module logic allows a module to use features offered by another module.
-    Throws a RuntimeError exception if the module does not have widget.
     :param moduleName: module name
     :return: file path of the module
     """
@@ -2024,6 +2049,8 @@ def arrayFromSegmentBinaryLabelmap(segmentationNode, segmentId, referenceVolumeN
             raise RuntimeError("Export of segment failed.")
         narray = slicer.util.arrayFromVolume(labelmapVolumeNode)
     finally:
+        if labelmapVolumeNode.GetDisplayNode():
+            slicer.mrmlScene.RemoveNode(labelmapVolumeNode.GetDisplayNode().GetColorNode())
         slicer.mrmlScene.RemoveNode(labelmapVolumeNode)
 
     return narray
@@ -2031,6 +2058,7 @@ def arrayFromSegmentBinaryLabelmap(segmentationNode, segmentId, referenceVolumeN
 
 def updateSegmentBinaryLabelmapFromArray(narray, segmentationNode, segmentId, referenceVolumeNode=None):
     """Sets binary labelmap representation of a segment from a numpy array.
+
     :param narray: voxel array, containing 0 outside the segment, 1 inside the segment.
     :param segmentationNode: segmentation node that will be updated.
     :param segmentId: ID of the segment that will be updated.
@@ -2040,7 +2068,8 @@ def updateSegmentBinaryLabelmapFromArray(narray, segmentationNode, segmentId, re
 
     :raises RuntimeError: in case of failure
 
-    Voxels values are deep-copied, therefore if the numpy array is modified after calling this method, segmentation node will not change.
+    .. warning::
+      Voxels values are deep-copied, therefore if the numpy array is modified after calling this method, segmentation node will not change.
     """
 
     # Export segment as vtkImageData (via temporary labelmap volume node)
@@ -2111,23 +2140,26 @@ def updateMarkupsControlPointsFromArray(markupsNode, narray, world=False):
     numberOfControlPoints = narrayshape[0]
     oldNumberOfControlPoints = markupsNode.GetNumberOfControlPoints()
     # Update existing control points
-    for controlPointIndex in range(min(numberOfControlPoints, oldNumberOfControlPoints)):
-        if world:
-            markupsNode.SetNthControlPointPositionWorldFromArray(controlPointIndex, narray[controlPointIndex, :])
-        else:
-            markupsNode.SetNthControlPointPositionFromArray(controlPointIndex, narray[controlPointIndex, :])
-    if numberOfControlPoints >= oldNumberOfControlPoints:
-        # Add new points to the markup node
-        from vtk import vtkVector3d
-        for controlPointIndex in range(oldNumberOfControlPoints, numberOfControlPoints):
+    wasModify = markupsNode.StartModify()
+    try:
+        for controlPointIndex in range(min(numberOfControlPoints, oldNumberOfControlPoints)):
             if world:
-                markupsNode.AddControlPointWorld(vtkVector3d(narray[controlPointIndex, :]))
+                markupsNode.SetNthControlPointPositionWorld(controlPointIndex, narray[controlPointIndex, :])
             else:
-                markupsNode.AddControlPoint(vtkVector3d(narray[controlPointIndex, :]))
-    else:
-        # Remove extra point from the markup node
-        for controlPointIndex in range(oldNumberOfControlPoints, numberOfControlPoints, -1):
-            markupsNode.RemoveNthControlPoint(controlPointIndex - 1)
+                markupsNode.SetNthControlPointPosition(controlPointIndex, narray[controlPointIndex, :])
+        if numberOfControlPoints >= oldNumberOfControlPoints:
+            # Add new points to the markup node
+            for controlPointIndex in range(oldNumberOfControlPoints, numberOfControlPoints):
+                if world:
+                    markupsNode.AddControlPointWorld(narray[controlPointIndex, :])
+                else:
+                    markupsNode.AddControlPoint(narray[controlPointIndex, :])
+        else:
+            # Remove extra point from the markup node
+            for controlPointIndex in range(oldNumberOfControlPoints, numberOfControlPoints, -1):
+                markupsNode.RemoveNthControlPoint(controlPointIndex - 1)
+    finally:
+        markupsNode.EndModify(wasModify)
 
 
 def arrayFromMarkupsCurvePoints(markupsNode, world=False):
@@ -2156,11 +2188,13 @@ def arrayFromMarkupsCurveData(markupsNode, arrayName, world=False):
       (effect of parent transform to the node is applied).
     :raises ValueError: in case of failure
 
-    Note that not all array may be available in both node and world coordinate systems.
-    For example, `Curvature` is only computed for the curve in world coordinate system.
+    .. warning::
 
-    The returned array is not intended to be modified, as arrays are expected to be written only
-    by measurement objects.
+      - Not all array may be available in both node and world coordinate systems.
+        For example, `Curvature` is only computed for the curve in world coordinate system.
+
+      - The returned array is not intended to be modified, as arrays are expected to be written only
+        by measurement objects.
     """
     import vtk.util.numpy_support
     if world:
@@ -2188,12 +2222,21 @@ def updateVolumeFromArray(volumeNode, narray):
 
     Voxels values are deep-copied, therefore if the numpy array
     is modified after calling this method, voxel values in the volume node will not change.
-    Dimensions and data size of the source numpy array does not have to match the current
+    Dimensions and voxel type of the source numpy array does not have to match the current
     content of the volume node.
     """
 
     vshape = tuple(reversed(narray.shape))
-    if len(vshape) == 3:
+    if len(vshape) == 2:
+        # Scalar 2D volume
+        vcomponents = 1
+        # Put the slice into a single-slice 3D volume
+        import numpy as np
+        narray3d = np.zeros([1, narray.shape[0], narray.shape[1]])
+        narray3d[0] = narray
+        narray = narray3d
+        vshape = tuple(reversed(narray.shape))
+    elif len(vshape) == 3:
         # Scalar volume
         vcomponents = 1
     elif len(vshape) == 4:
@@ -2433,11 +2476,9 @@ def dataframeFromMarkups(markupsNode):
 
 class VTKObservationMixin:
     def __init__(self):
-        from weakref import WeakKeyDictionary
-
         super().__init__()
 
-        self.__observations = WeakKeyDictionary()
+        self.__observations = {}
         # {obj: {event: {method: (group, tag, priority)}}}
 
     @property
@@ -2539,7 +2580,7 @@ def toLatin1String(text):
 def tempDirectory(key='__SlicerTemp__', tempDir=None, includeDateTime=True):
     """Come up with a unique directory name in the temp dir and make it and return it
 
-    Note: this directory is not automatically cleaned up
+    .. note:: This directory is not automatically cleaned up.
     """
     # TODO: switch to QTemporaryDir in Qt5.
     import qt, slicer
@@ -2697,7 +2738,7 @@ def _messageDisplay(logLevel, text, testingReturnValue, mainWindowNeeded=False, 
     if not windowTitle:
         windowTitle = slicer.app.applicationName + " " + logLevelString
     if slicer.app.testingEnabled():
-        logging.info("Testing mode is enabled: Returning %s and skipping message box [%s]." % (testingReturnValue, windowTitle))
+        logging.info(f"Testing mode is enabled: Returning {testingReturnValue} and skipping message box [{windowTitle}].")
         return testingReturnValue
     if mainWindowNeeded and mainWindow() is None:
         return
@@ -2720,9 +2761,15 @@ def messageBox(text, parent=None, **kwargs):
     import logging, qt, slicer
     if slicer.app.testingEnabled():
         testingReturnValue = qt.QMessageBox.Ok
-        logging.info("Testing mode is enabled: Returning %s (qt.QMessageBox.Ok) and displaying an auto-closing message box [%s]." % (testingReturnValue, text))
+        logging.info(f"Testing mode is enabled: Returning {testingReturnValue} (qt.QMessageBox.Ok) and displaying an auto-closing message box [{text}].")
         slicer.util.delayDisplay(text, autoCloseMsec=3000, parent=parent, **kwargs)
         return testingReturnValue
+
+    # if there is detailed text, make the dialog wider by making a long title
+    if "detailedText" in kwargs:
+        windowTitle = kwargs['windowTitle'] if 'windowTitle' in kwargs else slicer.app.applicationName
+        padding = " " * ((150 - len(windowTitle)) // 2)  # to center the title
+        kwargs['windowTitle'] = padding + windowTitle + padding
 
     import ctk
     mbox = ctk.ctkMessageBox(parent if parent else mainWindow())
@@ -2955,6 +3002,8 @@ def toBool(value):
     [True, True, False, True]
     >>> [toBool(x) for x in ['-2', '-1', '0', '1', '2', 'Hello']]
     [True, True, False, True, True, False]
+    >>> [toBool(x) for x in ['true', 'false', 'True', 'False', 'tRue', 'fAlse']]
+    [True, False, True, False, True, False]
     >>> toBool(object())
     True
     >>> toBool(None)
@@ -3370,6 +3419,10 @@ def plot(narray, xColumnIndex=-1, columnNames=None, title=None, show=True, nodes
         seriesNode.SetYColumnName(yColumnName)
         if title:
             seriesNode.SetName(title + " " + yColumnName)
+        else:
+            # When only columnNames are set (no `title` parameter), the user should see
+            # the name of the column as the name of the series.
+            seriesNode.SetName(yColumnName)
         if not chartNode.HasPlotSeriesNodeID(seriesNode.GetID()):
             chartNode.AddAndObservePlotSeriesNodeID(seriesNode.GetID())
 
@@ -3399,6 +3452,14 @@ def launchConsoleProcess(args, useStartupEnvironment=True, updateEnvironment=Non
     :param updateEnvironment: map containing optional additional environment variables (existing variables are overwritten)
     :param cwd: current working directory
     :return: process object.
+
+    This method is typically used together with :py:meth:`logProcessOutput` to wait for the execution to complete and display the process output in the application log:
+
+    .. code-block:: python
+
+      proc = slicer.util.launchConsoleProcess(args)
+      slicer.util.logProcessOutput(proc)
+
     """
     import subprocess
     import os
@@ -3429,7 +3490,6 @@ def logProcessOutput(proc):
     :param proc: process object.
     """
     from subprocess import CalledProcessError
-    import logging
     try:
         from slicer import app
         guiApp = app
@@ -3442,11 +3502,9 @@ def logProcessOutput(proc):
             line = proc.stdout.readline()
             if not line:
                 break
+            print(line.rstrip())
             if guiApp:
-                logging.info(line.rstrip())
                 guiApp.processEvents()  # give a chance the application to refresh GUI
-            else:
-                print(line.rstrip())
         except UnicodeDecodeError as e:
             # Code page conversion happens because `universal_newlines=True` sets process output to text mode,
             # and it fails because probably system locale is not UTF8. We just ignore the error and discard the string,
@@ -3496,6 +3554,7 @@ def pip_install(requirements):
     Currently, the method simply calls ``python -m pip install`` but in the future further checks, optimizations,
     user confirmation may be implemented, therefore it is recommended to use this method call instead of a plain
     pip install.
+
     :param requirements: requirement specifier in the same format as used by pip (https://docs.python.org/3/installing/index.html).
       It can be either a single string or a list of command-line arguments. It may be simpler to pass command-line arguments as a list
       if the arguments may contain spaces (because no escaping of the strings with quotes is necessary).
@@ -3582,7 +3641,7 @@ def longPath(path):
     sysInfo = qt.QSysInfo()
     if sysInfo.productType() != 'windows':
         return path
-    # Skip prefixing relative paths as UNC prefix wors only on absolute paths
+    # Skip prefixing relative paths as UNC prefix works only on absolute paths
     if not qt.QDir.isAbsolutePath(path):
         return path
     # Return path as is if UNC prefix is already applied

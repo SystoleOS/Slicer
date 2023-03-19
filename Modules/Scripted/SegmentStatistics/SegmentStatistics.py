@@ -716,15 +716,15 @@ class SegmentStatisticsTest(ScriptedLoadableModuleTest):
         import SampleData
         from SegmentStatistics import SegmentStatisticsLogic
 
-        self.delayDisplay("Load reference volume")
+        self.delayDisplay("Load source volume")
 
-        referenceVolumeNode = SampleData.downloadSample('MRBrainTumor1')
+        sourceVolumeNode = SampleData.downloadSample('MRBrainTumor1')
 
         self.delayDisplay("Create segmentation containing a few spheres")
 
         segmentationNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLSegmentationNode')
         segmentationNode.CreateDefaultDisplayNodes()
-        segmentationNode.SetReferenceImageGeometryParameterFromVolumeNode(referenceVolumeNode)
+        segmentationNode.SetReferenceImageGeometryParameterFromVolumeNode(sourceVolumeNode)
 
         # Geometry for each segment is defined by: radius, posX, posY, posZ
         segmentGeometries = [[10, -6, 30, 28], [20, 0, 65, 32], [15, 1, -14, 30], [12, 0, 28, -7], [5, 0, 30, 64],
@@ -741,7 +741,7 @@ class SegmentStatisticsTest(ScriptedLoadableModuleTest):
 
         segStatLogic = SegmentStatisticsLogic()
         segStatLogic.getParameterNode().SetParameter("Segmentation", segmentationNode.GetID())
-        segStatLogic.getParameterNode().SetParameter("ScalarVolume", referenceVolumeNode.GetID())
+        segStatLogic.getParameterNode().SetParameter("ScalarVolume", sourceVolumeNode.GetID())
         segStatLogic.computeStatistics()
 
         self.delayDisplay("Check a few numerical results")
@@ -774,15 +774,15 @@ class SegmentStatisticsTest(ScriptedLoadableModuleTest):
         import SampleData
         from SegmentStatistics import SegmentStatisticsLogic
 
-        self.delayDisplay("Load reference volume")
+        self.delayDisplay("Load source volume")
 
-        referenceVolumeNode = SampleData.downloadSample('MRBrainTumor1')
+        sourceVolumeNode = SampleData.downloadSample('MRBrainTumor1')
 
         self.delayDisplay("Create segmentation containing a few spheres")
 
         segmentationNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLSegmentationNode')
         segmentationNode.CreateDefaultDisplayNodes()
-        segmentationNode.SetReferenceImageGeometryParameterFromVolumeNode(referenceVolumeNode)
+        segmentationNode.SetReferenceImageGeometryParameterFromVolumeNode(sourceVolumeNode)
 
         # Geometry for each segment is defined by: radius, posX, posY, posZ
         segmentGeometries = [[10, -6, 30, 28], [20, 0, 65, 32], [15, 1, -14, 30], [12, 0, 28, -7], [5, 0, 30, 64],
@@ -800,7 +800,7 @@ class SegmentStatisticsTest(ScriptedLoadableModuleTest):
         self.delayDisplay("Test calculating only measurements for individual segments")
         segStatLogic = SegmentStatisticsLogic()
         segStatLogic.getParameterNode().SetParameter("Segmentation", segmentationNode.GetID())
-        segStatLogic.getParameterNode().SetParameter("ScalarVolume", referenceVolumeNode.GetID())
+        segStatLogic.getParameterNode().SetParameter("ScalarVolume", sourceVolumeNode.GetID())
         segStatLogic.updateStatisticsForSegment('Test_2')
         resultsTableNode = slicer.vtkMRMLTableNode()
         slicer.mrmlScene.AddNode(resultsTableNode)
@@ -856,7 +856,7 @@ class SegmentStatisticsTest(ScriptedLoadableModuleTest):
         self.delayDisplay("Test disabling of individual measurements")
         segStatLogic = SegmentStatisticsLogic()
         segStatLogic.getParameterNode().SetParameter("Segmentation", segmentationNode.GetID())
-        segStatLogic.getParameterNode().SetParameter("ScalarVolume", referenceVolumeNode.GetID())
+        segStatLogic.getParameterNode().SetParameter("ScalarVolume", sourceVolumeNode.GetID())
         segStatLogic.getParameterNode().SetParameter("LabelmapSegmentStatisticsPlugin.voxel_count.enabled", str(False))
         segStatLogic.getParameterNode().SetParameter("LabelmapSegmentStatisticsPlugin.volume_cm3.enabled", str(False))
         segStatLogic.computeStatistics()
@@ -903,7 +903,7 @@ class SegmentStatisticsTest(ScriptedLoadableModuleTest):
         SegmentStatisticsLogic.registeredPlugins = []  # remove all registered plugins
         segStatLogic = SegmentStatisticsLogic()
         segStatLogic.getParameterNode().SetParameter("Segmentation", segmentationNode.GetID())
-        segStatLogic.getParameterNode().SetParameter("ScalarVolume", referenceVolumeNode.GetID())
+        segStatLogic.getParameterNode().SetParameter("ScalarVolume", sourceVolumeNode.GetID())
         segStatLogic.computeStatistics()
         segStatLogic.exportToTable(resultsTableNode)
         segStatLogic.showTable(resultsTableNode)
@@ -917,7 +917,7 @@ class SegmentStatisticsTest(ScriptedLoadableModuleTest):
         SegmentStatisticsLogic.registerPlugin(ClosedSurfaceSegmentStatisticsPlugin())
         segStatLogic = SegmentStatisticsLogic()
         segStatLogic.getParameterNode().SetParameter("Segmentation", segmentationNode.GetID())
-        segStatLogic.getParameterNode().SetParameter("ScalarVolume", referenceVolumeNode.GetID())
+        segStatLogic.getParameterNode().SetParameter("ScalarVolume", sourceVolumeNode.GetID())
         segStatLogic.computeStatistics()
         segStatLogic.exportToTable(resultsTableNode)
         segStatLogic.showTable(resultsTableNode)
@@ -941,7 +941,7 @@ class Slicelet:
         self.parent = qt.QFrame()
         self.parent.setLayout(qt.QVBoxLayout())
 
-        # TODO: should have way to pop up python interactor
+        # TODO: should have way to pop up python console
         self.buttons = qt.QFrame()
         self.buttons.setLayout(qt.QHBoxLayout())
         self.parent.layout().addWidget(self.buttons)

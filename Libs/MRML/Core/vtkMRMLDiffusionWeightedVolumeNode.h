@@ -26,7 +26,7 @@ class vtkImageExtractComponents;
 ///
 /// Diffusion Weighted Volume nodes describe data sets that encode diffusion weighted
 /// images. These images are the basis for computing the diffusion tensor.
-/// The node is a container for the necessary information to interpert DW images:
+/// The node is a container for the necessary information to interpret DW images:
 /// 1. Gradient information.
 /// 2. B value for each gradient.
 /// 3. Measurement frame that relates the coordinate system where the gradients are given
@@ -63,7 +63,7 @@ class VTK_MRML_EXPORT vtkMRMLDiffusionWeightedVolumeNode : public vtkMRMLScalarV
   ///
   void SetDiffusionGradient(int val, const double g[3]);
   void SetDiffusionGradients(vtkDoubleArray *grad);
-  double *GetDiffusionGradient(int val);
+  double* GetDiffusionGradient(int val) VTK_SIZEHINT(3);
   void GetDiffusionGradient(int val, double g[3]);
   vtkGetObjectMacro(DiffusionGradients,vtkDoubleArray);
 

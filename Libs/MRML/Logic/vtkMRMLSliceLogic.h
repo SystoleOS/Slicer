@@ -210,7 +210,7 @@ public:
   /// Get the spacing of the volume, transformed to slice space
   /// - to be used, for example, to set the slice increment for stepping a single
   ///   voxel relative to the current slice view
-  double *GetVolumeSliceSpacing(vtkMRMLVolumeNode *volumeNode);
+  double* GetVolumeSliceSpacing(vtkMRMLVolumeNode *volumeNode) VTK_SIZEHINT(3);
 
   ///
   /// Get the min/max bounds of the volume
@@ -236,7 +236,7 @@ public:
   /// Get the spacing of the volume, transformed to slice space
   /// - to be used, for example, to set the slice increment for stepping a single
   ///   voxel relative to the current slice view
-  double *GetBackgroundSliceSpacing();
+  double* GetBackgroundSliceSpacing() VTK_SIZEHINT(3);
 
   ///
   /// Get the min/max bounds of the volume
@@ -276,7 +276,7 @@ public:
   /// - to be used, for example, to set the slice increment for stepping a single
   ///   voxel relative to the current slice view
   /// - returns first non-null layer
-  double *GetLowestVolumeSliceSpacing();
+  double* GetLowestVolumeSliceSpacing() VTK_SIZEHINT(3);
 
   ///
   /// Get the min/max bounds of the lowest volume layer (background, foreground, label)
@@ -381,6 +381,10 @@ public:
   /// backgroundVolumeEditable and foregroundVolumeEditable can be used specify that
   /// a volume is not editable (even if it is visible at the given position).
   int GetEditableLayerAtWorldPosition(double worldPos[3], bool backgroundVolumeEditable = true, bool foregroundVolumeEditable = true);
+
+  /// Get range and resolution for slice offset sliders.
+  /// Returns false if the information cannot be determined.
+  bool GetSliceOffsetRangeResolution(double range[2], double& resolution);
 
 protected:
 

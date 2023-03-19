@@ -178,7 +178,7 @@ about each operation, hover the mouse over the option and wait for the tooltip t
             slicer.vtkSlicerSegmentationsModuleLogic.GetAllLabelValues(labelValues, islandImage)
 
             # Erase segment from in original labelmap.
-            # Individuall islands will be added back later.
+            # Individual islands will be added back later.
             threshold = vtk.vtkImageThreshold()
             threshold.SetInputData(selectedSegmentLabelmap)
             threshold.ThresholdBetween(0, 0)
@@ -351,7 +351,7 @@ about each operation, hover the mouse over the option and wait for the tooltip t
                     self.scriptedEffect.modifySelectedSegmentByLabelmap(modifierLabelmap, slicer.qSlicerSegmentEditorAbstractEffect.ModificationModeRemove)
 
         except IndexError:
-            logging.error('apply: Failed to threshold reference volume!')
+            logging.error('Island processing failed')
         finally:
             qt.QApplication.restoreOverrideCursor()
 

@@ -33,6 +33,7 @@
 // MRML includes
 class vtkMRMLDisplayableNode;
 class vtkMRMLMarkupsNode;
+class vtkMRMLMessageCollection;
 class vtkMRMLScalarVolumeNode;
 class vtkMRMLScene;
 class vtkMRMLSliceNode;
@@ -66,11 +67,7 @@ class VTK_SLICER_TRANSFORMS_MODULE_LOGIC_EXPORT vtkSlicerTransformLogic : public
 
   ///
   /// Read transform from file
-  vtkMRMLTransformNode* AddTransform (const char* filename, vtkMRMLScene *scene);
-
-  ///
-  /// Write transform's data to a specified file
-  int SaveTransform (const char* filename, vtkMRMLTransformNode *transformNode);
+  vtkMRMLTransformNode* AddTransform(const char* filename, vtkMRMLScene *scene, vtkMRMLMessageCollection* userMessages=nullptr);
 
   /// Generate polydata for 2D transform visualization
   /// Return true on success.
@@ -90,9 +87,11 @@ class VTK_SLICER_TRANSFORMS_MODULE_LOGIC_EXPORT vtkSlicerTransformLogic : public
     vtkMatrix4x4* roiToRAS, int* roiSize, vtkPoints* samplePositions_RAS = nullptr);
 
   /// Generate polydata for 3D transform visualization
-  /// Region node can be slice (vtkMRMLSliceNode), volume (vtkMRMLVolumeNode), region of interest (vtkMRMLAnnotationROINode), or model (vtkMRMLModelNode).
+  /// Region node can be slice (vtkMRMLSliceNode), volume (vtkMRMLVolumeNode), region of interest (vtkMRMLMarkupsROINode), or model (vtkMRMLModelNode).
+  /// If glyphPointsNode is specified and display mode is glyphs then the region is ignored and glyphs are drawn at the markup control points.
   /// Return true on success.
-  static bool GetVisualization3d(vtkPolyData* output_RAS, vtkMRMLTransformDisplayNode* displayNode, vtkMRMLNode* regionNode);
+  static bool GetVisualization3d(vtkPolyData* output_RAS, vtkMRMLTransformDisplayNode* displayNode,
+    vtkMRMLNode* regionNode, vtkMRMLMarkupsNode* glyphPointsNode=nullptr);
 
   /// Name of the scalar array that stores the displacement magnitude values
   /// in polydata returned by GetVisualization2d and GetVisualization3d.

@@ -78,6 +78,25 @@
 #include "vtkMRMLSliceLayerLogic.h"
 #include "vtkMRMLSliceLogic.h"
 
+// TODO: temporary code, only for debugging
+// This will be removed once investigation of https://github.com/Slicer/Slicer/issues/6705 is completed.
+#include "vtkXMLPolyDataWriter.h"
+QString qSlicerSegmentEditorScissorsEffect::DebugOutputFolder;
+void DebugWritePolyData(vtkPolyData* poly)
+{
+  if (qSlicerSegmentEditorScissorsEffect::DebugOutputFolder.isEmpty())
+    {
+    return;
+    }
+  vtkNew<vtkXMLPolyDataWriter> writer;
+  writer->SetInputData(poly);
+  QString filepath = qSlicerSegmentEditorScissorsEffect::DebugOutputFolder + "/DebugScissorBrush.vtp";
+  writer->SetFileName(filepath.toStdString().c_str());
+  writer->SetCompressorTypeToNone();
+  writer->SetDataModeToAscii();
+  writer->Write();
+}
+
 //-----------------------------------------------------------------------------
 /// Visualization objects and pipeline for each slice view for drawing cutting outline
 class ScissorsPipeline: public QObject
@@ -491,14 +510,11 @@ bool qSlicerSegmentEditorScissorsEffectPrivate::updateBrushModel(qMRMLWidget* vi
     return false;
     }
 
-  vtkNew<vtkPoints> closedSurfacePoints; // p0Top, p0Bottom, p1Top, p1Bottom, ...
-  vtkNew<vtkCellArray> closedSurfaceStrips;
-  vtkNew<vtkCellArray> closedSurfacePolys;
-
   vtkPoints* pointsXY = pipeline->PolyData->GetPoints();
   int numberOfPoints = pointsXY ? pointsXY->GetNumberOfPoints() : 0;
-  if (numberOfPoints <= 1)
+  if (numberOfPoints < 3)
     {
+    // at least a triangle is needed
     return false;
     }
 
@@ -524,6 +540,8 @@ bool qSlicerSegmentEditorScissorsEffectPrivate::updateBrushModel(qMRMLWidget* vi
   // We don't support painting in non-linearly transformed node (it could be implemented, but would probably slow down things too much)
   // TODO: show a meaningful error message to the user if attempted
   vtkMRMLTransformNode::GetMatrixTransformBetweenNodes(segmentationNode->GetParentTransformNode(), nullptr, segmentationToWorldMatrix.GetPointer());
+
+  vtkNew<vtkPoints> closedSurfacePoints; // p0Top, p0Bottom, p1Top, p1Bottom, ...
 
   // Used for excluding one side of the slice plane from being modified when
   // filling or erasing outside in slice cut mode.
@@ -793,13 +811,9 @@ bool qSlicerSegmentEditorScissorsEffectPrivate::updateBrushModel(qMRMLWidget* vi
     return false;
     }
 
-  // Construct polydata
-  vtkNew<vtkPolyData> closedSurfacePolyData;
-  closedSurfacePolyData->SetPoints(closedSurfacePoints.GetPointer());
-  closedSurfacePolyData->SetStrips(closedSurfaceStrips.GetPointer());
-  closedSurfacePolyData->SetPolys(closedSurfacePolys.GetPointer());
-
   // Skirt
+  vtkNew<vtkCellArray> closedSurfacePolys;
+  vtkNew<vtkCellArray> closedSurfaceStrips;
   closedSurfaceStrips->InsertNextCell(numberOfPoints * 2 + 2);
   for (int i = 0; i < numberOfPoints * 2; i++)
     {
@@ -820,16 +834,33 @@ bool qSlicerSegmentEditorScissorsEffectPrivate::updateBrushModel(qMRMLWidget* vi
     closedSurfacePolys->InsertCellPoint(i * 2 + 1);
     }
 
+  // Construct polydata
+  vtkNew<vtkPolyData> closedSurfacePolyData;
+  closedSurfacePolyData->SetPoints(closedSurfacePoints.GetPointer());
+  closedSurfacePolyData->SetStrips(closedSurfaceStrips.GetPointer());
+  closedSurfacePolyData->SetPolys(closedSurfacePolys.GetPointer());
+
   if (additionalBrushRegion)
     {
     vtkNew<vtkAppendPolyData> append;
     append->AddInputData(closedSurfacePolyData.GetPointer());
     append->AddInputData(additionalBrushRegion);
     this->BrushPolyDataNormals->SetInputConnection(append->GetOutputPort());
+
+    // TODO: temporary code, only for debugging
+    // This will be removed once investigation of https://github.com/Slicer/Slicer/issues/6705 is completed.
+    append->Update();
+    DebugWritePolyData(append->GetOutput());
+
     }
   else
     {
     this->BrushPolyDataNormals->SetInputData(closedSurfacePolyData.GetPointer());
+
+    // TODO: temporary code, only for debugging
+    // This will be removed once investigation of https://github.com/Slicer/Slicer/issues/6705 is completed.
+    DebugWritePolyData(closedSurfacePolyData);
+
     }
 
   return true;
@@ -1240,7 +1271,7 @@ void qSlicerSegmentEditorScissorsEffect::setupOptionsFrame()
   d->gridLayout->addWidget(d->symmetricRadioButton, 4, 2);
   d->gridLayout->addWidget(d->sliceCutDepthSpinBox, 5, 2);
 
-  QLabel* applyToAllVisibleSegmentsLabel = new QLabel(tr("Apply to all segments:"));
+  QLabel* applyToAllVisibleSegmentsLabel = new QLabel(tr("Apply to visible segments:"));
   applyToAllVisibleSegmentsLabel->setToolTip(tr("Apply scissor effect to all visible segments from top to bottom. \
                                           After pressing 'Apply': Please be patient - this may be time-consuming. \
                                           Progress will be shown as status message. "));

@@ -22,7 +22,7 @@ Medical Reality Modeling Language (MRML) is a data model developed to represent 
   - **Volume** ([vtkMRMLVolume](https://apidocs.slicer.org/main/classvtkMRMLVolumeNode.html) and its subclasses): stores a 3D image. Each voxel of a volume may be a scalar (to store images with continuous grayscale values, such as a CT image), label (to store discrete labels, such as a segmentation result), vector (for storing displacement fields or RGB color images), or tensor (MRI diffusion images). 2D image volumes are represented as single-slice 3D volumes. 4D volumes are stored in sequence nodes (vtkMRMLSequenceNode).
   - **Model** ([vtkMRMLModelNode](https://apidocs.slicer.org/main/classvtkMRMLModelNode.html)): stores a surface mesh (polygonal elements, points, lines, etc.) or volumetric mesh (tetrahedral, wedge elements, unstructured grid, etc.)
   - **Segmentation** ([vtkMRMLSegmentationNode](https://apidocs.slicer.org/main/classvtkMRMLSegmentationNode.html)): complex data node that can store image segmentation (also known as contouring, labeling). It can store multiple representations internally, for example it can store both binary labelmap image and closed surface mesh.
-  - **Markups** ([vtkMRMLMarkupsNode](https://apidocs.slicer.org/main/classvtkMRMLMarkupsNode.html) and subclasses): store simple geometrical objects, such as point lists (formerly called "fiducial lists"), lines, angles, curves, planes for annotation and measurements. Annotations module is the old generation of markups functionality and is being phased out.
+  - **Markups** ([vtkMRMLMarkupsNode](https://apidocs.slicer.org/main/classvtkMRMLMarkupsNode.html) and subclasses): store simple geometrical objects, such as point lists (formerly called "fiducial lists"), lines, angles, curves, planes for annotation and measurements.
   - **Transform** ([vtkMRMLTransformNode](https://apidocs.slicer.org/main/classvtkMRMLTransformNode.html)): stores geometrical transformation that can be applied to any [transformable nodes](https://apidocs.slicer.org/main/classvtkMRMLTransformableNode.html). A transformation can contain any number of linear or non-linear (warping) transforms chained together. In general, it is recommended to use vtkMRMLTransformNode. Child types (vtkMRMLLinearTransformNode, vtkMRMLBSplineTransformNode, vtkMRMLGridTransformNode) are kept for backward compatibility and to allow filtering for specific transformation types in user interface widgets.
   - **Text** ([vtkMRMLTextNode](https://apidocs.slicer.org/main/classvtkMRMLTextNode.html)): stores text data, such as configuration files, descriptive text, etc.
   - **Table** ([vtkMRMLTableNode](https://apidocs.slicer.org/main/classvtkMRMLTableNode.html)): stores tabular data (multiple scalar or vector arrays), used mainly for showing quantitative results in tables and plots
@@ -75,6 +75,10 @@ For more details, see [this page](https://www.slicer.org/wiki/Documentation/Nigh
   - `ProcessMRMLEvents()` method should be implemented in MRML nodes, Logic, and GUI classes in order to process events from the observed nodes.
 
 ## Advanced topics
+
+### Parameter Nodes
+
+Parameter nodes are a specific use of MRML nodes to store parameters for a given function/module. For more info see [Parameter Nodes](parameter_nodes/overview.md).
 
 ### Scene undo/redo
 
@@ -459,7 +463,7 @@ Key Points:
 
 If you have used 3D Slicer for any length of time, you have probably noticed that for each type of node (or set of types as in something like markups) there is a dedicated module that is used solely for interacting with the single node type (or set of types). Examples would be the Models, Volumes, and Markups modules. These modules are useful from a user perspective and also necessary to get your new node registered everywhere it needs to be.
 
-As these are normal 3D Slicer modules, they come in three main parts, the module, the logic, and the module widget. The recommended way to create a new module is through the [Extension Wizard](https://www.slicer.org/wiki/Documentation/Nightly/Developers/ExtensionWizard).
+As these are normal 3D Slicer modules, they come in three main parts, the module, the logic, and the module widget. The recommended way to create a new module is through the [Extension Wizard](user_guide/modules/extensionwizard.md#extension-wizard).
 
 Files:
 
@@ -503,7 +507,7 @@ Management of slice views is distributed between several objects:
 - Slice node ([vtkMRMLSliceNode](https://apidocs.slicer.org/main/classvtkMRMLSliceNode.html)): Stores the position, orientation, and size of the slice. This is a [view node](https://apidocs.slicer.org/main/classvtkMRMLAbstractViewNode.html) and as such it stores common view properties, such as the view name, layout color, background color.
 - Slice display node ([vtkMRMLSliceDisplayNode](https://apidocs.slicer.org/main/classvtkMRMLSliceDisplayNode.html)): Specifies how the slice should be displayed, such as visibility and style of display of intersecting slices. The class is based on [classvtkMRMLModelDisplayNode](https://apidocs.slicer.org/main/classvtkMRMLModelDisplayNode.html), therefore it also specifies which 3D views the slice is displayed in.
 - Slice composite node ([vtkMRMLSliceCompositeNode](https://apidocs.slicer.org/main/classvtkMRMLSliceCompositeNode.html)): Specifies what volumes are displayed in the slice and how to blend them. It is ended up being a separate node probably because it is somewhat a mix between a data node (that tells what data to display) and a display node (that specifies how the data is displayed).
-- Slice model node ([vtkMRMLModelNode](https://apidocs.slicer.org/main/classvtkMRMLModelNode.html)): It is a model node that displays the slice in 3D views. It stores a simple rectangle mesh on that the image cross-section is renderd as a texture.
+- Slice model node ([vtkMRMLModelNode](https://apidocs.slicer.org/main/classvtkMRMLModelNode.html)): It is a model node that displays the slice in 3D views. It stores a simple rectangle mesh on that the image cross-section is rendered as a texture.
 - Slice model transform node ([vtkMRMLTransformNode](https://apidocs.slicer.org/main/classvtkMRMLTransformNode.html)). The transform node is used for positioning the slice model node in 3D views. It is faster to use a transform node to position the plane than modifying the plane points each time the slice is moved.
 - Slice logic ([vtkMRMLSliceLogic](https://apidocs.slicer.org/main/classvtkMRMLSliceLogic.html)): This is not a MRML node but a logic class, which implements operationson MRML nodes. There is one logic for each slice view. The object keeps reference to all MRML nodes, so it is a good starting point for accessing any data related to slices and performing operations on slices. Slice logics are stored in the application logic object and can be retrieved like this: `sliceLogic = slicer.app.applicationLogic().GetSliceLogicByLayoutName('Red')`. There are a few other `GetSlicerLogic...` methods to get slice logic based on slice node, slice model display node, and to get all the slice logics.
 - Slice layer logic([vtkMRMLSliceLayerLogic](https://apidocs.slicer.org/main/classvtkMRMLSliceLayerLogic.html)): Implements reslicing and interpolation for a volume. There is one slice layer logic for each volume layer (foreground, background, label) for each slice view.

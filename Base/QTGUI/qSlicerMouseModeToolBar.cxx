@@ -152,7 +152,6 @@ void qSlicerMouseModeToolBarPrivate::init()
 
   QObject::connect(this->ToolBarAction, SIGNAL(triggered()),
     q, SLOT(toggleMarkupsToolBar()));
-  q->addAction(this->ToolBarAction);
 
   this->PlaceWidgetMenu = new QMenu(qSlicerMouseModeToolBar::tr("Place Menu"), q);
   this->PlaceWidgetMenu->setObjectName("PlaceWidgetMenu");
@@ -169,7 +168,21 @@ void qSlicerMouseModeToolBarPrivate::init()
 
   connect(this->PlaceWidgetAction, SIGNAL(triggered()), q, SLOT(switchPlaceMode()));
   this->InteractionModesActionGroup->addAction(this->PlaceWidgetAction);
+  this->PlaceWidgetAction->setVisible(false);
+  q->addAction(this->PlaceWidgetAction);
 
+  q->addAction(this->ToolBarAction);  // add Toggle Markups ToolBar action last
+
+  this->PlaceWidgetToolBarAction = new QAction(this);
+  this->PlaceWidgetToolBarAction->setObjectName("PlaceWidgetToolBarAction");
+  this->PlaceWidgetToolBarAction->setToolTip(qSlicerMouseModeToolBar::tr("Toggle Markups Toolbar"));
+  this->PlaceWidgetToolBarAction->setText(qSlicerMouseModeToolBar::tr("Toggle Markups Toolbar"));
+  this->PlaceWidgetToolBarAction->setEnabled(true);
+  this->PlaceWidgetToolBarAction->setIcon(QIcon(":/Icons/MarkupsDisplayToolBar.png"));
+
+  QObject::connect(this->PlaceWidgetToolBarAction, SIGNAL(triggered()),
+    q, SLOT(toggleMarkupsToolBar()));
+  this->PlaceWidgetMenu->addAction(this->PlaceWidgetToolBarAction);
 }
 
 //---------------------------------------------------------------------------
@@ -268,9 +281,6 @@ void qSlicerMouseModeToolBarPrivate::updateWidgetFromMRML()
   // Update place widget action
   this->updatePlaceWidget();
 
-  // Update persistence checkbox
-  int persistence = interactionNode->GetPlaceModePersistence();
-
   // find the active place node class name and set it's corresponding action to be checked
   QString activePlaceNodeClassName;
   vtkMRMLSelectionNode *selectionNode = (this->MRMLAppLogic ? this->MRMLAppLogic->GetSelectionNode() : nullptr);
@@ -327,16 +337,16 @@ void qSlicerMouseModeToolBarPrivate::updatePlaceWidget()
   bool validNodeForPlacement = selectionNode->GetActivePlaceNodePlacementValid();
   if (!validNodeForPlacement || activePlaceNodeClassName.isEmpty())
     {
-    q->removeAction(this->PlaceWidgetAction);
-    q->addAction(this->ToolBarAction);
+    this->PlaceWidgetAction->setVisible(false);
+    this->ToolBarAction->setVisible(true);
     return;
     }
 
   QString activePlaceNodeID = selectionNode->GetActivePlaceNodeID();
   if (activePlaceNodeID.isEmpty())
     {
-    q->removeAction(this->PlaceWidgetAction);
-    q->addAction(this->ToolBarAction);
+    this->PlaceWidgetAction->setVisible(false);
+    this->ToolBarAction->setVisible(true);
     return;
     }
 
@@ -352,7 +362,7 @@ void qSlicerMouseModeToolBarPrivate::updatePlaceWidget()
       break;
       }
     }
-  q->removeAction(this->ToolBarAction);
+  this->ToolBarAction->setVisible(false);
 
   QIcon icon(placeNodeResource);
   if (icon.availableSizes().empty())
@@ -362,12 +372,12 @@ void qSlicerMouseModeToolBarPrivate::updatePlaceWidget()
   this->PlaceWidgetAction->setIcon(icon);
   this->PlaceWidgetAction->setText(placeNodeIconName);
   this->PlaceWidgetAction->setData(vtkMRMLInteractionNode::Place);
-  QString tooltip = QString("Place a control point");
+  QString tooltip = qSlicerMouseModeToolBar::tr("Place a control point");
   this->PlaceWidgetAction->setToolTip(tooltip);
   this->PlaceWidgetAction->setCheckable(true);
 
   connect(this->PlaceWidgetAction, SIGNAL(triggered()), q, SLOT(switchPlaceMode()));
-  q->addAction(this->PlaceWidgetAction);
+  this->PlaceWidgetAction->setVisible(true);
 }
 
 //---------------------------------------------------------------------------
@@ -542,10 +552,11 @@ void qSlicerMouseModeToolBar::changeCursorTo(QCursor cursor)
   for (int i=0; i < layoutManager->threeDViewCount(); ++i)
     {
     qMRMLThreeDView* threeDView = layoutManager->threeDWidget(i)->threeDView();
-    if (!threeDView->mrmlViewNode()->IsMappedInLayout())
-      {
-      continue;
-      }
+
+    // The cursor should be updated in all views, not only ones that are in the current layout.
+    // If it is only updated for views that are mapped in the current layout, then the cursor will be incorrect
+    // if we switch to a layout with different views.
+
     // Update cursor only if view interaction node corresponds to the one associated with the mouse toolbar
     if (threeDView->mrmlViewNode()->GetInteractionNode() != this->interactionNode())
       {
@@ -559,10 +570,11 @@ void qSlicerMouseModeToolBar::changeCursorTo(QCursor cursor)
   foreach(const QString& viewerName, layoutManager->sliceViewNames())
     {
     qMRMLSliceView* sliceView = layoutManager->sliceWidget(viewerName)->sliceView();
-    if (!sliceView->mrmlSliceNode()->IsMappedInLayout())
-      {
-      continue;
-      }
+
+    // The cursor should be updated in all views, not only ones that are in the current layout.
+    // If it is only updated for views that are mapped in the current layout, then the cursor will be incorrect
+    // if we switch to a layout with different views.
+
     // Update cursor only if view interaction node corresponds to the one associated with the mouse toolbar
     if (sliceView->mrmlSliceNode()->GetInteractionNode() != this->interactionNode())
       {
@@ -698,6 +710,11 @@ void qSlicerMouseModeToolBar::setAdjustWindowLevelMode(int adjustWindowLevelMode
     }
   interactionNode->SetAttribute(vtkMRMLWindowLevelWidget::GetInteractionNodeAdjustWindowLevelModeAttributeName(),
     vtkMRMLWindowLevelWidget::GetAdjustWindowLevelModeAsString(adjustWindowLevelMode));
+
+   // Activate window/level action when setting its mode.
+   // This is done to save a button click and reduce user confusion, similarly how it is done elsewhere in Slicer
+   // and other software, where adjusting an option of a feature activates that feature.
+   d->AdjustWindowLevelAction->trigger();
 }
 
 //-----------------------------------------------------------------------------

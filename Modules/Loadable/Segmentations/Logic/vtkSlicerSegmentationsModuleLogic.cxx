@@ -1625,7 +1625,15 @@ bool vtkSlicerSegmentationsModuleLogic::ImportLabelmapToSegmentationNode(
     vtkSegment* segment = segmentationNode->GetSegmentation()->GetSegment(segmentId);
     if (!segment)
       {
-      continue;
+      vtkNew<vtkSegment> newSegment;
+      newSegment->SetName(segmentId.c_str());
+      segment = newSegment;
+      if (!segmentationNode->GetSegmentation()->AddSegment(newSegment, segmentId))
+        {
+        vtkErrorWithObjectMacro(segmentationNode, "vtkSlicerSegmentationsModuleLogic::ImportLabelmapToSegmentationNode: "
+          "Could not add segment");
+        return false;
+        }
       }
 
     // Clear current content of the segment (before setting new label)
@@ -1910,12 +1918,12 @@ bool vtkSlicerSegmentationsModuleLogic::SetBinaryLabelmapToSegment(
       std::string targetRepresentationName = (*reprIt);
       if (targetRepresentationName.compare(vtkSegmentationConverter::GetSegmentationBinaryLabelmapRepresentationName()))
         {
-        vtkSegmentationConverter::ConversionPathAndCostListType pathCosts;
-        segmentation->GetPossibleConversions(targetRepresentationName, pathCosts);
+        vtkNew<vtkSegmentationConversionPaths> paths;
+        segmentation->GetPossibleConversions(targetRepresentationName, paths);
 
         // Get cheapest path from found conversion paths
-        vtkSegmentationConverter::ConversionPathType cheapestPath = vtkSegmentationConverter::GetCheapestPath(pathCosts);
-        if (cheapestPath.empty())
+        vtkSegmentationConversionPath* cheapestPath = vtkSegmentationConverter::GetCheapestPath(paths);
+        if (!cheapestPath)
           {
           continue;
           }
@@ -2647,12 +2655,12 @@ bool vtkSlicerSegmentationsModuleLogic::ReconvertAllRepresentations(vtkMRMLSegme
     std::string targetRepresentationName = (*reprIt);
     if (targetRepresentationName.compare(segmentation->MasterRepresentationName))
       {
-      vtkSegmentationConverter::ConversionPathAndCostListType pathCosts;
-      segmentation->GetPossibleConversions(targetRepresentationName, pathCosts);
+      vtkNew<vtkSegmentationConversionPaths> paths;
+      segmentation->GetPossibleConversions(targetRepresentationName, paths);
 
       // Get cheapest path from found conversion paths
-      vtkSegmentationConverter::ConversionPathType cheapestPath = vtkSegmentationConverter::GetCheapestPath(pathCosts);
-      if (!cheapestPath.empty())
+      vtkSegmentationConversionPath* cheapestPath = vtkSegmentationConverter::GetCheapestPath(paths);
+      if (cheapestPath)
         {
         conversionHappened |= segmentationNode->GetSegmentation()->ConvertSegmentsUsingPath(segmentIDsToConvert, cheapestPath, true);
         }

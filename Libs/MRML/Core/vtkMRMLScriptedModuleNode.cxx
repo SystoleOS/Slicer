@@ -109,7 +109,11 @@ void vtkMRMLScriptedModuleNode::CopyContent(vtkMRMLNode* anode, bool deepCopy/*=
     }
 
   this->SetModuleName(node->GetModuleName());
-  this->Parameters = node->Parameters;
+  if (this->Parameters != node->Parameters)
+    {
+    this->Parameters = node->Parameters;
+    this->Modified();
+    }
 }
 
 //----------------------------------------------------------------------------
@@ -134,11 +138,17 @@ void vtkMRMLScriptedModuleNode::PrintSelf(ostream& os, vtkIndent indent)
 }
 
 //----------------------------------------------------------------------------
+bool vtkMRMLScriptedModuleNode::HasParameter(const std::string& name) const
+{
+  return this->Parameters.count(name) > 0;
+}
+
+//----------------------------------------------------------------------------
 void vtkMRMLScriptedModuleNode
 ::SetParameter(const std::string& name, const std::string& value)
 {
   const std::string currentValue = this->GetParameter(name);
-  if (value != currentValue)
+  if (value != currentValue || !this->HasParameter(name))
     {
     this->Parameters[name] = value;
     this->Modified();

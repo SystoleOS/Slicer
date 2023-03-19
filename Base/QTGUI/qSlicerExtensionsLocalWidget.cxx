@@ -21,6 +21,7 @@
 // Qt includes
 #include <QAbstractTextDocumentLayout>
 #include <QDebug>
+#include <QDesktopServices>
 #include <QFileInfo>
 #include <QLabel>
 #include <QListWidget>
@@ -61,6 +62,7 @@ public:
     InstalledExtensionSlicerVersionRole,
     InstalledExtensionUpdatedRole,
     OnServerExtensionRevisionRole,
+    ChangeLogUrlRole,
     OnServerExtensionMissingRole,  // confirmed that the extension is missing from the server
     OnServerExtensionUpdatedRole,
     UpdateAvailableRole,
@@ -151,17 +153,17 @@ public:
     if (installed && !loaded)
       {
       this->StatusLabel->setVisible(true);
-      this->StatusLabel->setText(tr("Install pending restart"));
+      this->StatusLabel->setText(qSlicerExtensionsLocalWidget::tr("Install pending restart"));
       }
     else if (scheduledForUpdate)
       {
       this->StatusLabel->setVisible(true);
-      this->StatusLabel->setText(tr("Update pending restart"));
+      this->StatusLabel->setText(qSlicerExtensionsLocalWidget::tr("Update pending restart"));
       }
     else if (scheduledForUninstall)
       {
       this->StatusLabel->setVisible(true);
-      this->StatusLabel->setText(tr("Uninstall pending restart"));
+      this->StatusLabel->setText(qSlicerExtensionsLocalWidget::tr("Uninstall pending restart"));
       }
     else
       {
@@ -338,7 +340,7 @@ public:
     QTextOption textOption = this->Text.defaultTextOption();
     textOption.setWrapMode(QTextOption::NoWrap);
     this->Text.setDefaultTextOption(textOption);
-    this->MoreLinkText = tr("More");
+    this->MoreLinkText = qSlicerExtensionsLocalWidget::tr("More...");
     }
 
   // --------------------------------------------------------------------------
@@ -380,7 +382,7 @@ protected:
       }
     else if (revision.isEmpty() && formattedDate.isEmpty())
       {
-      return tr("unknown");
+      return qSlicerExtensionsLocalWidget::tr("unknown");
       }
     else
       {
@@ -415,20 +417,20 @@ protected:
     QString statusText;
     if (!available && missing) // "missing" is checked so that we don't display this message when there have been no update checks before
       {
-      statusText += QString("<p style=\"font-weight: bold; font-size: 80%; color: %1;\">"
-        "<img style=\"float: left\" src=\":/Icons/ExtensionIncompatible.svg\"/> "
-        "Not found for this version of the application (r%2)</p>")
+      statusText += QLatin1Literal("<p style=\"font-weight: bold; font-size: 80%; color: %1;\">"
+        "<img style=\"float: left\" src=\":/Icons/ExtensionIncompatible.svg\"/> ") +
+        qSlicerExtensionsLocalWidget::tr("Not found for this version of the application (r%2)")
         .arg(this->WarningColor)
-        .arg(this->SlicerRevision);
+        .arg(this->SlicerRevision) + QLatin1Literal("</p>");
       }
     if (!compatible)
       {
-      statusText += QString("<p style=\"font-weight: bold; font-size: 80%; color: %1;\">"
-        "<img style=\"float: left\" src=\":/Icons/ExtensionIncompatible.svg\"/> "
-        "Incompatible with Slicer r%2 [built for r%3]</p>")
+      statusText += QLatin1Literal("<p style=\"font-weight: bold; font-size: 80%; color: %1;\">"
+        "<img style=\"float: left\" src=\":/Icons/ExtensionIncompatible.svg\"/> ") +
+        qSlicerExtensionsLocalWidget::tr("Incompatible with Slicer r%2 [built for r%3]")
         .arg(this->WarningColor)
         .arg(this->SlicerRevision)
-        .arg(this->WidgetItem->data(qSlicerExtensionsLocalWidgetPrivate::InstalledExtensionSlicerVersionRole).toString());
+        .arg(this->WidgetItem->data(qSlicerExtensionsLocalWidgetPrivate::InstalledExtensionSlicerVersionRole).toString()) + QLatin1Literal("</p>");
       }
     if (this->WidgetItem->data(qSlicerExtensionsLocalWidgetPrivate::UpdateAvailableRole).toBool() && !scheduledForUpdate)
       {
@@ -436,13 +438,21 @@ protected:
         this->WidgetItem->data(qSlicerExtensionsLocalWidgetPrivate::OnServerExtensionRevisionRole).toString(),
         this->WidgetItem->data(qSlicerExtensionsLocalWidgetPrivate::OnServerExtensionUpdatedRole).toString());
 
+      QString changeLogText;
+      QString changeLogUrl = this->WidgetItem->data(qSlicerExtensionsLocalWidgetPrivate::ChangeLogUrlRole).toString();
+      if (!changeLogUrl.isEmpty())
+        {
+        changeLogText = QString(" <a href=\"%1\">%2</a>")
+          .arg(changeLogUrl)
+          .arg(qSlicerExtensionsLocalWidget::tr("Change log..."));
+        }
       statusText += QString("<p style=\"font-weight: bold; font-size: 80%; color: %1;\">"
         "<img style=\"float: left\""
-        " src=\":/Icons/ExtensionUpdateAvailable.svg\"/> "
-        "An update is available. Installed version: %2. Available version: %3 </p>")
-        .arg(this->InfoColor)
+        " src=\":/Icons/ExtensionUpdateAvailable.svg\"/> ").arg(this->InfoColor);
+      statusText += qSlicerExtensionsLocalWidget::tr("An update is available. Installed: %1. Available: %2.")
         .arg(installedVersion)
         .arg(onServerVersion);
+      statusText += changeLogText + QLatin1Literal("</p>");
       }
     if (statusText.isEmpty())
       {
@@ -453,17 +463,25 @@ protected:
 
         if (!enabled || !compatible)
           {
-          statusText += tr("<p>Version: %1. Disabled.</p>").arg(installedVersion);
+          statusText +=
+            QLatin1Literal("<p>")+
+            qSlicerExtensionsLocalWidget::tr("Version: %1. Disabled.").arg(installedVersion)
+            + QLatin1Literal("</p>");
           }
         else
           {
-          statusText += tr("<p>Version: %1</p>").arg(installedVersion);
+          statusText +=
+            QLatin1Literal("<p>") +
+            qSlicerExtensionsLocalWidget::tr("Version: %1").arg(installedVersion)
+            + QLatin1Literal("</p>");
           }
         }
       else
         {
-        //labelText += "<p>&nbsp;</p>";
-        statusText += "<p>Not installed.</p>";
+        statusText +=
+          QLatin1Literal("<p>") +
+          qSlicerExtensionsLocalWidget::tr("Not installed.")
+          + QLatin1Literal("</p>");
         }
       }
     labelText += statusText;
@@ -701,15 +719,43 @@ QListWidgetItem* qSlicerExtensionsLocalWidgetPrivate::updateExtensionItem(const 
     qWarning() << Q_FUNC_INFO << " failed: missing implementation for serverAPI" << serverAPI;
     }
 
+  QString installedRevision = metadata["installed"].toBool() ? metadata["revision"].toString() : QString();
+  QString onServerRevision = metadataFromServer["revision"].toString();
+
+  // Generate change log URL - only if repository is hosted on github or gitlab
+  QUrl scmUrl = QUrl(metadataFromServer["scmurl"].toString());
+  QString changeLogUrl;
+  if (!installedRevision.isEmpty() && !onServerRevision.isEmpty())
+    {
+    QString scmUrlPath = scmUrl.path();
+    // Path is usually like this: https://github.com/SlicerIGT/SlicerIGT.git
+    // We need to remove the .git suffix to get the repository URL path.
+    if (scmUrlPath.endsWith(".git"))
+      {
+      scmUrlPath.chop(4);
+      }
+    if (scmUrl.host().toLower() == "github.com")
+      {
+      scmUrl.setPath(QString("%1/compare/%2...%3").arg(scmUrlPath).arg(installedRevision).arg(onServerRevision));
+      changeLogUrl = scmUrl.toString();
+      }
+    else if (scmUrl.host().toLower() == "gitlab.com")
+      {
+      scmUrl.setPath(QString("%1/-/compare/%2...%3").arg(scmUrlPath).arg(installedRevision).arg(onServerRevision));
+      changeLogUrl = scmUrl.toString();
+      }
+    }
+
   // Save some metadata fields into the item to allow filtering and search
 
   item->setData(Self::NameRole, extensionName);
-  item->setData(Self::InstalledExtensionRevisionRole, metadata["installed"].toBool() ? metadata["revision"].toString() : QString());
+  item->setData(Self::InstalledExtensionRevisionRole, installedRevision);
   item->setData(Self::InstalledExtensionUpdatedRole, metadata["installed"].toBool() ? metadata["updated"].toString() : QString());
   item->setData(Self::InstalledExtensionSlicerVersionRole, metadata["installed"].toBool() ? metadata["slicer_revision"].toString() : QString());
-  item->setData(Self::OnServerExtensionRevisionRole, metadataFromServer["revision"].toString());
+  item->setData(Self::OnServerExtensionRevisionRole, onServerRevision);
   item->setData(Self::OnServerExtensionMissingRole, metadataFromServer["revision"].toString().isEmpty()
     && this->ExtensionsManagerModel->lastUpdateTimeExtensionsMetadataFromServer().isValid());
+  item->setData(Self::ChangeLogUrlRole, changeLogUrl);
   item->setData(Self::OnServerExtensionUpdatedRole, metadataFromServer["updated"].toString());
   item->setData(Self::UpdateAvailableRole, q->extensionsManagerModel()->isExtensionUpdateAvailable(extensionName));
   item->setData(Self::MoreLinkRole, moreLinkTarget);
@@ -1114,9 +1160,23 @@ void qSlicerExtensionsLocalWidget::onModelUpdated()
 {
   Q_D(qSlicerExtensionsLocalWidget);
   this->clear();
+  // Show extensions with available update at the top
+  QStringList availableUpdateExtensions = d->ExtensionsManagerModel->availableUpdateExtensions();
+  availableUpdateExtensions.sort();
+  foreach(const QString& extensionName, availableUpdateExtensions)
+    {
+    d->updateExtensionItem(extensionName);
+    }
+  // Show all other extensions
   QStringList managedExtensions = d->ExtensionsManagerModel->managedExtensions();
+  managedExtensions.sort();
   foreach(const QString& extensionName, managedExtensions)
     {
+    if (availableUpdateExtensions.contains(extensionName))
+      {
+      // already in the list
+      continue;
+      }
     d->updateExtensionItem(extensionName);
     }
 }
@@ -1125,24 +1185,34 @@ void qSlicerExtensionsLocalWidget::onModelUpdated()
 void qSlicerExtensionsLocalWidget::onLinkActivated(const QString& link)
 {
   Q_D(qSlicerExtensionsLocalWidget);
-
-  QUrl url = d->ExtensionsManagerModel->frontendServerUrl();
-  int serverAPI = this->extensionsManagerModel()->serverAPI();
-  if (serverAPI == qSlicerExtensionsManagerModel::Girder_v1)
+  if (link.startsWith("slicer:"))
     {
-    QString extensionName = link.mid(7); // remove leading "slicer:"
-    url.setPath(url.path() + QString("/view/%1/%2/%3")
-                .arg(extensionName)
-                .arg(this->extensionsManagerModel()->slicerRevision())
-                .arg(this->extensionsManagerModel()->slicerOs()));
+    // internal link (extension description page on the frontend server)
+    QUrl url(d->ExtensionsManagerModel->frontendServerUrl());
+    int serverAPI = this->extensionsManagerModel()->serverAPI();
+    if (serverAPI == qSlicerExtensionsManagerModel::Girder_v1)
+      {
+        {
+        QString extensionName = link.mid(7); // remove leading "slicer:"
+        url.setPath(url.path() + QString("/view/%1/%2/%3")
+                    .arg(extensionName)
+                    .arg(this->extensionsManagerModel()->slicerRevision())
+                    .arg(this->extensionsManagerModel()->slicerOs()));
+        }
+      }
+    else
+      {
+      qWarning() << Q_FUNC_INFO << " failed: missing implementation for serverAPI" << serverAPI;
+      return;
+      }
+    emit this->linkActivated(url);
     }
   else
     {
-    qWarning() << Q_FUNC_INFO << " failed: missing implementation for serverAPI" << serverAPI;
-    return;
+    // external link (e.g., change log), open in external browser
+    QUrl url(link);
+    QDesktopServices::openUrl(url);
     }
-
-  emit this->linkActivated(url);
 }
 
 // --------------------------------------------------------------------------

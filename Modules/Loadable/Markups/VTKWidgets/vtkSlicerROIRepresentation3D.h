@@ -44,7 +44,7 @@ class vtkLookupTable;
 class vtkMRMLInteractionEventData;
 class vtkMRMLMarkupsROINode;
 class vtkOutlineFilter;
-class vtkPassThroughFilter;
+class vtkPassThrough;
 class vtkPlaneSource;
 class vtkPolyDataAlgorithm;
 class vtkPolyDataMapper;
@@ -79,7 +79,7 @@ public:
   vtkTypeBool HasTranslucentPolygonalGeometry() override;
 
   /// Return the bounds of the representation
-  double *GetBounds() override;
+  double* GetBounds() VTK_SIZEHINT(6) override;
 
   void CanInteract(vtkMRMLInteractionEventData* interactionEventData,
     int& foundComponentType, int& foundComponentIndex, double& closestDistance2) override;
@@ -101,7 +101,7 @@ protected:
 
   vtkSmartPointer<vtkPolyDataAlgorithm> ROISource;
 
-  vtkSmartPointer<vtkPassThroughFilter> ROIPipelineInputFilter;
+  vtkSmartPointer<vtkPassThrough> ROIPipelineInputFilter;
 
   vtkSmartPointer<vtkTransformPolyDataFilter>    ROITransformFilter;
   vtkSmartPointer<vtkTransform>                  ROIToWorldTransform;

@@ -314,7 +314,7 @@ QWidget* qSlicerCLIModuleUIHelperPrivate::createIntegerTagWidget(const ModulePar
   int min = std::numeric_limits<int>::min() / 100;
   int max = std::numeric_limits<int>::max() / 100;
   bool withConstraints = !QString::fromStdString(moduleParameter.GetConstraints()).isEmpty();
-  QString _label = QString::fromStdString(moduleParameter.GetLabel());
+  QString _label = this->CLIModuleWidget->translate(moduleParameter.GetLabel());
   QString _name = QString::fromStdString(moduleParameter.GetName());
 
   QWidget * widget = nullptr;
@@ -361,7 +361,7 @@ QWidget* qSlicerCLIModuleUIHelperPrivate::createBooleanTagWidget(const ModulePar
 
   QString valueAsStr = QString::fromStdString(moduleParameter.GetValue());
   QCheckBox * widget = new QCheckBox;
-  QString _label = QString::fromStdString(moduleParameter.GetLabel());
+  QString _label = this->CLIModuleWidget->translate(moduleParameter.GetLabel());
   QString _name = QString::fromStdString(moduleParameter.GetName());
   widget->setChecked(valueAsStr == "true");
   INSTANCIATE_WIDGET_VALUE_WRAPPER(Boolean, _name, _label, widget);
@@ -385,7 +385,7 @@ QWidget* qSlicerCLIModuleUIHelperPrivate::createFloatTagWidget(const ModuleParam
   float min = -std::numeric_limits<float>::max() / 100;
   float max = std::numeric_limits<float>::max() / 100;
   bool withConstraints = !QString::fromStdString(moduleParameter.GetConstraints()).isEmpty();
-  QString _label = QString::fromStdString(moduleParameter.GetLabel());
+  QString _label = this->CLIModuleWidget->translate(moduleParameter.GetLabel());
   QString _name = QString::fromStdString(moduleParameter.GetName());
   int decimals = valueAsStr.indexOf('.') != -1 ? valueAsStr.length() - valueAsStr.indexOf('.') -1 : 2;
 
@@ -465,7 +465,7 @@ QWidget* qSlicerCLIModuleUIHelperPrivate::createDoubleTagWidget(const ModulePara
   double min = -std::numeric_limits<double>::max() / 100;
   double max = std::numeric_limits<double>::max() / 100;
   bool withConstraints = !QString::fromStdString(moduleParameter.GetConstraints()).isEmpty();
-  QString _label = QString::fromStdString(moduleParameter.GetLabel());
+  QString _label = this->CLIModuleWidget->translate(moduleParameter.GetLabel());
   QString _name = QString::fromStdString(moduleParameter.GetName());
   int decimals = valueAsStr.indexOf('.') != -1 ? valueAsStr.length() - valueAsStr.indexOf('.') -1 : 2;
 
@@ -532,7 +532,7 @@ QWidget* qSlicerCLIModuleUIHelperPrivate::createStringTagWidget(const ModulePara
 {
   QString valueAsStr = QString::fromStdString(moduleParameter.GetValue());
   QLineEdit * widget = new QLineEdit;
-  QString _label = QString::fromStdString(moduleParameter.GetLabel());
+  QString _label = this->CLIModuleWidget->translate(moduleParameter.GetLabel());
   QString _name = QString::fromStdString(moduleParameter.GetName());
   widget->setText(valueAsStr);
   if (isOutputChannel(moduleParameter))
@@ -546,7 +546,7 @@ QWidget* qSlicerCLIModuleUIHelperPrivate::createStringTagWidget(const ModulePara
 //-----------------------------------------------------------------------------
 QWidget* qSlicerCLIModuleUIHelperPrivate::createPointTagWidget(const ModuleParameter& moduleParameter)
 {
-  QString _label = QString::fromStdString(moduleParameter.GetLabel());
+  QString _label = this->CLIModuleWidget->translate(moduleParameter.GetLabel());
   QString _name = QString::fromStdString(moduleParameter.GetName());
   qMRMLNodeComboBox* widget = new qMRMLNodeComboBox;
   QStringList nodeTypes;
@@ -574,7 +574,7 @@ QWidget* qSlicerCLIModuleUIHelperPrivate::createPointTagWidget(const ModuleParam
 //-----------------------------------------------------------------------------
 QWidget* qSlicerCLIModuleUIHelperPrivate::createPointFileTagWidget(const ModuleParameter& moduleParameter)
 {
-  QString _label = QString::fromStdString(moduleParameter.GetLabel());
+  QString _label = this->CLIModuleWidget->translate(moduleParameter.GetLabel());
   QString _name = QString::fromStdString(moduleParameter.GetName());
   qMRMLNodeComboBox* widget = new qMRMLNodeComboBox;
 
@@ -627,18 +627,17 @@ QWidget* qSlicerCLIModuleUIHelperPrivate::createPointFileTagWidget(const ModuleP
 //-----------------------------------------------------------------------------
 QWidget* qSlicerCLIModuleUIHelperPrivate::createRegionTagWidget(const ModuleParameter& moduleParameter)
 {
-  QString _label = QString::fromStdString(moduleParameter.GetLabel());
+  QString _label = this->CLIModuleWidget->translate(moduleParameter.GetLabel());
   QString _name = QString::fromStdString(moduleParameter.GetName());
   qMRMLNodeComboBox* widget = new qMRMLNodeComboBox;
   QStringList nodeTypes;
   nodeTypes += "vtkMRMLMarkupsROINode";
   nodeTypes += "vtkMRMLROIListNode";
-  nodeTypes += "vtkMRMLAnnotationROINode";
   widget->setNodeTypes(QStringList(nodeTypes));
   //TODO - title + " RegionList"
   widget->setNoneEnabled(this->isNoneEnabled(moduleParameter));
   widget->setBaseName(_label);
-  // Reegion can be added without switching to another module
+  // Region can be added without switching to another module
   // therefore it makes sense to enable adding nodes.
   widget->setAddEnabled(true);
   widget->setRenameEnabled(true);
@@ -672,7 +671,7 @@ QWidget* qSlicerCLIModuleUIHelperPrivate::createImageTagWidget(const ModuleParam
     // and add all nodes that are derived from vtkMRMLVolumeNode.
     widget->setNodeTypes(QStringList()
       << "vtkMRMLScalarVolumeNode"
-      << "vtkMRMLLabelMapVolumeNode"
+      << "vtkMRMLLabelMapVolumeNode" << "vtkMRMLSegmentationNode"
       << "vtkMRMLVectorVolumeNode"
       << "vtkMRMLDiffusionTensorVolumeNode"
       << "vtkMRMLDiffusionWeightedVolumeNode"
@@ -689,12 +688,29 @@ QWidget* qSlicerCLIModuleUIHelperPrivate::createImageTagWidget(const ModuleParam
   else
     {
     QString nodeType = Self::nodeTypeFromMap(Self::ImageTypeAttributeToNodeType, type, "vtkMRMLScalarVolumeNode");
-    widget->setNodeTypes(QStringList(nodeType));
+    // If node type is vtkMRMLMultiVolumeNode then allow selecting volume sequences, too
+    if (nodeType == "vtkMRMLMultiVolumeNode")
+      {
+      QStringList nodeTypes;
+      nodeTypes << nodeType << "vtkMRMLSequenceNode";
+      widget->setNodeTypes(nodeTypes);
+      widget->addAttribute("vtkMRMLSequenceNode", "DataNodeClassName", "vtkMRMLScalarVolumeNode");
+      }
+    else if (nodeType == "vtkMRMLLabelMapVolumeNode")
+      {
+      QStringList nodeTypes;
+      nodeTypes << nodeType << "vtkMRMLSegmentationNode";
+      widget->setNodeTypes(nodeTypes);
+      }
+    else
+      {
+      widget->setNodeTypes(QStringList(nodeType));
+      }
     }
 
   // TODO - title + " Volume"
 
-  QString imageLabel = QString::fromStdString(moduleParameter.GetLabel());
+  QString imageLabel = this->CLIModuleWidget->translate(moduleParameter.GetLabel());
   QString imageName = QString::fromStdString(moduleParameter.GetName());
 
   // If "type" is specified, only display nodes of type nodeType
@@ -748,7 +764,7 @@ QWidget* qSlicerCLIModuleUIHelperPrivate::createGeometryTagWidget(const ModulePa
 
   // TODO - title + " Model"
 
-  QString _label = QString::fromStdString(moduleParameter.GetLabel());
+  QString _label = this->CLIModuleWidget->translate(moduleParameter.GetLabel());
   QString _name = QString::fromStdString(moduleParameter.GetName());
   qMRMLNodeComboBox * widget = new qMRMLNodeComboBox;
   widget->setShowHidden(false);
@@ -786,7 +802,7 @@ QWidget* qSlicerCLIModuleUIHelperPrivate::createTableTagWidget(const ModuleParam
 
   // TODO - title + " Table"
 
-  QString _label = QString::fromStdString(moduleParameter.GetLabel());
+  QString _label = this->CLIModuleWidget->translate(moduleParameter.GetLabel());
   QString _name = QString::fromStdString(moduleParameter.GetName());
   qMRMLNodeComboBox * widget = new qMRMLNodeComboBox;
   widget->setNodeTypes(QStringList(nodeType));
@@ -823,7 +839,7 @@ QWidget* qSlicerCLIModuleUIHelperPrivate::createMeasurementTagWidget(const Modul
 
   // TODO - title + " Measurement"
 
-  QString _label = QString::fromStdString(moduleParameter.GetLabel());
+  QString _label = this->CLIModuleWidget->translate(moduleParameter.GetLabel());
   QString _name = QString::fromStdString(moduleParameter.GetName());
   qMRMLNodeComboBox * widget = new qMRMLNodeComboBox;
   widget->setNodeTypes(QStringList(nodeType));
@@ -857,7 +873,7 @@ QWidget* qSlicerCLIModuleUIHelperPrivate::createTransformTagWidget(const ModuleP
       type, defaultNodeType);
   // TODO - title + " Transform"
 
-  QString _label = QString::fromStdString(moduleParameter.GetLabel());
+  QString _label = this->CLIModuleWidget->translate(moduleParameter.GetLabel());
   QString _name = QString::fromStdString(moduleParameter.GetName());
   qMRMLNodeComboBox * widget = new qMRMLNodeComboBox;
   widget->setNoneEnabled(this->isNoneEnabled(moduleParameter));
@@ -891,7 +907,7 @@ QWidget* qSlicerCLIModuleUIHelperPrivate::createTransformTagWidget(const ModuleP
 //-----------------------------------------------------------------------------
 QWidget* qSlicerCLIModuleUIHelperPrivate::createDirectoryTagWidget(const ModuleParameter& moduleParameter)
 {
-  QString _label = QString::fromStdString(moduleParameter.GetLabel());
+  QString _label = this->CLIModuleWidget->translate(moduleParameter.GetLabel());
   QString _name = QString::fromStdString(moduleParameter.GetName());
 
   ctkDirectoryButton* widget = new ctkDirectoryButton();
@@ -906,14 +922,14 @@ QWidget* qSlicerCLIModuleUIHelperPrivate::createDirectoryTagWidget(const ModuleP
 //-----------------------------------------------------------------------------
 QWidget* qSlicerCLIModuleUIHelperPrivate::createFileTagWidget(const ModuleParameter& moduleParameter)
 {
-  QString label = QString::fromStdString(moduleParameter.GetLabel());
+  QString label = this->CLIModuleWidget->translate(moduleParameter.GetLabel());
   QString name = QString::fromStdString(moduleParameter.GetName());
 
   QStringList fileExtensions;
   const std::vector< std::string > fileExtensionsStd = moduleParameter.GetFileExtensions();
   if (!fileExtensionsStd.empty())
     {
-    QString customFilter("Compatible Files (");
+    QString customFilter(qSlicerCLIModuleUIHelper::tr("Compatible Files") + " (");
     for (std::vector< std::string >::const_iterator it = fileExtensionsStd.begin();
       it != fileExtensionsStd.end(); ++it)
       {
@@ -926,7 +942,7 @@ QWidget* qSlicerCLIModuleUIHelperPrivate::createFileTagWidget(const ModuleParame
     customFilter.append(")");
     fileExtensions << customFilter;
     }
-  fileExtensions << QString("All Files (*.*)");
+  fileExtensions << QString(qSlicerCLIModuleUIHelper::tr("All Files") + " (*.*)");
 
   QWidget* widget = new QWidget;
   ctkPathLineEdit* pathLineEdit =
@@ -961,7 +977,7 @@ QWidget* qSlicerCLIModuleUIHelperPrivate::createEnumerationTagWidget(const Modul
   ElementConstIterator sBeginIt = moduleParameter.GetElements().begin();
   ElementConstIterator sEndIt = moduleParameter.GetElements().end();
 
-  QString _label = QString::fromStdString(moduleParameter.GetLabel());
+  QString _label = this->CLIModuleWidget->translate(moduleParameter.GetLabel());
   QString _name = QString::fromStdString(moduleParameter.GetName());
   ButtonGroupWidgetWrapper * widget = new ButtonGroupWidgetWrapper;
   ctkFlowLayout * _layout = new ctkFlowLayout(widget);
@@ -970,7 +986,7 @@ QWidget* qSlicerCLIModuleUIHelperPrivate::createEnumerationTagWidget(const Modul
   for (ElementConstIterator sIt = sBeginIt; sIt != sEndIt; ++sIt)
     {
     QString value = QString::fromStdString(*sIt);
-    QRadioButton * radio = new QRadioButton(value, widget);
+    QRadioButton * radio = new QRadioButton(this->CLIModuleWidget->translate(value.toStdString()), widget);
     _layout->addWidget(radio);
     radio->setChecked(defaultValue == value);
     // enumValue may differ from displayed text when the application is
@@ -1106,7 +1122,7 @@ QWidget* qSlicerCLIModuleUIHelper::createTagWidget(const ModuleParameter& module
 
   if (widget)
     {
-    QString description = QString::fromStdString(moduleParameter.GetDescription());
+    QString description = d->CLIModuleWidget->translate(moduleParameter.GetDescription());
     widget->setToolTip(description);
     QString widgetName = QString::fromStdString(moduleParameter.GetName());
     widget->setObjectName(widgetName);

@@ -1750,31 +1750,14 @@ void vtkMRMLSliceLogic::ResizeSliceNode(double newWidth, double newHeight)
   newWidth /= this->SliceNode->GetLayoutGridColumns();
   newHeight /= this->SliceNode->GetLayoutGridRows();
 
-  // The following was previously in SliceSWidget.tcl
-  double sliceStep = this->SliceSpacing[2];
   int oldDimensions[3];
   this->SliceNode->GetDimensions(oldDimensions);
   double oldFOV[3];
   this->SliceNode->GetFieldOfView(oldFOV);
-
-  double scalingX = (newWidth != 0 && oldDimensions[0] != 0 ? newWidth / oldDimensions[0] : 1.);
-  double scalingY = (newHeight != 0 && oldDimensions[1] != 0 ? newHeight / oldDimensions[1] : 1.);
-
-  double magnitudeX = (scalingX >= 1. ? scalingX : 1. / scalingX);
-  double magnitudeY = (scalingY >= 1. ? scalingY : 1. / scalingY);
-
   double newFOV[3];
-  if (magnitudeX < magnitudeY)
-    {
-    newFOV[0] = oldFOV[0];
-    newFOV[1] = oldFOV[1] * scalingY / scalingX;
-    }
-  else
-    {
-    newFOV[0] = oldFOV[0] * scalingX / scalingY;
-    newFOV[1] = oldFOV[1];
-    }
-  newFOV[2] = sliceStep * oldDimensions[2];
+  newFOV[0] = oldFOV[0];
+  newFOV[1] = oldFOV[1];
+  newFOV[2] = this->SliceSpacing[2] * oldDimensions[2];
   double windowAspect = (newWidth != 0. ? newHeight / newWidth : 1.);
   double planeAspect = (newFOV[0] != 0. ? newFOV[1] / newFOV[0] : 1.);
   if (windowAspect != planeAspect)
@@ -2471,7 +2454,8 @@ bool vtkMRMLSliceLogic::VolumeWindowLevelEditable(const char* volumeNodeID)
     {
     return false;
     }
-  return !scalarVolumeDisplayNode->GetWindowLevelLocked();
+  vtkWarningMacro("vtkMRMLSliceLogic::VolumeWindowLevelEditable method is deprecated. Volume window level can always be set programmatically.");
+  return true;
 }
 
 //----------------------------------------------------------------------------
@@ -2524,4 +2508,44 @@ bool vtkMRMLSliceLogic::IsEventInsideVolume(bool background, double worldPos[3])
 vtkMRMLSliceDisplayNode* vtkMRMLSliceLogic::GetSliceDisplayNode()
 {
   return vtkMRMLSliceDisplayNode::SafeDownCast(this->GetSliceModelDisplayNode());
+}
+
+
+//----------------------------------------------------------------------------
+bool vtkMRMLSliceLogic::GetSliceOffsetRangeResolution(double range[2], double& resolution)
+{
+  // Calculate the number of slices in the current range.
+  // Extent is between the farthest voxel centers (not voxel sides).
+  double sliceBounds[6] = {0, -1, 0, -1, 0, -1};
+  this->GetLowestVolumeSliceBounds(sliceBounds, true);
+
+  const double * sliceSpacing = this->GetLowestVolumeSliceSpacing();
+  if (!sliceSpacing)
+    {
+    range[0] = -1.0;
+    range[1] = 1.0;
+    resolution = 1.0;
+    return false;
+    }
+
+  // Set the scale increments to match the z spacing (rotated into slice space)
+  resolution = sliceSpacing ? sliceSpacing[2] : 1.0;
+
+  bool singleSlice = ((sliceBounds[5] - sliceBounds[4]) < resolution);
+  if (singleSlice)
+    {
+    // add one blank slice before and after the current slice to make the slider appear in the center when
+    // we are centered on the slice
+    double centerPos = (sliceBounds[4] + sliceBounds[5]) / 2.0;
+    range[0] = centerPos - resolution;
+    range[1] = centerPos + resolution;
+    }
+  else
+    {
+    // there are at least two slices in the range
+    range[0] = sliceBounds[4];
+    range[1] = sliceBounds[5];
+    }
+
+  return true;
 }

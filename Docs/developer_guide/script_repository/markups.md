@@ -2,14 +2,14 @@
 
 ### Save markups to file
 
-Any markup node can be saved as a [markups json file](modules/markups.md):
+Any markup node can be saved as a [markups json file](developer_guide/modules/markups.md#markups):
 
 ```python
 markupsNode = slicer.util.getNode('F')
 slicer.util.saveNode(markupsNode, "/path/to/MyMarkups.mkp.json")
 ```
 
-Generally the markups json file format is recommended for saving all properties of a markups node, but for exporting only control point information (name, position, and basic state) a [control points table can be exported in standard csv file format](modules/markups.md#markups-control-points-table-file-format-csv-tsv):
+Generally the markups json file format is recommended for saving all properties of a markups node, but for exporting only control point information (name, position, and basic state) a [control points table can be exported in standard csv file format](developer_guide/modules/markups.md#markups-control-points-table-file-format-csv-tsv):
 
 ```python
 slicer.modules.markups.logic().ExportControlPointsToCSV(markupsNode, "/path/to/MyControlPoints.csv")
@@ -17,13 +17,13 @@ slicer.modules.markups.logic().ExportControlPointsToCSV(markupsNode, "/path/to/M
 
 ### Load markups from file
 
-Any markup node can be loaded from a [markups json file](modules/markups.md):
+Any markup node can be loaded from a [markups json file](developer_guide/modules/markups.md#markups):
 
 ```python
 markupsNode = slicer.util.loadMarkups("/path/to/MyMarkups.mkp.json")
 ```
 
-Control points can be loaded from [control points table csv file](modules/markups.md#markups-control-points-table-file-format-csv-tsv):
+Control points can be loaded from [control points table csv file](developer_guide/modules/markups.md#markups-control-points-table-file-format-csv-tsv):
 
 ```python
 markupsNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsCurveNode")
@@ -32,7 +32,7 @@ slicer.modules.markups.logic().ImportControlPointsFromCSV(markupsNode, "/path/to
 
 ### Load markups point list from file
 
-Markups point list can be loaded from legacy [fcsv file format](modules/markups.md#markups-fiducial-point-list-file-format-fcsv). Note that this file format is no longer recommended, as it is not a standard csv file format and can only store a small fraction of information that is in a markups node.
+Markups point list can be loaded from legacy [fcsv file format](developer_guide/modules/markups.md#markups-fiducial-point-list-file-format-fcsv). Note that this file format is no longer recommended, as it is not a standard csv file format and can only store a small fraction of information that is in a markups node.
 
 ```python
 slicer.util.loadMarkupsFiducialList("/path/to/list/F.fcsv")
@@ -226,7 +226,7 @@ def _calculate_residual_sphere(parameters, x_values, y_values, z_values):
   return distance_from_centre - radius
 
 # Fit a sphere to the markups fidicual points
-markupsPositions = slicer.util.arrayFromMarkupsControlPoints(markups)
+markupsPositions = slicer.util.arrayFromMarkupsControlPoints(pointListNode)
 import numpy as np
 # initial guess
 center0 = np.mean(markupsPositions, 0)
@@ -538,18 +538,18 @@ with open(outputFileName, "w") as outfile:
   json.dump(data, outfile)
 ```
 
-### Write annotation ROI to JSON file
+### Write markup ROI to JSON file
 
 ```python
 roiNode = getNode("R")
 outputFileName = "c:/tmp/test.json"
 
-# Get annotation ROI data
+# Get ROI data
 center = [0,0,0]
-radius = [0,0,0]
-roiNode.GetControlPointWorldCoordinates(0, center)
-roiNode.GetControlPointWorldCoordinates(1, radius)
-data = {"center": radius, "radius": radius}
+size = [0,0,0]
+roiNode.GetCenterWorld(center)
+roiNode.GetSizeWorld(size)
+data = {"center": center, "size": size}
 
 # Write to json file
 import json
@@ -592,14 +592,13 @@ The [qSlicerSimpleMarkupsWidget](https://apidocs.slicer.org/main/classqSlicerSim
 This code snippet creates a set of predefined line markups (named A, B, C, D) in the scene when the user hits <kbd>Ctrl+N</kbd>.
 How to use this:
 
-1. Customize the code (replace A, B, C, D with your measurement names) and copy-paste the code into the Python console. This has to be done only once after Slicer is started. Add it to [.slicerrc.py file](../user_guide/settings.md#application-startup-file) so that it persists even if Slicer is restarted.
+1. Customize the code (replace A, B, C, D with your measurement names) and copy-paste the code into the Python console. This has to be done only once after Slicer is started. Add it to [.slicerrc.py file](user_guide/settings.md#application-startup-file) so that it persists even if Slicer is restarted.
 2. Load the data set that has to be measured
 3. Hit Ctrl+N to create all the measurements
 4. Go to Markups module to see the list of measurements
 5. For each measurement: select it in the data tree, click on the place button on the toolbar then click in slice or 3D views
 
 ```python
-sliceNode = slicer.mrmlScene.GetNodeByID("vtkMRMLSliceNodeRed")
 def createMeasurements():
   for nodeName in ['A', 'B', 'C', 'D']:
     lineNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsLineNode", nodeName)
@@ -620,7 +619,7 @@ shortcut1.connect( 'activated()', createMeasurements)
 This code snippet creates a set of predefined line markups (named A, B, C, D) in the scene when the user hits Ctrl+N.
 How to use this:
 
-1. Copy-paste the code into the Python console. This has to be done only once after Slicer is started. Add it to [.slicerrc.py file](../user_guide/settings.md#application-startup-file) so that it persists even if Slicer is restarted.
+1. Copy-paste the code into the Python console. This has to be done only once after Slicer is started. Add it to [.slicerrc.py file](user_guide/settings.md#application-startup-file) so that it persists even if Slicer is restarted.
 2. Load the data set that has to be measured and place line markups (you can use the "Pre-populate the scene with measurements" script above to help with this)
 3. Hit Ctrl+M to copy all line measurents to the clipboard
 4. Switch to Excel and hit Ctrl+V to paste the results there
@@ -632,12 +631,15 @@ def copyLineMeasurementsToClipboard():
   # Collect all line measurements from the scene
   lineNodes = getNodesByClass('vtkMRMLMarkupsLineNode')
   for lineNode in lineNodes:
+    if lineNode.GetNumberOfDefinedControlPoints() < 2:
+      # incomplete line, skip it
+      continue
     # Get node filename that the length was measured on
     try:
       volumeNode = slicer.mrmlScene.GetNodeByID(lineNode.GetNthControlPointAssociatedNodeID(0))
       imagePath = volumeNode.GetStorageNode().GetFileName()
     except:
-      imagePath = ''
+      imagePath = '(unknown)'
     # Get line node n
     measurementName = lineNode.GetName()
     # Get length measurement
@@ -646,12 +648,20 @@ def copyLineMeasurementsToClipboard():
     # Add fields to results
     measurements.append('\t'.join([imagePath, measurementName, length]))
   # Copy all measurements to clipboard (to be pasted into Excel)
-  slicer.app.clipboard().setText("\n".join(measurements))
+  outputText = "\n".join(measurements) + "\n"
+  slicer.app.clipboard().setText(outputText)
   slicer.util.delayDisplay(f"Copied {len(measurements)} length measurements to the clipboard.")
 
 shortcut2 = qt.QShortcut(slicer.util.mainWindow())
 shortcut2.setKey(qt.QKeySequence("Ctrl+m"))
 shortcut2.connect( 'activated()', copyLineMeasurementsToClipboard)
+```
+
+To copy all measurement results to a file instead of copying it to the clipboard, replace `slicer.app.clipboard...` line by these lines:
+
+```python
+with open("c:/tmp/results.csv", "a") as f:
+  f.write(outputText)
 ```
 
 ### Use markups json files in Python - outside Slicer

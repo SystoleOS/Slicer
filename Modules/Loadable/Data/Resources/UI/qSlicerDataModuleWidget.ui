@@ -270,7 +270,7 @@
           <number>10</number>
          </property>
          <property name="nodeTypes">
-          <stringlist>
+          <stringlist notr="true">
            <string>vtkMRMLTransformableNode</string>
           </stringlist>
          </property>
@@ -437,7 +437,6 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../../../Annotations/Resources/qSlicerAnnotationModule.qrc"/>
   <include location="../../../SubjectHierarchy/Resources/qSlicerSubjectHierarchyModule.qrc"/>
   <include location="../qSlicerDataModule.qrc"/>
  </resources>

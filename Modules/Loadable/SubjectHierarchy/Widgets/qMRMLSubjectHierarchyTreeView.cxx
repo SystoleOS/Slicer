@@ -192,8 +192,6 @@ void qMRMLSubjectHierarchyTreeViewPrivate::init()
   q->QTreeView::setModel(this->SortFilterModel);
   QObject::connect( q->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
                     q, SLOT(onSelectionChanged(QItemSelection,QItemSelection)) );
-  // selectionChanged signal is not triggered when the same item is selected. This connection handles the case when the same item is re-selected.
-  QObject::connect( q, SIGNAL(pressed(const QModelIndex&)), q, SLOT(onCurrentSelection(const QModelIndex&)) );
 
   this->SortFilterModel->setParent(q);
   this->SortFilterModel->setSourceModel(this->Model);
@@ -252,22 +250,22 @@ void qMRMLSubjectHierarchyTreeViewPrivate::init()
 
   this->TransformInteractionInViewAction = new QAction("Interaction in 3D view", this->TransformMenu);
   this->TransformInteractionInViewAction->setCheckable(true);
-  this->TransformInteractionInViewAction->setToolTip(q->tr("Allow interactively modify the transform in 3D views"));
+  this->TransformInteractionInViewAction->setToolTip(qMRMLSubjectHierarchyTreeView::tr("Allow interactively modify the transform in 3D views"));
   this->TransformMenu->addAction(this->TransformInteractionInViewAction);
   QObject::connect(this->TransformInteractionInViewAction, SIGNAL(toggled(bool)), q, SLOT(onTransformInteractionInViewToggled(bool)));
 
   this->TransformEditPropertiesAction = new QAction("Edit transform properties...", this->TransformMenu);
-  this->TransformEditPropertiesAction->setToolTip(q->tr("Edit properties of the current transform"));
+  this->TransformEditPropertiesAction->setToolTip(qMRMLSubjectHierarchyTreeView::tr("Edit properties of the current transform"));
   this->TransformMenu->addAction(this->TransformEditPropertiesAction);
   QObject::connect(this->TransformEditPropertiesAction, SIGNAL(triggered()), q, SLOT(onTransformEditProperties()));
 
   this->TransformHardenAction = new QAction("Harden transform", this->TransformMenu);
-  this->TransformHardenAction->setToolTip(q->tr("Harden current transform on this node and all children nodes"));
+  this->TransformHardenAction->setToolTip(qMRMLSubjectHierarchyTreeView::tr("Harden current transform on this node and all children nodes"));
   this->TransformMenu->addAction(this->TransformHardenAction);
   QObject::connect(this->TransformHardenAction, SIGNAL(triggered()), this->Model, SLOT(onHardenTransformOnBranchOfCurrentItem()));
 
   this->CreateNewTransformAction = new QAction("Create new transform", this->TransformMenu);
-  this->CreateNewTransformAction->setToolTip(q->tr("Create and apply new transform"));
+  this->CreateNewTransformAction->setToolTip(qMRMLSubjectHierarchyTreeView::tr("Create and apply new transform"));
   this->TransformMenu->addAction(this->CreateNewTransformAction);
   QObject::connect(this->CreateNewTransformAction, SIGNAL(triggered()), q, SLOT(onCreateNewTransform()));
 
@@ -275,7 +273,7 @@ void qMRMLSubjectHierarchyTreeViewPrivate::init()
 
   this->NoTransformAction = new QAction("None", this->TransformMenu);
   this->NoTransformAction->setCheckable(true);
-  this->NoTransformAction->setToolTip(q->tr("Remove parent transform from all the nodes in this branch"));
+  this->NoTransformAction->setToolTip(qMRMLSubjectHierarchyTreeView::tr("Remove parent transform from all the nodes in this branch"));
   this->TransformMenu->addAction(this->NoTransformAction);
   QObject::connect(this->NoTransformAction, SIGNAL(triggered()), this->Model, SLOT(onRemoveTransformsFromBranchOfCurrentItem()));
 
@@ -1505,23 +1503,6 @@ void qMRMLSubjectHierarchyTreeView::onSelectionChanged(const QItemSelection& sel
   // Emit current item changed signal
   emit currentItemChanged(selectedShItems[0]);
   emit currentItemsChanged(selectedShItems);
-}
-
-//------------------------------------------------------------------------------
-void qMRMLSubjectHierarchyTreeView::onCurrentSelection(const QModelIndex &currentItemIndex)
-{
-  Q_D(qMRMLSubjectHierarchyTreeView);
-  if (!d->SortFilterModel)
-    {
-    return;
-    }
-
-  vtkIdType itemID = d->SortFilterModel->subjectHierarchyItemFromIndex(currentItemIndex);
-  // Emit current item signal only if the current item is pressed to avoid duplicated signals when the item is changed
-  if (itemID == d->SelectedItems[0])
-    {
-    emit currentItemChanged(d->SelectedItems[0]);
-    }
 }
 
 //------------------------------------------------------------------------------

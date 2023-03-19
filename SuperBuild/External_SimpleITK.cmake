@@ -2,7 +2,13 @@
 set(proj SimpleITK)
 
 # Set dependency list
-set(${proj}_DEPENDENCIES ITK Swig python python-setuptools)
+set(${proj}_DEPENDENCIES
+  ITK
+  python
+  python-pip
+  python-setuptools
+  Swig
+  )
 
 # Include dependent projects if any
 ExternalProject_Include_Dependencies(${proj} PROJECT_VAR proj DEPENDS_VAR ${proj}_DEPENDENCIES)
@@ -123,18 +129,18 @@ set(ENV{LibraryPaths} \"${_paths}${_path_sep}\$ENV{${_varname}}\")
   file(WRITE ${_install_script}
 "include(\"${_env_script}\")
 set(${proj}_WORKING_DIR \"${EP_BINARY_DIR}/SimpleITK-build/Wrapping/Python\")
-ExternalProject_Execute(${proj} \"install\" \"${PYTHON_EXECUTABLE}\" setup.py install)
+ExternalProject_Execute(${proj} \"install\" \"${PYTHON_EXECUTABLE}\" \"-m\" \"pip\" \"install\" \".\")
 ")
 
   ExternalProject_SetIfNotDefined(
     Slicer_${proj}_GIT_REPOSITORY
-    "${EP_GIT_PROTOCOL}://github.com/SimpleITK/SimpleITK.git"
+    "${EP_GIT_PROTOCOL}://github.com/Slicer/SimpleITK.git"
     QUIET
     )
 
   ExternalProject_SetIfNotDefined(
     Slicer_${proj}_GIT_TAG
-    "ffd48e274e2112928e95e5dfc802d8ca3121c840"
+    "ca0c09386219dfff61975437b7ea32b246adb724"  # slicer-v2.2.0-2022-08-30-1c0cf5de
     QUIET
     )
 

@@ -57,9 +57,14 @@ Since DICOM files are often located in several folders, they can cross-reference
 2. Go to DICOM module
 3. Select folders that contain DICOM files
     - Option A: Drag-and-drop the folder that contains DICOM files to the Slicer application window.
-    - Option B: Click "Import" button in the top-left corner of the DICOM browser. Select folder that contains DICOM files. Optionally select the "Copy" option so that the files are copied into the database directory. Otherwise they will only be referenced in their original location. It is recommended to copy data if importing files from removable media (CD/DVD/USB drives) to be able to load the data set even after media is ejected.
+    - Option B: Click "Import" button in the top-left corner of the DICOM browser. Select folder that contains DICOM files.
+        - The import button has a drop-down menu, which can be displayed by clicking the small down-arrow button at the right side. Currently the only item in the menu is the "Copy imported files to DICOM database" option. Enable this option to copy all the imported DICOM files from their original location into the Slicer DICOM database. This is useful when loading data from removable media (CD/DVD/USB drives or remote drives), to be able to load the data set even after media is ejected. If the copy option is disabled then only the path of the imported files will be stored in the DICOM database (along with values of most commonly used DICOM tags).
 
-*Note:* When a folder is drag-and-dropped to the Slicer application while not the DICOM module is active, Slicer displays a popup, asking what to do - click OK ("Load directory in DICOM database"). After import is completed, go to DICOM module.
+:::{note}
+
+When a folder is drag-and-dropped to the Slicer application while not the DICOM module is active, Slicer displays a popup, asking what to do - click OK ("Load directory in DICOM database"). After import is completed, go to DICOM module.
+
+:::
 
 #### DICOM loading
 
@@ -175,7 +180,7 @@ DICOM module settings:
 - **DICOM database settings**: allows you to select a location on disk for Slicer's database of DICOM files. The application manages content of this folder (stores metadata and copy of imported DICOM files): do not manually copy any data into this folder.
 - Additional settings are available in menu: Edit / Application Settings / DICOM:
     - Generic DICOM settings:
-        - Load referenced series will give you the option of easily loading, for example, the reference volume of a segmentation when you open the segmentation.  This can also be made to happen automatically.
+        - Load referenced series will give you the option of easily loading, for example, the source volume of a segmentation when you open the segmentation.  This can also be made to happen automatically.
     - DICOMScalarVolumePlugin settings:
         - You can choose what back-end library to use (currently GDCM, DCMTK, or GDCM with DCMTK fallback with the last option being the default.  This is provided in case some data is unsupported by one library or the other.
         - Acquisition geometry regularization option supports the creation of a nonlinear transform that corrects for things like missing slices or gantry tilt in the acquisition.  See more information [here](https://github.com/Slicer/Slicer/commit/3328b81211cb2e9ae16a0b49097744171c8c71c0)
@@ -235,9 +240,13 @@ If none of the data sets seems to be correct then follow the steps described in 
 
 Some non-clinical (industrial or pre-clinical) imaging systems do not generate valid DICOM data sets. For example, they may incorrectly assume that slice thickness tag defines image geometry, while according to DICOM standard, image slice position must be used for determining image geometry. [DICOM Patcher](dicompatcher.md) module can fix some of these images: remove the images from Slicer's DICOM database, process the image files with DICOM Patcher module, and re-import the processed file into Slicer's DICOM database. If image is still distorted, go to *Volumes* module, open *Volume information* section, and adjust *Image spacing* values.
 
-Scanners may create image volumes with varying image slice spacing. Slicer can represent such images in the scene by apply a non-linear transform. To enable this feature, go to menu: Edit / Application settings / DICOM and set *Acquisition geometry regularization* to *apply regularization transform*. Slice view, segmentation, and many other features work directly on non-linearly transformed volumes. For some other features, such as volume rendering, you need to harden the transform on the volume: go to Data module, in the row of the volume node, double-click on the transform column, and choose *Harden transform*.
+Scanners may create image volumes with varying image slice spacing. Slicer can represent such images in the scene by apply a non-linear transform. To enable this feature, go to menu: Edit / Application settings / DICOM and set *Acquisition geometry regularization* to *apply regularization transform*. Slice view, segmentation, and many other features work directly on non-linearly transformed volumes. For some other features, such as volume rendering, you need to harden the transform on the volume: go to Data module, in the row of the volume node, right-click on the transform column, and choose *Harden transform*.
 
 Note that if Slicer displays a warning about non-uniform slice spacing then it may be due to missing or corrupted DICOM files. There is no reliable mechanism to distinguish between slices that are missing because they had not been acquired (for example, to reduce patient dose) or they were acquired but later they were lost.
+
+## Information for developers
+
+See examples and other developer information in [Developer guide](../../developer_guide/modules/dicom) and [Script repository](../../developer_guide/script_repository.md#dicom).
 
 ## Related extensions and modules
 

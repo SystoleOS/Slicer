@@ -5,6 +5,9 @@ set(TEMP ${Slicer_BINARY_DIR}/Testing/Temporary)
 set(INPUT ${CMAKE_CURRENT_SOURCE_DIR}/../Data/Input)
 
 #-----------------------------------------------------------------------------
+slicer_is_loadable_builtin_module_enabled("SceneViews" _build_scene_views_module)
+
+#-----------------------------------------------------------------------------
 set(KIT_TEST_SRCS
   vtkMRMLMarkupsDisplayNodeTest1.cxx
   vtkMRMLMarkupsFiducialNodeTest1.cxx
@@ -22,16 +25,44 @@ set(KIT_TEST_SRCS
   vtkSlicerMarkupsLogicTest2.cxx
   vtkSlicerMarkupsLogicTest3.cxx
   vtkSlicerMarkupsLogicTest4.cxx
-  vtkMarkupsAnnotationSceneTest.cxx
   vtkMRMLMarkupsNodeEventsTest.cxx
   )
+if(_build_scene_views_module)
+  list(APPEND KIT_TEST_SRCS
+    vtkMarkupsAnnotationSceneTest.cxx
+    )
+endif()
+
+# --------------------------------------------------------------------------
+# Include dirs
+# --------------------------------------------------------------------------
+set(KIT_TEST_INCLUDE_DIRS
+  )
+
+if(_build_scene_views_module)
+  list(APPEND KIT_TEST_INCLUDE_DIRS
+    ${vtkSlicerSceneViewsModuleLogic_SOURCE_DIR}
+    ${vtkSlicerSceneViewsModuleLogic_BINARY_DIR}
+    )
+endif()
+
+#-----------------------------------------------------------------------------
+set(KIT_TEST_TARGET_LIBRARIES
+  vtkSlicerAnnotationsModuleLogic
+  )
+
+if(_build_scene_views_module)
+  list(APPEND KIT_TEST_TARGET_LIBRARIES
+    vtkSlicerSceneViewsModuleLogic
+    )
+endif()
 
 #-----------------------------------------------------------------------------
 slicerMacroConfigureModuleCxxTestDriver(
   NAME ${KIT}
   SOURCES ${KIT_TEST_SRCS}
-  TARGET_LIBRARIES
-    vtkSlicerAnnotationsModuleLogic
+  TARGET_LIBRARIES ${KIT_TEST_TARGET_LIBRARIES}
+  INCLUDE_DIRECTORIES ${KIT_TEST_INCLUDE_DIRS}
   WITH_VTK_DEBUG_LEAKS_CHECK
   WITH_VTK_ERROR_OUTPUT_CHECK
   )
@@ -62,5 +93,6 @@ SIMPLE_TEST( vtkSlicerMarkupsLogicTest3 )
 SIMPLE_TEST( vtkSlicerMarkupsLogicTest4 )
 
 # test Slicer4 annotation fiducials in a mrml file
-# TODO: remove this after annotation fiducials have been removed
-SIMPLE_TEST( vtkMarkupsAnnotationSceneTest ${INPUT}/AnnotationTest/AnnotationFiducialsTest.mrml )
+if(_build_scene_views_module)
+  SIMPLE_TEST( vtkMarkupsAnnotationSceneTest ${INPUT}/AnnotationTest/AnnotationFiducialsTest.mrml )
+endif()

@@ -74,7 +74,7 @@ void qSlicerModuleFactoryFilterModelPrivate::decodeDataRecursive(QDataStream &st
 }
 
 // --------------------------------------------------------------------------
-// qSlicerModulesListViewPrivate methods
+// qSlicerModuleFactoryFilterModelPrivate methods
 
 // --------------------------------------------------------------------------
 qSlicerModuleFactoryFilterModelPrivate::qSlicerModuleFactoryFilterModelPrivate(qSlicerModuleFactoryFilterModel& object)
@@ -242,7 +242,7 @@ void qSlicerModuleFactoryFilterModel::setShowModules(const QStringList& modules)
   this->setFilterRole(Qt::UserRole);
   if (d->HideAllWhenShowModulesIsEmpty && modules.isEmpty())
     {
-    this->setFilterWildcard("hide all modules");
+    this->setFilterWildcard(/*no tr*/"hide all modules");
     }
   else
     {
@@ -324,24 +324,21 @@ bool qSlicerModuleFactoryFilterModel::filterAcceptsRow(int sourceRow, const QMod
     }
   if (!d->ShowBuiltIn)
     {
-    // qSlicerModulesListViewPrivate::IsBuiltInRole = Qt::UserRole+1
-    if (this->sourceModel()->data(sourceIndex, Qt::UserRole+1).toBool())
+    if (this->sourceModel()->data(sourceIndex, qSlicerModuleFactoryFilterModel::IsBuiltInRole).toBool())
       {
       return false;
       }
     }
   if (!d->ShowTesting)
     {
-    // qSlicerModulesListViewPrivate::IsTestingRole = Qt::UserRole+2
-    if (this->sourceModel()->data(sourceIndex, Qt::UserRole+2).toBool())
+    if (this->sourceModel()->data(sourceIndex, qSlicerModuleFactoryFilterModel::IsTestingRole).toBool())
       {
       return false;
       }
     }
   if (!d->ShowHidden)
     {
-    // qSlicerModulesListViewPrivate::IsHiddenRole = Qt::UserRole+3
-    if (this->sourceModel()->data(sourceIndex, Qt::UserRole+3).toBool())
+    if (this->sourceModel()->data(sourceIndex, qSlicerModuleFactoryFilterModel::IsHiddenRole).toBool())
       {
       return false;
       }
@@ -367,14 +364,9 @@ bool qSlicerModuleFactoryFilterModel::dropMimeData(const QMimeData *data, Qt::Dr
   // check if the format is supported
   QString format = QLatin1String("application/x-qstandarditemmodeldatalist");
   if (!data->hasFormat(format))
+    {
     return QAbstractItemModel::dropMimeData(data, action, row, column, parent);
-
-  if (row > rowCount(parent))
-    row = rowCount(parent);
-  if (row == -1)
-    row = rowCount(parent);
-  if (column == -1)
-    column = 0;
+    }
 
   // decode and insert
   QByteArray encoded = data->data(format);
@@ -405,11 +397,29 @@ bool qSlicerModuleFactoryFilterModel::dropMimeData(const QMimeData *data, Qt::Dr
     bottom = qMax(r, bottom);
     right = qMax(c, right);
     }
+
   QStringList newShowModules = this->showModules();
+
+  // Determine where to insert
+  int insertionPosition = parent.row();
+  if (insertionPosition > newShowModules.size())
+    {
+    insertionPosition = newShowModules.size();
+    }
+  else if (insertionPosition < 0)
+    {
+    insertionPosition = 0;
+    }
+
+  // Insert new items
   foreach(QStandardItem* item, items)
     {
-    newShowModules << item->data(Qt::UserRole).toString();
+    QString moduleName = item->data(Qt::UserRole).toString();
+    newShowModules.removeAll(moduleName);
+    newShowModules.insert(insertionPosition, moduleName);
+    insertionPosition++;
     }
+
   newShowModules.removeDuplicates();
   this->setShowModules(newShowModules);
   return true;

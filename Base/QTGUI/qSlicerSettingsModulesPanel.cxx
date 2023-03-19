@@ -126,6 +126,8 @@ void qSlicerSettingsModulesPanelPrivate::init()
 
   this->ModulesMenu->setCurrentModule(Slicer_DEFAULT_HOME_MODULE);
 
+  // Allow reordering of favorite modules by drag-and-drop within the favorite modules list
+  this->FavoritesModulesListView->filterModel()->setDynamicSortFilter(false);
   // Slicer_DEFAULT_FAVORITE_MODULES contains module names in a comma-separated list
   // (chosen this format because the same format is used for storing the favorites list in the .ini file).
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
@@ -143,34 +145,39 @@ void qSlicerSettingsModulesPanelPrivate::init()
 
   // Register settings
   q->registerProperty("disable-loadable-modules", this->LoadLoadableModulesCheckBox,
-                      "checked", SIGNAL(toggled(bool)));
+                      /*no tr*/"checked", SIGNAL(toggled(bool)));
   q->registerProperty("disable-scripted-loadable-modules", this->LoadScriptedLoadableModulesCheckBox,
-                      "checked", SIGNAL(toggled(bool)));
+                      /*no tr*/"checked", SIGNAL(toggled(bool)));
   q->registerProperty("disable-cli-modules", this->LoadCommandLineModulesCheckBox,
-                      "checked", SIGNAL(toggled(bool)));
+                      /*no tr*/"checked", SIGNAL(toggled(bool)));
 
   q->registerProperty("disable-builtin-loadable-modules", this->LoadBuiltInLoadableModulesCheckBox,
-                      "checked", SIGNAL(toggled(bool)));
+                      /*no tr*/"checked", SIGNAL(toggled(bool)));
   q->registerProperty("disable-builtin-scripted-loadable-modules", this->LoadBuiltInScriptedLoadableModulesCheckBox,
-                      "checked", SIGNAL(toggled(bool)));
+                      /*no tr*/"checked", SIGNAL(toggled(bool)));
   q->registerProperty("disable-builtin-cli-modules", this->LoadBuiltInCommandLineModulesCheckBox,
-                      "checked", SIGNAL(toggled(bool)));
+                      /*no tr*/"checked", SIGNAL(toggled(bool)));
 
   q->registerProperty("Modules/HomeModule", this->ModulesMenu,
                       "currentModule", SIGNAL(currentModuleChanged(QString)));
   q->registerProperty("Modules/FavoriteModules", this->FavoritesModulesListView->filterModel(),
                       "showModules", SIGNAL(showModulesChanged(QStringList)));
+  // Emit signal when favorite modules are updated to allow immediate update of the application GUI
+  // (e.g., favorite module toolbar)
+  QObject::connect(this->FavoritesModulesListView->filterModel(), SIGNAL(showModulesChanged(QStringList)),
+    q, SIGNAL(favoriteModulesChanged()));
+
   qSlicerRelativePathMapper* relativePathMapper = new qSlicerRelativePathMapper(
-    this->TemporaryDirectoryButton, "directory", SIGNAL(directoryChanged(QString)));
+    this->TemporaryDirectoryButton, /*no tr*/"directory", SIGNAL(directoryChanged(QString)));
   q->registerProperty("TemporaryPath", relativePathMapper,
                       "relativePath", SIGNAL(relativePathChanged(QString)));
   q->registerProperty("Modules/ShowHiddenModules", this->ShowHiddenModulesCheckBox,
-                      "checked", SIGNAL(toggled(bool)));
+                      /*no tr*/"checked", SIGNAL(toggled(bool)));
   qSlicerRelativePathMapper* relativePathMapper2 = new qSlicerRelativePathMapper(
     this->AdditionalModulePathsView, "directoryList", SIGNAL(directoryListChanged()));
   q->registerProperty("Modules/AdditionalPaths", relativePathMapper2,
                       "relativePaths", SIGNAL(relativePathsChanged(QStringList)),
-                      "Additional module paths", ctkSettingsPanel::OptionRequireRestart,
+                      qSlicerSettingsModulesPanel::tr("Additional module paths"), ctkSettingsPanel::OptionRequireRestart,
                       coreApp->revisionUserSettings());
 
   this->ModulesToAlwaysIgnore = coreApp->revisionUserSettings()->value("Modules/IgnoreModules").toStringList();
@@ -178,7 +185,7 @@ void qSlicerSettingsModulesPanelPrivate::init()
 
   q->registerProperty("Modules/IgnoreModules", q,
                       "modulesToAlwaysIgnore", SIGNAL(modulesToAlwaysIgnoreChanged(QStringList)),
-                      "Modules to ignore", ctkSettingsPanel::OptionRequireRestart,
+                      qSlicerSettingsModulesPanel::tr("Modules to ignore"), ctkSettingsPanel::OptionRequireRestart,
                       coreApp->revisionUserSettings());
   QObject::connect(factoryManager, SIGNAL(modulesToIgnoreChanged(QStringList)),
                    q, SLOT(setModulesToAlwaysIgnore(QStringList)));

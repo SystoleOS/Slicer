@@ -40,7 +40,7 @@ The Layout Toolbar provides a drop-down menu of layouts useful for many types of
 
 - **File**: Functions for loading a previously saved scene or individual datasets of various types, and for downloading sample datasets from the internet. An option for saving scenes and data is also provided here. **Add Data** allows loading data from files. **DICOM** module is recommended to import data from DICOM files and loading of imported DICOM data. **Save** opens the "Save Data" window, which offers a variety of options for saving all data or selected datasets.
 - **Edit**: Contains an option for showing Application Settings, which allows users to customize appearance and behavior of Slicer, such as modules displayed in the toolbar, application font size, temporary directory location, location of additional Slicer modules to include.
-- **View**: Functions for showing/hiding additional windows and widgets, such as **Extensions Manager** for installing extensions from Slicer app store, **Error Log** for checking if the application encountered any potential errors, **Python Interactor** for getting a Python console to interact with the loaded data or modules, **show/hide toolbars**, or **switch view layout**.
+- **View**: Functions for showing/hiding additional windows and widgets, such as **Extensions Manager** for installing extensions from Slicer app store, **Error Log** for checking if the application encountered any potential errors, **Python Console** for getting a Python console to interact with the loaded data or modules, **show/hide toolbars**, or **switch view layout**.
 
 ### Toolbar
 
@@ -119,9 +119,10 @@ By default 3D Slicer uses window/level setting that is specified in the DICOM fi
 
 Window/level can be manually adjusted anytime by clicking on "Adjust window/level" button on the toolbar then left-click-and-drag in any of the slice viewers. Optimal window/level can be computed for a chosen area by lef-click-and-dragging while holding down <kbd>Ctrl</kbd> key.
 
+
 [![](https://img.youtube.com/vi/u1B0F1KcVsk/0.jpg)](https://youtu.be/u1B0F1KcVsk "Demo video of how to adjust image window/level")
 
-Additional window/level options, presets, intensity histogram, automatic adjustments are available in Display section of [Volumes](modules/volumes.md) module.
+Additional window/level options, presets, intensity histogram, automatic adjustments are available in Display section of [Volumes](modules/volumes.md) module.  Presets are also available in the context menu of the Slice views.  You can reset to the automatically calculated window/level settings using the context menu or by using `Ctrl` + `left-double-click` on the Slice view.
 
 ### 3D View
 
@@ -152,7 +153,7 @@ Default orientation axes: A = anterior, P = posterior, R = right, L = left, S = 
 
 ### Slice View
 
-Three default slice views are provided (with Red, Yellow and Green colored bars) in which Axial, Saggital, Coronal or Oblique 2D slices of volume images can be displayed. Additional generic slice views have a grey colored bar and an identifying number in their upper left corner.
+Three default slice views are provided (with Red, Yellow and Green colored bars) in which Axial, Sagittal, Coronal or Oblique 2D slices of volume images can be displayed. Additional generic slice views have a grey colored bar and an identifying number in their upper left corner.
 
 ![](https://github.com/Slicer/Slicer/releases/download/docs-resources/user_interface_slice_view_controls.png)
 
@@ -165,13 +166,13 @@ View Controllers module provides an alternate way of displaying these controller
 - **Slice orientation** displays allows you to choose the orientation for this slice view.
 - **Lightbox** to select a mosiac (a.k.a. contact sheet) view.  Not all operations work in this mode and it may be removed in the future.
 - **Reformat** allows interactive manipulation of the slice orientation.
-- **Slice offset slider** allows slicing through the volume. Step size is set to the background volume's spacing by default but can be modified by clicking on "Spacing and field of view" button.
+- **Slice offset slider** allows slicing through the volume. Step size is set to the background volume's spacing by default but can be modified by clicking on "Spacing and field of view" button. The label next to the offset value (e.g., `S`, `L`, `A`, `IL`, `IRP`) reflects the slice normal direction. If the offset slider moved to the right then the slice moves in this normal direction. If the slice normal direction is not aligned with an axis then the label contains a combination of directions, with the order of axes reflecting the dominance of the axis. For example, if the plane normal points to anterior and slightly left then the label is `AL`, while if the plane normal mostly left and slightly anterior then the label is `LA`.
 - **Blending mode** specifies how foreground and background layers are mixed.
 - **Spacing and field of view** Spacing defines the increment for the slice offset slider. Field of view sets the zoom level for the slice.
 - **Rotate to volume plane** changes the orientation of the slice to match the closest acquisition orientation of the displayed volume.
 - **Orientation Marker** controls display of human, cube, etc in lower right corner.
 - **Ruler** controls display of ruler in slice view.
-- **View link** button synchronizes properties of views in the same view group, such as foreground/backgroudn/label volume selection, foreground/label volume opacity, zoom factor.
+- **View link** button synchronizes properties of views in the same view group, such as foreground/background/label volume selection, foreground/label volume opacity, zoom factor.
   - For parallel views (i.e., that are set to the same orientation,OD such as `axial`), the view center position is synchronized as well.
   - Long-click on the button exposes **hot-linked** option, which controls when properties are synchronized (immediately or when the mouse button is released).
   - A view group typically consists of 3 orthogonal views (e.g., in `Four-Up` view, `R`, `G`, `Y, views are in the same group). In layouts that contain multiple triplets of slice views, each triplet forms a separate group (e.g., in `Three over three` layout there are two view groups, one group is `R`, `G`, `Y`, the other groups is `R+`, `G+`, `Y+`).
@@ -193,7 +194,7 @@ View Controllers module provides an alternate way of displaying these controller
 | `Ctrl` + `0` | show Error Log |
 | `Ctrl` + `1` | show Application Help |
 | `Ctrl` + `2` | show Application Settings |
-| `Ctrl` + `3` / `Ctrl` + `` ` `` | show/hide Python Interactor |
+| `Ctrl` + `3` / `Ctrl` + `` ` `` | show/hide Python Console |
 | `Ctrl` + `4` | show Extensions Manager |
 | `Ctrl` + `5` | show/hide Module Panel |
 | `Ctrl` + `h` | open default startup module (configurable in Application Settings) |
@@ -260,3 +261,17 @@ view will not activate the view.
 > **Note:** Simulation if shortcuts not available on your device:
 > - One-button mouse: instead of `right-click` do `Ctrl` + `click`
 > - Trackpad: instead of `right-click` do `two-finger click`
+
+### Python console
+
+The following shortcuts are available in the Python console.
+
+| Shortcut | Operation |
+| -------- | --------- |
+| `Tab` | auto-complete |
+| `up arrow` / `down arrow` | command history |
+| `Esc` | clear selection, return to current command line, clear current command line |
+| `Ctrl` + `g` | run Python script from a file |
+| `Ctrl` + `v` | paste Python script from clipboard and run it |
+
+Note that when code is pasted into an empty line then all the code in the clipboard is executed *at once*. If the current command line is not empty then the code from the clipboard is pasted into the console and executed *line by line*. When code is executed line by line, the behavior is different in that an empty input line immediately closes the current block, and output is printed after executing each line.

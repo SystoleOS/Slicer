@@ -8,8 +8,8 @@ If you have developed a script or module that you would like to share with other
 
 - Scan through the [user](../user_guide/extensions_manager.md) and [developer](https://www.slicer.org/wiki/Documentation/Nightly/Developers/FAQ/Extensions) extension FAQs
 - Inform a community about your plans on the [Slicer forum](https://discourse.slicer.org) to get information about potential parallel efforts (other developers may already work on a similar idea and you could join or build on each other's work), past efforts (related tools might have been available in earlier Slicer versions or in other software that you may reuse), and get early feedback from prospective users. You may also seek advice on the name of your extension and how to organize features into modules. All these can save you a lot of time in the long term.
-- If you have not done already, use the [Extension Wizard module](https://www.slicer.org/wiki/Documentation/Nightly/Developers/ExtensionWizard) in Slicer to create an extension that will contain your module(s).
-- If developing [C++ loadable or CLI modules](https://www.slicer.org/wiki/Documentation/Nightly/Developers/Modules) (not needed if developing in Python):
+- If you have not done already, use the [Extension Wizard](user_guide/modules/extensionwizard.md#extension-wizard) module in Slicer to create an extension that will contain your module(s).
+- If developing [C++ loadable or CLI modules](module_overview.md) (not needed if developing in Python):
   - [build Slicer application](build_instructions/index.md).
   - [build your extension](#build-an-extension)
 
@@ -43,17 +43,17 @@ On macOS, the extension must be configured specifying `CMAKE_OSX_*` variables ma
 
 Instead of manually setting these variables, within your extension, including the <code>ConfigurePrerequisites</code> component before the project statement should ensure it uses the same CMAKE_OSX_* variables as Slicer:
 
-```txt
+```cmake
 find_package(Slicer COMPONENTS ConfigurePrerequisites REQUIRED)
 
 project(Foo)
 
-[...]
+# [...]
 
 find_package(Slicer REQUIRED)
 include(${Slicer_USE_FILE})
 
-[...]
+# [...]
 ```
 
 For more details, see [here](https://github.com/Slicer/Slicer/blob/6f4e2946bb129d317dfdb1116f06f5308b449044/CMake/SlicerConfig.cmake.in#L10-L38).
@@ -80,7 +80,9 @@ Run `CMake (cmake-gui)` from the Windows Start menu.
 
 To test an extension, you need to specify location(s) where Slicer should look for additional modules.
 
-- If the extension is not built: add all source code folders that contain module .py files to "additional module paths" in modules section in application settings.
+- If the extension is not built: append all source code folders that contain module `.py` files to "additional module paths".
+  - Option A (recommended): Drag-and-drop the `.py` files (or the parent folder, or that folder's parent) to the application window, select `Add Python scripted modules to the application` in the popup window, click OK. Select which modules to add to load immediately and click `Yes`. The selected modules will be immediately loaded and made available in the module list. If you want to load the modules only in the current session, then uncheck `Add selected modules to 'Additional module paths'` option before clicking `Yes`.
+  - Option B: In menu: Edit / Application settings / Modules panel, drag-and-drop files to the `Additional module paths` list.
 - If the extension is built:
   - Option A: start the application using the `SlicerWithMyExtension` executable in your build directory. This starts Slicer, specifying additional module paths via command-line arguments.
   - Option B: specify additional module paths manually in application settings. Assuming your extension has been built into folder `MyExtension-debug`, add these module folders (if they exist) to the additional module paths in Slicer's application settings:
@@ -106,7 +108,7 @@ $ ctest -j<NUMBEROFCORES>
 
 Open a command prompt.
 
-```text
+```bat
 cd C:\path\to\MyExtension-debug
 "c:\Program Files\CMake\bin\ctest.exe" -C Release -V
 ```
@@ -179,7 +181,7 @@ adding a playback button using [this free service](https://addplaybuttontoimage.
 
 - Upload source code of your extension to a publicly available repository. It is recommended to start the repository name with "Slicer" (to make Slicer extensions easier to identify) followed by your extension name (for example, "Sequences" extension is stored in "SlicerSequences" repository). However, this is not a mandatory requirement. If you have a compelling reason not to use Slicer prefix, please make a note while making the pull request. See more requirements in the [new extension submission checklist](https://github.com/Slicer/ExtensionsIndex/blob/main/.github/PULL_REQUEST_TEMPLATE.md#todo-list-for-submitting-a-new-extension).
   - GitHub is recommended (due to large user community, free public project hosting): [join Github](https://github.com/join) and [setup Git](https://docs.github.com/get-started/quickstart/set-up-git).
-- If developing an extension that contains [C++ loadable or CLI modules](https://www.slicer.org/wiki/Documentation/Nightly/Developers/Modules) (not needed if developing in Python):
+- If developing an extension that contains [C++ loadable or CLI modules](module_overview.md) (not needed if developing in Python):
   - Build the `PACKAGE` target to create a package file.
   - Test your extension by installing the created package file using the Extensions Manager.
 - Complete the [extension submission checklist](https://github.com/Slicer/ExtensionsIndex/blob/main/.github/PULL_REQUEST_TEMPLATE.md#todo-list-for-submitting-a-new-extension)) then submit it to the Slicer Extensions Index:
@@ -300,7 +302,7 @@ The ExtensionsIndex is a repository containing a list of [extension description 
 
 The ExtensionsIndex is hosted on GitHub: <https://github.com/Slicer/ExtensionsIndex>
 
-Each branch of the repository contains extension descrtiption files that corresponds to the same branch in the Slicer repository. For example, `main` branch contains descriptions for Slicer `main` branch, and `4.11` branch contains extension descripions for Slicer's `4.11` branch.
+Each branch of the repository contains extension description files that corresponds to the same branch in the Slicer repository. For example, `main` branch contains descriptions for Slicer `main` branch, and `4.11` branch contains extension descripions for Slicer's `4.11` branch.
 
 Extension developers have to make sure that the extension description in each branch of the Extensions index is compatible with the corresponding Slicer version. Extension developers often create the same branches (`main`, `4.11`, `4.13`, ...) in their repository and they specify this branch name in the extensions descriptor file.
 
@@ -442,7 +444,7 @@ We suggest to use the `Slicer` prefix in the extension name, too, when the exten
 
 The module and extension templates are available in the Slicer source tree: <https://github.com/Slicer/Slicer/tree/main/Utilities/Templates/>
 
-Using the [Extension Wizard module](https://www.slicer.org/wiki/Documentation/Nightly/Developers/ExtensionWizard), developers can easily create a new extension without having to copy, rename and update manually every files.
+Using the [Extension Wizard](user_guide/modules/extensionwizard.md#extension-wizard) module, developers can easily create a new extension without having to copy, rename and update manually every files.
 
 ### How are Superbuild extension packaged?
 
@@ -467,7 +469,7 @@ If you have `ModuleA`, `ModuleB` and `ModuleC` and `ModuleA` can be used as stan
 
 Add the following variable to `Extension2/CMakeLists.txt`:
 
-```txt
+```cmake
 set(EXTENSION_DEPENDS Extension1)
 ```
 
@@ -580,7 +582,7 @@ Following [Slicer r22063](https://github.com/Slicer/Slicer/commit/d1d0699aeaff85
 
 Before:
 
-```text
+```cmake
 cmake_minimum_required(VERSION 2.8.9)
 
 if(NOT Slicer_SOURCE_DIR)
@@ -610,7 +612,7 @@ endif()
 
 After:
 
-```text
+```cmake
 cmake_minimum_required(VERSION 2.8.9)
 
 find_package(Slicer COMPONENTS ConfigurePrerequisites)
@@ -661,7 +663,7 @@ Consider publishing a paper describing your extension. [This page](https://www.s
 
 ### How to force Slicer to download extensions corresponding to a different Slicer revision?
 
-Since extensions available from the Extensions Manager are associated with a particular Slicer revision, for development versions, typically no extension builds will appear in the Extensions Manager. For testing purposes, the current revision can be overridden in the Python interactor in Slicer:
+Since extensions available from the Extensions Manager are associated with a particular Slicer revision, for development versions, typically no extension builds will appear in the Extensions Manager. For testing purposes, the current revision can be overridden in the Python console in Slicer:
 
 ```python
 >>> extensionManagerModel = slicer.app.extensionsManagerModel()
