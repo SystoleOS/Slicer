@@ -2,6 +2,23 @@ from slicer.util import TESTING_DATA_URL
 import os
 import numpy as np
 
+
+def verifyArrays(pointData, arrayNames):
+    """
+    Utility function that verify arrays in a point data object. The array names are given as a list of strings.
+    If there is a mismatch then a RuntimeError exception is raised.
+    """
+    if not pointData:
+        raise RuntimeError("Invalid point data given for verifying scalar arrays")
+    if pointData.GetNumberOfArrays() != len(arrayNames):
+        raise RuntimeError(f"Unexpected number of data arrays: {pointData.GetNumberOfArrays()} (expected {arrayNames})")
+    elif pointData.GetNumberOfArrays() == 0 and len(arrayNames) == 0:
+        return
+    for arrIdx in range(pointData.GetNumberOfArrays()):
+        if pointData.GetArrayName(arrIdx) != arrayNames[arrIdx]:
+            raise RuntimeError(f"Unexpected data array name at index {arrIdx}: {pointData.GetArrayName(arrIdx)} (expected {arrayNames})")
+
+
 #
 # Test curvature computation for curve markups
 #
@@ -25,24 +42,16 @@ curveNode = slicer.util.getNode('C')
 
 # Check number of arrays in the curve node
 curvePointData = curveNode.GetCurveWorld().GetPointData()
-if curvePointData.GetNumberOfArrays() != 1:
-    exceptionMessage = f"Unexpected number of data arrays in curve: {curvePointData.GetNumberOfArrays()} (expected 1)"
-    raise Exception(exceptionMessage)
+verifyArrays(curvePointData, ["PedigreeIDs", "Tangents", "Normals", "Binormals"])
 
 # Turn on curvature calculation in curve node
 curveNode.GetMeasurement("curvature max").SetEnabled(True)
 
 # Check curvature computation result
 curvePointData = curveNode.GetCurveWorld().GetPointData()
-if curvePointData.GetNumberOfArrays() != 2:
-    exceptionMessage = f"Unexpected number of data arrays in curve: {curvePointData.GetNumberOfArrays()} (expected 2)"
-    raise Exception(exceptionMessage)
+verifyArrays(curvePointData, ["PedigreeIDs", "Tangents", "Normals", "Binormals", "Curvature"])
 
-if curvePointData.GetArrayName(1) != 'Curvature':
-    exceptionMessage = f"Unexpected data array name in curve: {curvePointData.GetArrayName(1)} (expected 'Curvature')"
-    raise Exception(exceptionMessage)
-
-curvatureArray = curvePointData.GetArray(1)
+curvatureArray = curvePointData.GetArray(4)
 if curvatureArray.GetMaxId() != curvePointData.GetNumberOfTuples() - 1:
     exceptionMessage = "Unexpected number of values in curvature data array: %d (expected %d)" % (curvatureArray.GetMaxId(), curvePointData.GetNumberOfTuples() - 1)
     raise Exception(exceptionMessage)
@@ -57,9 +66,7 @@ if abs(curvatureArray.GetRange()[1] - 0.9816015970208652) > 0.0001:
 # Turn off curvature computation
 curveNode.GetMeasurement("curvature max").SetEnabled(False)
 curvePointData = curveNode.GetCurveWorld().GetPointData()
-if curvePointData.GetNumberOfArrays() != 1:
-    exceptionMessage = "Unexpected number of data arrays in curve: " + str(curvePointData.GetNumberOfArrays())
-    raise Exception(exceptionMessage)
+verifyArrays(curvePointData, ["PedigreeIDs", "Tangents", "Normals", "Binormals"])
 
 print('Open curve curvature test finished successfully')
 
@@ -75,15 +82,9 @@ for i in range(curveNode.GetNumberOfControlPoints()):
 
 closedCurveNode.GetMeasurement("curvature mean").SetEnabled(True)
 curvePointData = closedCurveNode.GetCurveWorld().GetPointData()
-if curvePointData.GetNumberOfArrays() != 2:
-    exceptionMessage = "Unexpected number of data arrays in curve: " + str(curvePointData.GetNumberOfArrays())
-    raise Exception(exceptionMessage)
+verifyArrays(curvePointData, ["PedigreeIDs", "Tangents", "Normals", "Binormals", "Curvature"])
 
-if curvePointData.GetArrayName(1) != 'Curvature':
-    exceptionMessage = "Unexpected data array name in curve: " + str(curvePointData.GetArrayName(1))
-    raise Exception(exceptionMessage)
-
-curvatureArray = curvePointData.GetArray(1)
+curvatureArray = curvePointData.GetArray(4)
 if curvatureArray.GetMaxId() != curvePointData.GetNumberOfTuples() - 1:
     exceptionMessage = "Unexpected number of values in curvature data array: %d (expected %d)" % (curvatureArray.GetMaxId(), curvePointData.GetNumberOfTuples() - 1)
     raise Exception(exceptionMessage)
@@ -137,15 +138,9 @@ centerlineCurve.AddMeasurement(radiusMeasurement)
 centerlineCurvePointData = centerlineCurve.GetCurveWorld().GetPointData()
 
 # Check interpolation computation result
-if centerlineCurvePointData.GetNumberOfArrays() != 2:
-    exceptionMessage = "Unexpected number of data arrays in curve: " + str(centerlineCurvePointData.GetNumberOfArrays())
-    raise Exception(exceptionMessage)
+verifyArrays(centerlineCurvePointData, ["PedigreeIDs", "Tangents", "Normals", "Binormals", "Radius"])
 
-if centerlineCurvePointData.GetArrayName(1) != 'Radius':
-    exceptionMessage = "Unexpected data array name in curve: " + str(centerlineCurvePointData.GetArrayName(1))
-    raise Exception(exceptionMessage)
-
-interpolatedRadiusArray = centerlineCurvePointData.GetArray(1)
+interpolatedRadiusArray = centerlineCurvePointData.GetArray(4)
 if interpolatedRadiusArray.GetNumberOfTuples() != 571:
     exceptionMessage = "Unexpected number of data points in interpolated radius array: " + str(interpolatedRadiusArray.GetNumberOfTuples())
     raise Exception(exceptionMessage)
@@ -182,6 +177,22 @@ closedCurveNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsClosedCurveN
 for controlPointIndex in range(numberOfControlPoints):
     angle = 2.0 * math.pi * controlPointIndex / numberOfControlPoints
     closedCurveNode.AddControlPoint(vtk.vtkVector3d(radius * math.sin(angle), radius * math.cos(angle), 0.0))
+
+# Test static measurements for closed curve (differs from open curve in interpolation of the last curve segment)
+
+customStaticMeasurementArray = vtk.vtkDoubleArray()
+for controlPointIndex in range(numberOfControlPoints):
+    customStaticMeasurementArray.InsertNextValue(1 if controlPointIndex % 3 else 0)
+
+customStaticMeasurement = slicer.vtkMRMLStaticMeasurement()
+customStaticMeasurement.SetName('CustomStaticMeasurement')
+customStaticMeasurement.SetUnits('')
+customStaticMeasurement.SetPrintFormat("")
+customStaticMeasurement.SetControlPointValues(customStaticMeasurementArray)
+closedCurveNode.AddMeasurement(customStaticMeasurement)
+
+closedCurvePointData = closedCurveNode.GetCurveWorld().GetPointData()
+verifyArrays(closedCurvePointData, ["PedigreeIDs", "Tangents", "Normals", "Binormals", "CustomStaticMeasurement"])
 
 # Turn on curvature calculation in curve node
 closedCurveNode.GetMeasurement("curvature mean").SetEnabled(True)

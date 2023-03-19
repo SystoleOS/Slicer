@@ -1,3 +1,6 @@
+"""The validators module is responsible for defining classes that can be used to place invariants on single parameters
+of a parameterPack or parameterNodeWrapper."""
+
 import abc
 
 __all__ = [
@@ -9,6 +12,7 @@ __all__ = [
     "Maximum",
     "Choice",
     "Exclude",
+    "RangeBounds",
 ]
 
 
@@ -27,6 +31,9 @@ class Validator(abc.ABC):
 
 
 def extractValidators(annotations):
+    """
+    Given a list of annotations, separates the annotations that are Validators from the ones that are not.
+    """
     def isValidator(x) -> None:
         return isinstance(x, Validator) or (isinstance(x, type) and issubclass(x, Validator))
 
@@ -157,3 +164,20 @@ class Exclude(Validator):
     def validate(self, value) -> None:
         if value in self.excludedValues:
             raise ValueError(f"Value is {value}, but must not be an excluded value: excluded values {self.excludedValues}")
+
+
+class RangeBounds(Validator):
+    """
+    Validates that the values in a range are within the given overall bounds.
+    """
+
+    def __init__(self, minimum, maximum):
+        self.minimum = minimum
+        self.maximum = maximum
+
+    def __repr__(self) -> str:
+        return f"RangeBounds({self.minimum}, {self.maximum})"
+
+    def validate(self, value) -> None:
+        if not self.minimum <= value.minimum and value.maximum <= self.maximum:
+            raise ValueError(f"Range must be within the bound of [{self.minimum}, {self.maximum}], is [{value.minimum}, {value.maximum}]")
