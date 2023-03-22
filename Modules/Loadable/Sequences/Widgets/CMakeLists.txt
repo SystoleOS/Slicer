@@ -40,6 +40,7 @@ set(${KIT}_RESOURCES
 set(${KIT}_TARGET_LIBRARIES
   vtkSlicer${MODULE_NAME}ModuleMRML
   vtkSlicer${MODULE_NAME}ModuleLogic
+  qMRMLWidgets
   )
 
 #-----------------------------------------------------------------------------
@@ -55,8 +56,8 @@ SlicerMacroBuildModuleWidgets(
   WRAP_PYTHONQT
   )
 
-#-----------------------------------------------------------------------------
-add_subdirectory(DesignerPlugins)
+# #-----------------------------------------------------------------------------
+# add_subdirectory(DesignerPlugins)
 
 # Testing
 if(BUILD_TESTING)

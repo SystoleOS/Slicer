@@ -32,6 +32,9 @@ set(${KIT}_TARGET_LIBRARIES
   qSlicer${MODULE_NAME}ModuleWidgets
   )
 
+# NOTE: this is due to https://github.com/commontk/CTK/issues/1073
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
 #-----------------------------------------------------------------------------
 ctkMacroBuildQtDesignerPlugin(
   NAME ${KIT}
