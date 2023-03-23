@@ -127,13 +127,6 @@ include(SlicerInitializeBuildType)
 include(SlicerInitializeReleaseType)
 
 #-----------------------------------------------------------------------------
-# Set the header template which defines custom export/import macros
-# for shared libraries
-#-----------------------------------------------------------------------------
-set(Slicer_EXPORT_HEADER_TEMPLATE "${Slicer_SOURCE_DIR}/Templates/qSlicerExport.h.in")
-set(Slicer_LOGOS_RESOURCE "${Slicer_SOURCE_DIR}/Resources/qSlicer.qrc")
-
-#-----------------------------------------------------------------------------
 # Platform checks
 #-----------------------------------------------------------------------------
 include(SlicerBlockPlatformCheck)
@@ -507,6 +500,14 @@ include(SlicerBlockCXXRequiredFlags)
 # Slicer directories
 #-----------------------------------------------------------------------------
 include(SlicerDirectories)
+
+#-----------------------------------------------------------------------------
+# Set the header template which defines custom export/import macros
+# for shared libraries
+#-----------------------------------------------------------------------------
+set(Slicer_EXPORT_HEADER_TEMPLATE "${Slicer_SOURCE_DIR}/Templates/qSlicerExport.h.in")
+set(Slicer_LOGOS_RESOURCE "${Slicer_SOURCE_DIR}/Resources/qSlicer.qrc")
+set(Slicer_LOGOS_INSTALL_RESOURCE "${Slicer_INSTALL_SHARE_DIR}/Resources/qSlicer.qrc")
 
 # SlicerExecutionModel output directories
 if(Slicer_SUPERBUILD)
@@ -1281,6 +1282,16 @@ endif()
 #-----------------------------------------------------------------------------
 install(PROGRAMS ${Slicer_QRCC_SCRIPT}
   DESTINATION ${Slicer_INSTALL_UTILITY_SCRIPTS_DIR})
+
+#-----------------------------------------------------------------------------
+# Install Resources
+#-----------------------------------------------------------------------------
+if(NOT Slicer_INSTALL_NO_DEVELOPMENT)
+  install(FILES ${Slicer_LOGOS_RESOURCE}
+    DESTINATION ${Slicer_INSTALL_RESOURCES_DIR})
+  install(DIRECTORY ${Slicer_RESOURCES_DIR}/Logos
+    DESTINATION ${Slicer_INSTALL_RESOURCES_DIR})
+endif()
 
 #-----------------------------------------------------------------------------
 # Create target to download data from the <Slicer_ExternalData_DATA_MANAGEMENT_TARGET> group.

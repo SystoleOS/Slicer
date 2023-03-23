@@ -193,3 +193,6 @@ set(Slicer_INSTALL_THIRDPARTY_SHARE_DIR "${Slicer_INSTALL_ROOT}${Slicer_THIRDPAR
 
 set(Slicer_UTILITY_SCRIPTS_DIR "${CMAKE_SOURCE_DIR}/Utilities/Scripts")
 set(Slicer_INSTALL_UTILITY_SCRIPTS_DIR "${Slicer_INSTALL_LIBEXEC_DIR}/Utilities/Scripts")
+
+set(Slicer_RESOURCES_DIR "${CMAKE_SOURCE_DIR}/Resources")
+set(Slicer_INSTALL_RESOURCES_DIR "${Slicer_INSTALL_SHARE_DIR}/Resources")
