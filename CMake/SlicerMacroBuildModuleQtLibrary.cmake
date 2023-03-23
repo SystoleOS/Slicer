@@ -211,6 +211,7 @@ macro(SlicerMacroBuildModuleQtLibrary)
     file(GLOB headers "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
     install(FILES
       ${headers}
+      ${MODULEQTLIBRARY_UI_CXX}
       ${dynamicHeaders}
       DESTINATION ${Slicer_INSTALL_QTLOADABLEMODULES_INCLUDE_DIR}/${MODULEQTLIBRARY_NAME} COMPONENT Development
       )
