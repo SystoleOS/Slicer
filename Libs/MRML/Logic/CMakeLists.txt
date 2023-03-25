@@ -141,7 +141,7 @@ install(TARGETS ${lib_name}
 # --------------------------------------------------------------------------
 # Python Wrapping
 # --------------------------------------------------------------------------
-if(VTK_WRAP_PYTHON)
+if(Slicer_USE_PYTHONQT AND VTK_WRAP_PYTHON)
   include(vtkMacroKitPythonWrap)
 
   set(_python_wrapped_libraries)

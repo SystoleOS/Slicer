@@ -266,6 +266,11 @@ if(Slicer_USE_PYTHONQT)
 
 endif()
 
+set(WRAP_PYTHONQT)
+if(Slicer_USE_PYTHONQT)
+  set(WRAP_PYTHONQT WRAP_PYTHONQT)
+endif()
+
 SlicerMacroBuildBaseQtLibrary(
   NAME ${PROJECT_NAME}
   EXPORT_DIRECTIVE ${KIT_export_directive}
@@ -274,10 +279,10 @@ SlicerMacroBuildBaseQtLibrary(
   MOC_SRCS ${KIT_MOC_SRCS}
   TARGET_LIBRARIES ${KIT_target_libraries}
   RESOURCES ${KIT_resources}
-  WRAP_PYTHONQT
+  ${WRAP_PYTHONQT}
   )
 
-if(Slicer_USE_PYTHONQT_WITH_OPENSSL)
+if(Slicer_USE_PYTHONQT AND Slicer_USE_PYTHONQT_WITH_OPENSSL)
   configure_file(
     Resources/Certs/Slicer.crt
     ${Slicer_BINARY_DIR}/${Slicer_SHARE_DIR}/Slicer.crt

@@ -15,7 +15,7 @@ endif()
 # VTK
 #
 if(Slicer_USE_PYTHONQT AND NOT VTK_WRAP_PYTHON)
-  message(FATAL_ERROR "Since Slicer_USE_PYTHONQT is ON, VTK_WRAP_PYTHON is expected to be ON. "
+  message(FATAL_ERROR "Since Slicer_USE_PYTHONQT is ON, Slicer_USE_PYTHONQT AND VTK_WRAP_PYTHON is expected to be ON. "
                       "Re-configure VTK with python wrapping.")
 endif()
 
@@ -196,7 +196,7 @@ install(TARGETS ${lib_name}
 # --------------------------------------------------------------------------
 # Python Wrapping
 # --------------------------------------------------------------------------
-if(VTK_WRAP_PYTHON)
+if(Slicer_USE_PYTHONQT AND VTK_WRAP_PYTHON)
   include(vtkMacroKitPythonWrap)
 
   set(_python_wrapped_libraries

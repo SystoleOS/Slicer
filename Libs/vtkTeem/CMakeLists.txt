@@ -45,7 +45,7 @@ include(${Teem_USE_FILE})
 #     See https://sourceforge.net/p/teem/code/4168/
 set(Teem_LIBRARIES teem)
 
-if(VTK_WRAP_PYTHON)
+if(Slicer_USE_PYTHONQT)
   find_package(vtkAddon REQUIRED)
 endif()
 
@@ -150,7 +150,7 @@ install(TARGETS ${lib_name}
 # --------------------------------------------------------------------------
 # Python Wrapping
 # --------------------------------------------------------------------------
-if(VTK_WRAP_PYTHON)
+if(Slicer_USE_PYTHONQT)
   include(vtkMacroKitPythonWrap)
 
   vtkMacroKitPythonWrap(

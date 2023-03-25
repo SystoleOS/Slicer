@@ -149,7 +149,7 @@ install(TARGETS ${PROJECT_NAME}
 # --------------------------------------------------------------------------
 # Python wrapping
 # --------------------------------------------------------------------------
-if(VTK_WRAP_PYTHON AND BUILD_SHARED_LIBS)
+if(Slicer_USE_PYTHONQT AND BUILD_SHARED_LIBS)
 
   set(Slicer_Wrapped_LIBRARIES
     )
