@@ -94,7 +94,7 @@ set(KIT_target_libraries
   ModuleDescriptionParser ${ITK_LIBRARIES}
   MRMLCLI
   )
-if(VTK_WRAP_PYTHON AND ${VTK_VERSION} VERSION_GREATER_EQUAL "8.90")
+if(Slicer_USE_PYTHONQT AND VTK_WRAP_PYTHON AND ${VTK_VERSION} VERSION_GREATER_EQUAL "8.90")
   # HACK Explicitly list transitive VTK dependencies because _get_dependencies_recurse
   # used in vtkAddon/CMake/vtkMacroKitPythonWrap.cmake only recurses over dependencies
   # that are VTK python wrapped.
@@ -149,7 +149,7 @@ endif()
 # --------------------------------------------------------------------------
 # Python Wrapping
 # --------------------------------------------------------------------------
-if(VTK_WRAP_PYTHON)
+if(Slicer_USE_PYTHONQT AND VTK_WRAP_PYTHON)
   include(vtkMacroKitPythonWrap)
 
   set(_python_wrapped_libraries

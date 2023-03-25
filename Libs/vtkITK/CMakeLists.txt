@@ -213,7 +213,7 @@ install(TARGETS ${lib_name}
 # --------------------------------------------------------------------------
 # Python Wrapping
 # --------------------------------------------------------------------------
-if(VTK_WRAP_PYTHON)
+if(Slicer_USE_PYTHONQT)
   vtkMacroKitPythonWrap(
     KIT_NAME ${lib_name}
     KIT_SRCS ${vtkITK_SRCS}
