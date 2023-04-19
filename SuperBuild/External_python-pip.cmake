@@ -31,6 +31,22 @@ if(NOT Slicer_USE_SYSTEM_${proj})
   # [/pip]
   ]===])
 
+  # # This block considers the possibility that the dependencies are given as a single file (one dependency)
+  # # or as a directory of dependencies, in which case all the *.whl files in the directory will be installed
+  if(DEFINED Slicer_${proj}_WHEEL_PATH)
+    if(IS_DIRECTORY "${Slicer_${proj}_WHEEL_PATH}")
+      set(Slicer_${proj}_INSTALL_COMMAND ${PYTHON_EXECUTABLE} -m pip install)
+      file(GLOB WHEEL_FILES "${Slicer_${proj}_WHEEL_PATH}/*.whl")
+      foreach(WHEEL_FILE ${WHEEL_FILES})
+        set(Slicer_${proj}_INSTALL_COMMAND ${Slicer_${proj}_INSTALL_COMMAND} ${WHEEL_FILE})
+      endforeach()
+    else()
+      set(Slicer_${proj}_INSTALL_COMMAND ${PYTHON_EXECUTABLE} -m pip install ${Slicer_${proj}_WHEEL_PATH})
+    endif()
+  else()
+    set(Slicer_${proj}_INSTALL_COMMAND ${PYTHON_EXECUTABLE} -m pip install --require-hashes -r ${requirements_file})
+  endif()
+
   ExternalProject_Add(${proj}
     ${${proj}_EP_ARGS}
     DOWNLOAD_COMMAND ""
@@ -38,7 +54,7 @@ if(NOT Slicer_USE_SYSTEM_${proj})
     BUILD_IN_SOURCE 1
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
-    INSTALL_COMMAND ${PYTHON_EXECUTABLE} -m pip install --require-hashes -r ${requirements_file}
+    INSTALL_COMMAND ${Slicer_${proj}_INSTALL_COMMAND}
     LOG_INSTALL 1
     DEPENDS
       ${${proj}_DEPENDENCIES}
