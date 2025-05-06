@@ -39,8 +39,41 @@ get_filename_component(Slicer_CONFIG_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 set(Slicer_HOME "${Slicer_CONFIG_DIR}/../..")
 get_filename_component(Slicer_HOME ${Slicer_HOME} ABSOLUTE)
 
-# The CMake macros dir.
+# The CMake macros directories.
 set(Slicer_CMAKE_DIR "${Slicer_HOME}/@Slicer_INSTALL_LIB_DIR@/CMake")
+set(CTK_CMAKE_DIR "@CTK_CMAKE_DIR@")
+
+# Set the CMake module path
+list(APPEND CMAKE_MODULE_PATH
+  "${Slicer_CMAKE_DIR}"
+  "${CTK_CMAKE_DIR}"
+  "@vtkAddon_CMAKE_DIR@"
+)
+
+set(Slicer_USE_TBB "@Slicer_USE_TBB@")
+set(Slicer_SUPERBUILD "@Slicer_SUPERBUILD@")
+
+if(NOT Slicer_SUPERBUILD)
+  set(Slicer_REQUIRED_QT_MODULES "@Slicer_REQUIRED_QT_MODULES@")
+  set(Qt5_DIR "@Qt5_DIR@")
+  set(Slicer_VTK_VERSION_MAJOR "@Slicer_VTK_VERSION_MAJOR@")
+  set(Slicer_VTK_VERSION_MINOR "@Slicer_VTK_VERSION_MINOR@")
+  set(Slicer_VTK_COMPONENTS "@Slicer_VTK_COMPONENTS@")
+  set(VTK_DIR "@VTK_DIR@")
+  set(ITK_DIR "@ITK_DIR@")
+  set(HDF5_LIBRARIES "@HDF5_LIBRARIES@")
+  set(HDF5_INCLUDE_DIRS "@HDF5_INCLUDE_DIRS@")
+  set(vtkAddon_DIR "@vtkAddon_DIR@")
+  if(Slicer_USE_TBB)
+    set(TBB_DIR "@TBB_DIR@")
+  endif()
+  set(CTK_DIR "@CTK_DIR@")
+endif()
+
+# Set the Slicer_EXPORT_HEADER_TEMPLATE to the install dir
+set(Slicer_EXPORT_HEADER_TEMPLATE "@Slicer_INSTALL_TEMPLATES_DIR@/qSlicerExport.h.in")
+
+set(Slicer_BUILD_CLI_SUPPORT "@Slicer_BUILD_CLI_SUPPORT@")
 
 # Slicer Libs library directories.
 set(Slicer_Libs_LIBRARY_DIRS
@@ -64,19 +97,17 @@ set(Slicer_Libs_LIBRARY_DIRS
 
 # Slicer Libs include file directories.
 set(Slicer_Libs_INCLUDE_DIRS
-  "${Slicer_HOME}/include/IGT"
-  "${Slicer_HOME}/include/ITKCommandIO"
-  "${Slicer_HOME}/include/LoadableModule"
-  "${Slicer_HOME}/include/MGHImageIO"
-  "${Slicer_HOME}/include/MRML"
-  "${Slicer_HOME}/include/MRMLIDImageIO"
-  "${Slicer_HOME}/include/ModuleDescriptionParser"
-  "${Slicer_HOME}/include/Qdec"
-  "${Slicer_HOME}/include/tclap"
-  "${Slicer_HOME}/include/vtkAddon"
+  "${Slicer_HOME}/include/ITKFactoryRegistration"
+  "${Slicer_HOME}/include/MRMLCore"
+  "${Slicer_HOME}/include/MRMLDisplayableManager"
+  "${Slicer_HOME}/include/MRMLLogic"
+  "${Slicer_HOME}/include/qMRMLWidgets"
+  "${Slicer_HOME}/include/RemoteIO"
   "${Slicer_HOME}/include/vtkITK"
   "${Slicer_HOME}/include/vtkSegmentationCore"
   "${Slicer_HOME}/include/vtkTeem"
+  "${Slicer_HOME}/include/qSlicerBaseQTGUI"
+  "@vtkAddon_INCLUDE_DIRS@"
   )
 
 # Slicer Base library directories.
@@ -119,16 +150,16 @@ endif()
 
 # Components needed to build modules from outside a Slicer build tree or
 # from outside a Slicer installation tree
-set(TCLAP_DIR "${Slicer_HOME}/lib/tclap")
-set(ModuleDescriptionParser_DIR "${Slicer_HOME}/lib/ModuleDescriptionParser")
-set(GenerateCLP_DIR "${Slicer_HOME}/lib/GenerateCLP")
-set(GenerateLM_DIR "${Slicer_HOME}/lib/GenerateLM")
-set(ITK_DIR "${Slicer_HOME}/lib/${ITK_LIB_DIR}")
-set(LoadableModule_DIR "${Slicer_HOME}/lib/LoadableModule")
-set(Teem_DIR "${Slicer_HOME}/lib/Teem-@Teem_VERSION_MAJOR@.@Teem_VERSION_MINOR@.@Teem_VERSION_PATCH@")
-set(VTK_DIR "${Slicer_HOME}/lib/vtk-@VTK_MAJOR_VERSION@.@VTK_MINOR_VERSION@")
-set(PYTHON_INCLUDE_PATH "@PYTHON_INCLUDE_PATH@")
-get_filename_component(PYTHON_LIB_FILE "${PYTHON_LIBRARY}" NAME)
-set(PYTHON_LIBRARIES "${Slicer_HOME}/lib/Python/lib/${PYTHON_LIB_FILE}")
-get_filename_component(PYTHON_INCLUDE_DIR "${PYTHON_INCLUDE_PATH}" NAME)
-set(PYTHON_INCLUDE_PATH "${Slicer_HOME}/lib/Python/include/${PYTHON_INCLUDE_DIR}")
+# set(TCLAP_DIR "${Slicer_HOME}/lib/tclap")
+# set(ModuleDescriptionParser_DIR "${Slicer_HOME}/lib/ModuleDescriptionParser")
+# set(GenerateCLP_DIR "${Slicer_HOME}/lib/GenerateCLP")
+# set(GenerateLM_DIR "${Slicer_HOME}/lib/GenerateLM")
+# set(ITK_DIR "${Slicer_HOME}/lib/${ITK_LIB_DIR}")
+# set(LoadableModule_DIR "${Slicer_HOME}/lib/LoadableModule")
+# set(Teem_DIR "${Slicer_HOME}/lib/Teem-@Teem_VERSION_MAJOR@.@Teem_VERSION_MINOR@.@Teem_VERSION_PATCH@")
+# set(VTK_DIR "${Slicer_HOME}/lib/vtk-@VTK_MAJOR_VERSION@.@VTK_MINOR_VERSION@")
+# set(PYTHON_INCLUDE_PATH "@PYTHON_INCLUDE_PATH@")
+# get_filename_component(PYTHON_LIB_FILE "${PYTHON_LIBRARY}" NAME)
+# set(PYTHON_LIBRARIES "${Slicer_HOME}/lib/Python/lib/${PYTHON_LIB_FILE}")
+# get_filename_component(PYTHON_INCLUDE_DIR "${PYTHON_INCLUDE_PATH}" NAME)
+# set(PYTHON_INCLUDE_PATH "${Slicer_HOME}/lib/Python/include/${PYTHON_INCLUDE_DIR}")

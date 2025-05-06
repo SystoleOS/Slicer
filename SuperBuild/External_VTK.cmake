@@ -12,7 +12,7 @@ endif()
 
 # Include dependent projects if any
 ExternalProject_Include_Dependencies(${proj} PROJECT_VAR proj DEPENDS_VAR ${proj}_DEPENDENCIES)
-
+message(FATAL_ERROR "pff")
 if(Slicer_USE_SYSTEM_${proj})
   unset(VTK_DIR CACHE)
   unset(VTK_SOURCE_DIR CACHE)

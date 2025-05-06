@@ -50,7 +50,10 @@ endif()
 #-----------------------------------------------------------------------------
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake" ${CMAKE_MODULE_PATH})
 set(SUPERBUILD_TOPLEVEL_PROJECT Slicer)
-list(APPEND EXTERNAL_PROJECT_ADDITIONAL_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/SuperBuild)
+
+if(Slicer_SUPERBUILD)
+  list(APPEND EXTERNAL_PROJECT_ADDITIONAL_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/SuperBuild)
+endif()
 include(ExternalProject)
 include(ExternalProjectDependency)
 include(ExternalProjectDependencyForPython)
@@ -61,10 +64,11 @@ if(APPLE)
   # Note: By setting CMAKE_OSX_* variables before any enable_language() or project() calls,
   #       we ensure that the bitness, and C++ standard library will be properly detected.
   include(SlicerInitializeOSXVariables)
+
   mark_as_superbuild(
     VARS CMAKE_OSX_ARCHITECTURES:STRING CMAKE_OSX_SYSROOT:PATH CMAKE_OSX_DEPLOYMENT_TARGET:STRING
     ALL_PROJECTS
-    )
+  )
 
   set(CMAKE_INSTALL_NAME_TOOL "" CACHE FILEPATH "" FORCE)
   # Due to the possibility of external projects (e.g., LibFFI) enabling languages (e.g., ASM)
@@ -110,13 +114,6 @@ include(SlicerCheckSourceTree)
 option(Slicer_SUPERBUILD "Build ${PROJECT_NAME} and the projects it depends on." ON)
 mark_as_advanced(Slicer_SUPERBUILD)
 set(Slicer_BINARY_INNER_SUBDIR Slicer-build)
-
-#-----------------------------------------------------------------------------
-# Include essential packages in non-superbuild
-#-----------------------------------------------------------------------------
-if(NOT SLICER_SUPERBUILD)
-    find_package(ITK REQUIRED)
-endif()
 
 #-----------------------------------------------------------------------------
 include(CTestUseLaunchers OPTIONAL)
@@ -170,6 +167,7 @@ include(SlicerInitializeReleaseType)
 # Set the header template which defines custom export/import macros
 # for shared libraries
 #-----------------------------------------------------------------------------
+set(Slicer_INSTALL_TEMPLATES_DIR "${CMAKE_INSTALL_PREFIX}/${Slicer_SHARE_DIR}/templates")
 set(Slicer_EXPORT_HEADER_TEMPLATE "${Slicer_SOURCE_DIR}/CMake/qSlicerExport.h.in")
 set(Slicer_LOGOS_RESOURCE "${Slicer_SOURCE_DIR}/Resources/qSlicer.qrc")
 
@@ -214,14 +212,15 @@ if(NOT DEFINED Slicer_REQUIRED_QT_VERSION)
   endif()
   set(Slicer_REQUIRED_QT_VERSION ${_required_qt_version} CACHE STRING "Minimum required Qt version" FORCE)
 endif()
-mark_as_superbuild(Slicer_REQUIRED_QT_VERSION)
 
+mark_as_superbuild(Slicer_REQUIRED_QT_VERSION)
 #-----------------------------------------------------------------------------
 # Python requirements
 #-----------------------------------------------------------------------------
 if(NOT DEFINED Slicer_REQUIRED_PYTHON_VERSION)
   set(Slicer_REQUIRED_PYTHON_VERSION "3.9.10")
 endif()
+
 mark_as_superbuild(Slicer_REQUIRED_PYTHON_VERSION)
 
 if(NOT Slicer_REQUIRED_PYTHON_VERSION MATCHES "([0-9]+)\\.([0-9]+)\\.([0-9]+)")
@@ -672,6 +671,7 @@ endif()
       WebChannel
       )
   endif()
+
   # Both "extension manager" and "application update" require qRestApi external
   # project itself depending on Qt's Qml module
   if(Slicer_BUILD_EXTENSIONMANAGER_SUPPORT OR Slicer_BUILD_APPLICATIONUPDATE_SUPPORT)
@@ -890,6 +890,17 @@ endif()
 #
 # This means that moving forward most of the find_package calls listed below
 # will be removed.
+
+#-----------------------------------------------------------------------------
+# Include essential packages in non-superbuild
+#-----------------------------------------------------------------------------
+if(NOT Slicer_SUPERBUILD)
+    find_package(ITK REQUIRED)
+    find_package(vtkAddon REQUIRED)
+    if(Slicer_USE_TBB)
+      find_package(TBB REQUIRED)
+    endif()
+endif()
 
 #-----------------------------------------------------------------------------
 # VTK
@@ -1122,7 +1133,7 @@ set(extensions_build_dir "${Slicer_BINARY_DIR}/E")
 # Configure a no-op SlicerConfig and SlicerConfigVersion for bundled projects
 set(Slicer_DIR ${extensions_build_dir})
 configure_file(
-  ${Slicer_SOURCE_DIR}/CMake/SlicerConfig.cmake.in
+  ${Slicer_SOURCE_DIR}/CMake/SlicerInstallConfig.cmake.in
   ${Slicer_DIR}/SlicerConfig.cmake @ONLY)
 
 configure_file(
@@ -1221,12 +1232,12 @@ add_dependencies(MRMLCore SlicerConfigureVersionHeader)
 list(APPEND files vtkSlicerVersionConfigure.h)
 
 if(NOT Slicer_INSTALL_NO_DEVELOPMENT)
-foreach(f ${files})
-  install(
-    FILES ${CMAKE_CURRENT_BINARY_DIR}/${f}
-    DESTINATION ${Slicer_INSTALL_INCLUDE_DIR} COMPONENT Development
+  foreach(f ${files})
+    install(
+      FILES ${CMAKE_CURRENT_BINARY_DIR}/${f}
+      DESTINATION ${Slicer_INSTALL_INCLUDE_DIR} COMPONENT Development
     )
-endforeach()
+  endforeach()
 endif()
 
 #-----------------------------------------------------------------------------
@@ -1277,6 +1288,7 @@ endif()
 # Install CMake modules
 #-----------------------------------------------------------------------------
 if(NOT Slicer_INSTALL_NO_DEVELOPMENT)
+
   file(GLOB cmake_files "${CMAKE_CURRENT_SOURCE_DIR}/CMake/*.cmake")
   install(
     FILES ${cmake_files}
@@ -1285,11 +1297,18 @@ if(NOT Slicer_INSTALL_NO_DEVELOPMENT)
 
   install(FILES
     ${Slicer_BINARY_DIR}/UseSlicer.cmake
-    ${Slicer_BINARY_DIR}/SlicerConfig.cmake
-    ${Slicer_BINARY_DIR}/SlicerConfigVersion.cmake
+    ${extensions_build_dir}/SlicerConfig.cmake
+    ${extensions_build_dir}/SlicerConfigVersion.cmake
     DESTINATION ${Slicer_INSTALL_LIB_DIR}
     COMPONENT Development
     )
+
+  install(FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/CMake/qSlicerExport.h.in
+    DESTINATION ${Slicer_INSTALL_TEMPLATES_DIR}
+    COMPONENT Development
+    )
+
 endif()
 
 #-----------------------------------------------------------------------------
