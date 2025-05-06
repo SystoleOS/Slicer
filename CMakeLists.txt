@@ -112,6 +112,13 @@ mark_as_advanced(Slicer_SUPERBUILD)
 set(Slicer_BINARY_INNER_SUBDIR Slicer-build)
 
 #-----------------------------------------------------------------------------
+# Include essential packages in non-superbuild
+#-----------------------------------------------------------------------------
+if(NOT SLICER_SUPERBUILD)
+    find_package(ITK REQUIRED)
+endif()
+
+#-----------------------------------------------------------------------------
 include(CTestUseLaunchers OPTIONAL)
 if(${CTEST_USE_LAUNCHERS})
   message(STATUS "CTest launchers enabled")
