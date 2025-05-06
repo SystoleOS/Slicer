@@ -43,8 +43,7 @@ include(${Teem_USE_FILE})
 
 # XXX Teem 1.11.0 or Teem >= 4168 - This variable won't be needed anymore.
 #     See https://sourceforge.net/p/teem/code/4168/
-set(Teem_LIBRARIES teem)
-
+set(Teem_LIBRARIES "${Teem_ROOT_DIR}/../libteem.so")
 # --------------------------------------------------------------------------
 # Configure headers
 # --------------------------------------------------------------------------
