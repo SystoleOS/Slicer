@@ -484,6 +484,7 @@ add_library(${lib_name}
 set(MRMLWidgets_LIBRARIES
   ${QT_LIBRARIES}
   ${CTK_LIBRARIES}
+  VTK::IOExportGL2PS
   MRMLLogic
   MRMLDisplayableManager
   VTK::RenderingQt
