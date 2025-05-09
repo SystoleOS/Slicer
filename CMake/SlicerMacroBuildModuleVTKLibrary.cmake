@@ -155,9 +155,9 @@ macro(SlicerMacroBuildModuleVTKLibrary)
   # --------------------------------------------------------------------------
   # Install headers
   # --------------------------------------------------------------------------
-  if(DEFINED Slicer_DEVELOPMENT_INSTALL)
+  if(DEFINED Slicer_INSTALL_DEVELOPMENT)
     if(NOT DEFINED ${MODULEVTKLIBRARY_NAME}_DEVELOPMENT_INSTALL)
-      set(${MODULEVTKLIBRARY_NAME}_DEVELOPMENT_INSTALL ${Slicer_DEVELOPMENT_INSTALL})
+      set(${MODULEVTKLIBRARY_NAME}_DEVELOPMENT_INSTALL ${Slicer_INSTALL_DEVELOPMENT})
     endif()
   else()
     if(NOT DEFINED ${MODULEVTKLIBRARY_NAME}_DEVELOPMENT_INSTALL)

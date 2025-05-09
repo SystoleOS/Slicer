@@ -195,9 +195,9 @@ macro(SlicerMacroBuildModuleQtLibrary)
   # --------------------------------------------------------------------------
   # Install headers
   # --------------------------------------------------------------------------
-  if(DEFINED Slicer_DEVELOPMENT_INSTALL)
+  if(DEFINED Slicer_INSTALL_DEVELOPMENT)
     if(NOT DEFINED ${MODULEQTLIBRARY_NAME}_DEVELOPMENT_INSTALL)
-      set(${MODULEQTLIBRARY_NAME}_DEVELOPMENT_INSTALL ${Slicer_DEVELOPMENT_INSTALL})
+      set(${MODULEQTLIBRARY_NAME}_DEVELOPMENT_INSTALL ${Slicer_INSTALL_DEVELOPMENT})
     endif()
   else()
     if(NOT DEFINED ${MODULEQTLIBRARY_NAME}_DEVELOPMENT_INSTALL)

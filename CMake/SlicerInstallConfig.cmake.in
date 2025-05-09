@@ -74,6 +74,17 @@ endif()
 set(Slicer_EXPORT_HEADER_TEMPLATE "@Slicer_INSTALL_TEMPLATES_DIR@/qSlicerExport.h.in")
 
 set(Slicer_BUILD_CLI_SUPPORT "@Slicer_BUILD_CLI_SUPPORT@")
+# Slicer Core library
+set(Slicer_CORE_LIBRARY "@Slicer_CORE_LIBRARY_CONFIG@")
+
+# Slicer GUI library
+set(Slicer_GUI_LIBRARY "@Slicer_GUI_LIBRARY_CONFIG@")
+
+# MRML libraries - This variable regroup all related MRML libraries
+set(MRML_LIBRARIES "@MRML_LIBRARIES@")
+
+# Slicer Libs VTK wrapped libraries
+set(Slicer_Libs_VTK_WRAPPED_LIBRARIES "@Slicer_Libs_VTK_WRAPPED_LIBRARIES@")
 
 # Slicer Libs library directories.
 set(Slicer_Libs_LIBRARY_DIRS
@@ -106,7 +117,9 @@ set(Slicer_Libs_INCLUDE_DIRS
   "${Slicer_HOME}/include/vtkITK"
   "${Slicer_HOME}/include/vtkSegmentationCore"
   "${Slicer_HOME}/include/vtkTeem"
-  "${Slicer_HOME}/include/qSlicerBaseQTGUI"
+  "${Slicer_HOME}/include/Slicer-5.8/qSlicerBaseQTGUI"
+  "${Slicer_HOME}/include/Slicer-5.8/qSlicerBaseQTCore"
+
   "@vtkAddon_INCLUDE_DIRS@"
   )
 
