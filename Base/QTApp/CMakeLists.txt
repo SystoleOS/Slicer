@@ -72,6 +72,25 @@ SlicerMacroBuildBaseQtLibrary(
   )
 
 # --------------------------------------------------------------------------
+# Install ui_headers
+# --------------------------------------------------------------------------
+# ui_header files are generated in build time and are not listed by
+# the globbing mechanims in the Slicer build macros. Here we list them and make
+# the installation explicit
+if(NOT DEFINED ${PROJECT_NAME}_INSTALL_NO_DEVELOPMENT)
+  set(${PROJECT_NAME}_INSTALL_NO_DEVELOPMENT ON)
+endif()
+if(NOT ${PROJECT_NAME}_INSTALL_NO_DEVELOPMENT)
+  set(ui_headers
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qSlicerMainWindow.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qSlicerErrorReportDialog.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/ui_qSlicerAboutDialog.h")
+  install(
+    FILES ${ui_headers}
+    DESTINATION ${Slicer_INSTALL_INCLUDE_DIR}/${PROJECT_NAME} COMPONENT Development)
+endif()
+
+# --------------------------------------------------------------------------
 if(BUILD_TESTING)
   add_subdirectory(Testing)
 endif()

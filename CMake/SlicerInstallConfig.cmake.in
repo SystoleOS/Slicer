@@ -116,6 +116,7 @@ set(Slicer_Libs_INCLUDE_DIRS
   "${Slicer_HOME}/include/RemoteIO"
   "${Slicer_HOME}/include/vtkITK"
   "${Slicer_HOME}/include/vtkSegmentationCore"
+  "${Slicer_HOME}/include/SlicerBaseLogic"
   "${Slicer_HOME}/include/vtkTeem"
   "${Slicer_HOME}/include/Slicer-5.8/qSlicerBaseQTGUI"
   "${Slicer_HOME}/include/Slicer-5.8/qSlicerBaseQTCore"
