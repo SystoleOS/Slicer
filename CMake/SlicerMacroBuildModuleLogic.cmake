@@ -35,6 +35,7 @@ macro(SlicerMacroBuildModuleLogic)
   set(multiValueArgs
     SRCS
     INCLUDE_DIRECTORIES
+    LINK_DIRECTORIES
     TARGET_LIBRARIES
     )
   cmake_parse_arguments(MODULELOGIC
@@ -54,6 +55,13 @@ macro(SlicerMacroBuildModuleLogic)
     ${Slicer_ModuleLogic_INCLUDE_DIRS}
     ${Slicer_ModuleMRML_INCLUDE_DIRS}
     )
+
+  if(NOT Slicer_SUPERBUILD)
+    list(APPEND MODULELOGIC_LINK_DIRECTORIES
+      ${Slicer_Libs_LIBRARY_DIRS}
+      ${Slicer_Base_LIBRARY_DIRS}
+      )
+  endif()
 
   if(Slicer_BUILD_CLI_SUPPORT)
     # Third-party library
@@ -102,6 +110,7 @@ macro(SlicerMacroBuildModuleLogic)
     SRCS ${MODULELOGIC_SRCS}
     INCLUDE_DIRECTORIES ${MODULELOGIC_INCLUDE_DIRECTORIES}
     TARGET_LIBRARIES ${MODULELOGIC_TARGET_LIBRARIES}
+    LINK_DIRECTORIES ${MODULELOGIC_LINK_DIRECTORIES}
     ${MODULELOGIC_NO_INSTALL_OPTION}
     )
 

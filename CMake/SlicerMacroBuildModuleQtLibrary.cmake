@@ -37,6 +37,7 @@ macro(SlicerMacroBuildModuleQtLibrary)
     MOC_SRCS
     UI_SRCS
     INCLUDE_DIRECTORIES
+    LINK_DIRECTORIES
     TARGET_LIBRARIES
     RESOURCES
     )
@@ -175,6 +176,12 @@ macro(SlicerMacroBuildModuleQtLibrary)
   target_link_libraries(${lib_name}
     ${MODULEQTLIBRARY_TARGET_LIBRARIES}
     )
+
+  if(MODULEQTLIBRARY_LINK_DIRECTORIES)
+    target_link_directories(${lib_name}
+      PUBLIC ${MODULEQTLIBRARY_LINK_DIRECTORIES}
+      )
+  endif()
 
   # Apply user-defined properties to the library target.
   if(Slicer_LIBRARY_PROPERTIES)

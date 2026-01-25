@@ -35,6 +35,7 @@ macro(SlicerMacroBuildModuleVTKLibrary)
   set(multiValueArgs
     SRCS
     INCLUDE_DIRECTORIES
+    LINK_DIRECTORIES
     TARGET_LIBRARIES
     )
   cmake_parse_arguments(MODULEVTKLIBRARY
@@ -127,6 +128,12 @@ macro(SlicerMacroBuildModuleVTKLibrary)
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${Slicer_QTLOADABLEMODULES_LIB_DIR}"
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${Slicer_QTLOADABLEMODULES_LIB_DIR}"
     )
+
+  if(MODULEVTKLIBRARY_LINK_DIRECTORIES)
+    target_link_directories(${lib_name}
+      PUBLIC ${MODULEVTKLIBRARY_LINK_DIRECTORIES}
+      )
+  endif()
 
   target_link_libraries(${lib_name}
     ${MODULEVTKLIBRARY_TARGET_LIBRARIES}

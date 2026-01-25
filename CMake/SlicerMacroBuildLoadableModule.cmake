@@ -34,6 +34,7 @@ macro(slicerMacroBuildLoadableModule)
     MOC_SRCS
     UI_SRCS
     INCLUDE_DIRECTORIES
+    LINK_DIRECTORIES
     TARGET_LIBRARIES
     RESOURCES
     )
@@ -102,6 +103,13 @@ macro(slicerMacroBuildLoadableModule)
     ${Slicer_ModuleMRML_INCLUDE_DIRS}
     ${LOADABLEMODULE_INCLUDE_DIRECTORIES}
     )
+
+  if(NOT Slicer_SUPERBUILD)
+    list(APPEND LOADABLEMODULE_LINK_DIRECTORIES
+      ${Slicer_Libs_LIBRARY_DIRS}
+      ${Slicer_Base_LIBRARY_DIRS}
+      )
+  endif()
 
   #-----------------------------------------------------------------------------
   # Configure export header
@@ -212,6 +220,12 @@ macro(slicerMacroBuildLoadableModule)
     PUBLIC
       ${Slicer_GUI_LIBRARY}
     )
+
+  if(LOADABLEMODULE_LINK_DIRECTORIES)
+    target_link_directories(${lib_name}
+      PUBLIC ${LOADABLEMODULE_LINK_DIRECTORIES}
+      )
+  endif()
 
   # Apply user-defined properties to the library target.
   if(Slicer_LIBRARY_PROPERTIES)
