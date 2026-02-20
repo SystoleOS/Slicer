@@ -1289,7 +1289,10 @@ endif()
 #-----------------------------------------------------------------------------
 if(NOT Slicer_INSTALL_NO_DEVELOPMENT)
 
-  file(GLOB cmake_files "${CMAKE_CURRENT_SOURCE_DIR}/CMake/*.cmake")
+  file(GLOB cmake_files
+    "${CMAKE_CURRENT_SOURCE_DIR}/CMake/*.cmake"
+    "${CMAKE_CURRENT_SOURCE_DIR}/CMake/*.h.in"
+    "${CMAKE_CURRENT_SOURCE_DIR}/CMake/*.cxx.in")
   install(
     FILES ${cmake_files}
     DESTINATION ${Slicer_INSTALL_LIB_DIR}/CMake COMPONENT Development
