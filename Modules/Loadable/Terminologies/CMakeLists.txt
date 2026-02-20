@@ -19,6 +19,13 @@ if(NOT Slicer_INSTALL_QTLOADABLEMODULES_SHARE_DIR)
     "./share/Slicer-${Slicer_VERSION}/qt-loadable-modules")
 endif()
 
+# UseSlicer.cmake also resets Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR to empty
+# when Slicer_QTLOADABLEMODULES_LIB_DIR is unset (standalone build). Restore.
+if(NOT Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR)
+  set(Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR
+    "./lib/Slicer-${Slicer_VERSION}/qt-loadable-modules")
+endif()
+
 #-----------------------------------------------------------------------------
 add_subdirectory(Logic)
 add_subdirectory(Widgets)
