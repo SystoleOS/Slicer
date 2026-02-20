@@ -67,12 +67,15 @@ macro(SlicerMacroBuildModuleQtLibrary)
   # --------------------------------------------------------------------------
   set(lib_name ${MODULEQTLIBRARY_NAME})
 
-  # Qt-based module libraries always need Qt5::Widgets. Linking the target
-  # propagates Qt5 include directories automatically, which is needed when
-  # building against an installed (non-superbuild) Slicer where Qt5 headers
-  # are not part of any Slicer_*_INCLUDE_DIRS variable.
+  # Qt-based module libraries always need Qt5::Widgets and Qt5::Xml.
+  # Linking these targets propagates Qt5 include directories automatically,
+  # which is needed when building against an installed (non-superbuild) Slicer
+  # where Qt5 headers are not part of any Slicer_*_INCLUDE_DIRS variable.
+  # Qt5::Xml is required because CTK headers (e.g. ctkLayoutManager.h) include
+  # QDomDocument which lives in the QtXml module.
   list(APPEND MODULEQTLIBRARY_TARGET_LIBRARIES
     Qt5::Widgets
+    Qt5::Xml
     )
 
   # When building against an installed (non-superbuild) Slicer, headers and
