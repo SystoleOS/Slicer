@@ -63,6 +63,16 @@ macro(SlicerMacroBuildModuleLogic)
       )
   endif()
 
+  # Every module logic inherits from vtkSlicerModuleLogic -> vtkMRMLAbstractLogic
+  # (MRMLLogic), and routinely uses VTK addon utilities (vtkAddon). In superbuild
+  # mode these come transitively from SlicerBaseLogic, but in a system install
+  # transitive dependencies may not propagate, so we list them explicitly here.
+  list(APPEND MODULELOGIC_TARGET_LIBRARIES
+    MRMLCore
+    MRMLLogic
+    vtkAddon
+    )
+
   if(Slicer_BUILD_CLI_SUPPORT)
     # Third-party library
     find_package(SlicerExecutionModel REQUIRED ModuleDescriptionParser)
