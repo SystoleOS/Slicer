@@ -75,16 +75,31 @@ macro(SlicerMacroBuildModuleQtLibrary)
     Qt5::Widgets
     )
 
-  # When building against an installed (non-superbuild) Slicer, headers from
-  # installed qt-loadable modules (e.g. qSlicerSubjectHierarchyAbstractPlugin.h)
-  # are not covered by any Slicer_*_INCLUDE_DIRS variable. Add the installed
-  # qt-loadable-modules include tree so they are found.
+  # When building against an installed (non-superbuild) Slicer, headers and
+  # libraries from installed qt-loadable modules (SubjectHierarchy, Colors,
+  # etc.) are not covered by any Slicer_*_INCLUDE_DIRS / _LIBRARY_DIRS
+  # variable and per-module <Name>_INCLUDE_DIRS / <Name>_LIBRARY_DIRS cache
+  # vars are empty. Add the installed qt-loadable-modules trees directly:
+  #  - include: root + every per-module subdirectory for flat #include lookups
+  #  - lib:     the shared library directory so the linker can find them
   if(NOT Slicer_SUPERBUILD
       AND DEFINED Slicer_HOME
-      AND DEFINED Slicer_INSTALL_QTLOADABLEMODULES_INCLUDE_DIR)
-    list(APPEND MODULEQTLIBRARY_INCLUDE_DIRECTORIES
-      "${Slicer_HOME}/${Slicer_INSTALL_QTLOADABLEMODULES_INCLUDE_DIR}"
+      AND DEFINED Slicer_INSTALL_QTLOADABLEMODULES_INCLUDE_DIR
+      AND DEFINED Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR)
+    set(_qt_inc_root "${Slicer_HOME}/${Slicer_INSTALL_QTLOADABLEMODULES_INCLUDE_DIR}")
+    file(GLOB _qt_loadable_subdirs
+      LIST_DIRECTORIES true
+      "${_qt_inc_root}/*"
       )
+    list(APPEND MODULEQTLIBRARY_INCLUDE_DIRECTORIES
+      "${_qt_inc_root}"
+      ${_qt_loadable_subdirs}
+      )
+    list(APPEND MODULEQTLIBRARY_LINK_DIRECTORIES
+      "${Slicer_HOME}/${Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR}"
+      )
+    unset(_qt_inc_root)
+    unset(_qt_loadable_subdirs)
   endif()
 
   # --------------------------------------------------------------------------

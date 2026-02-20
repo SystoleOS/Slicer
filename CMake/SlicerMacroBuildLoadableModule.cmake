@@ -109,6 +109,11 @@ macro(slicerMacroBuildLoadableModule)
       ${Slicer_Libs_LIBRARY_DIRS}
       ${Slicer_Base_LIBRARY_DIRS}
       )
+    if(DEFINED Slicer_HOME AND DEFINED Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR)
+      list(APPEND LOADABLEMODULE_LINK_DIRECTORIES
+        "${Slicer_HOME}/${Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR}"
+        )
+    endif()
   endif()
 
   #-----------------------------------------------------------------------------
@@ -212,14 +217,23 @@ macro(slicerMacroBuildLoadableModule)
     )
   set_target_properties(${lib_name} PROPERTIES LABELS ${lib_name})
 
+  # In the superbuild Slicer_GUI_LIBRARY is set (e.g. qSlicerBaseQTApp).
+  # In a system install it is empty; fall back to qSlicerBaseQTGUI directly.
+  if(Slicer_GUI_LIBRARY)
+    set(_slicer_gui_lib ${Slicer_GUI_LIBRARY})
+  else()
+    set(_slicer_gui_lib qSlicerBaseQTGUI)
+  endif()
+
   target_link_libraries(${lib_name}
     # The two PUBLIC keywords are not a duplication, they allow developers to
     # include PRIVATE/INTERFACE keywords in their library list
     PUBLIC
       ${LOADABLEMODULE_TARGET_LIBRARIES}
     PUBLIC
-      ${Slicer_GUI_LIBRARY}
+      ${_slicer_gui_lib}
     )
+  unset(_slicer_gui_lib)
 
   if(LOADABLEMODULE_LINK_DIRECTORIES)
     target_link_directories(${lib_name}

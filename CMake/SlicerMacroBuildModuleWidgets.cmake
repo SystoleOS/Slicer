@@ -60,15 +60,32 @@ macro(SlicerMacroBuildModuleWidgets)
     ${Slicer_ModuleWidgets_INCLUDE_DIRS}
     )
 
-  list(APPEND MODULEWIDGETS_TARGET_LIBRARIES
-    ${Slicer_GUI_LIBRARY}
-    )
+  # In the superbuild Slicer_GUI_LIBRARY is set (e.g. qSlicerBaseQTApp) and
+  # carries CTK transitively. In a system install it is empty; fall back to
+  # the actual provider of qSlicerWidget and add CTKVisualizationVTKCore
+  # explicitly since the transitive chain is broken.
+  if(Slicer_GUI_LIBRARY)
+    list(APPEND MODULEWIDGETS_TARGET_LIBRARIES
+      ${Slicer_GUI_LIBRARY}
+      )
+  else()
+    list(APPEND MODULEWIDGETS_TARGET_LIBRARIES
+      qSlicerBaseQTGUI
+      CTKVisualizationVTKCore
+      )
+  endif()
 
   if(NOT Slicer_SUPERBUILD)
     list(APPEND MODULEWIDGETS_LINK_DIRECTORIES
       ${Slicer_Libs_LIBRARY_DIRS}
       ${Slicer_Base_LIBRARY_DIRS}
+      ${CTK_LIBRARY_DIRS}
       )
+    if(DEFINED Slicer_HOME AND DEFINED Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR)
+      list(APPEND MODULEWIDGETS_LINK_DIRECTORIES
+        "${Slicer_HOME}/${Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR}"
+        )
+    endif()
   endif()
 
   if(NOT DEFINED MODULEWIDGETS_FOLDER AND DEFINED MODULE_NAME)

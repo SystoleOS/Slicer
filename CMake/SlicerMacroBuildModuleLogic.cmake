@@ -61,6 +61,11 @@ macro(SlicerMacroBuildModuleLogic)
       ${Slicer_Libs_LIBRARY_DIRS}
       ${Slicer_Base_LIBRARY_DIRS}
       )
+    if(DEFINED Slicer_HOME AND DEFINED Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR)
+      list(APPEND MODULELOGIC_LINK_DIRECTORIES
+        "${Slicer_HOME}/${Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR}"
+        )
+    endif()
   endif()
 
   # Every module logic inherits from vtkSlicerModuleLogic -> vtkMRMLAbstractLogic
