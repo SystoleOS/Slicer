@@ -1,7 +1,23 @@
+cmake_minimum_required(VERSION 3.31)
+
 #-----------------------------------------------------------------------------
 set(MODULE_NAME "Terminologies")
 
 string(TOUPPER ${MODULE_NAME} MODULE_NAME_UPPER)
+
+#-----------------------------------------------------------------------------
+set(CMAKE_CXX_STANDARD "17")
+
+#-----------------------------------------------------------------------------
+find_package(Slicer REQUIRED)
+include(${Slicer_USE_FILE})
+
+# UseSlicer.cmake resets Slicer_INSTALL_QTLOADABLEMODULES_SHARE_DIR to empty
+# when Slicer_QTLOADABLEMODULES_SHARE_DIR is unset (standalone build). Restore.
+if(NOT Slicer_INSTALL_QTLOADABLEMODULES_SHARE_DIR)
+  set(Slicer_INSTALL_QTLOADABLEMODULES_SHARE_DIR
+    "./share/Slicer-${Slicer_VERSION}/qt-loadable-modules")
+endif()
 
 #-----------------------------------------------------------------------------
 add_subdirectory(Logic)
