@@ -109,6 +109,8 @@ macro(SlicerMacroBuildModuleQtLibrary)
     ${${MODULEQTLIBRARY_NAME}_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
+    ${Slicer_Libs_INCLUDE_DIRS}
+    ${Slicer_Base_INCLUDE_DIRS}
     )
   # Since module developer may have already set the variable to some
   # specific values in the module CMakeLists.txt, we make sure to
