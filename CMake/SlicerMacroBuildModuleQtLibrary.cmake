@@ -67,6 +67,26 @@ macro(SlicerMacroBuildModuleQtLibrary)
   # --------------------------------------------------------------------------
   set(lib_name ${MODULEQTLIBRARY_NAME})
 
+  # Qt-based module libraries always need Qt5::Widgets. Linking the target
+  # propagates Qt5 include directories automatically, which is needed when
+  # building against an installed (non-superbuild) Slicer where Qt5 headers
+  # are not part of any Slicer_*_INCLUDE_DIRS variable.
+  list(APPEND MODULEQTLIBRARY_TARGET_LIBRARIES
+    Qt5::Widgets
+    )
+
+  # When building against an installed (non-superbuild) Slicer, headers from
+  # installed qt-loadable modules (e.g. qSlicerSubjectHierarchyAbstractPlugin.h)
+  # are not covered by any Slicer_*_INCLUDE_DIRS variable. Add the installed
+  # qt-loadable-modules include tree so they are found.
+  if(NOT Slicer_SUPERBUILD
+      AND DEFINED Slicer_HOME
+      AND DEFINED Slicer_INSTALL_QTLOADABLEMODULES_INCLUDE_DIR)
+    list(APPEND MODULEQTLIBRARY_INCLUDE_DIRECTORIES
+      "${Slicer_HOME}/${Slicer_INSTALL_QTLOADABLEMODULES_INCLUDE_DIR}"
+      )
+  endif()
+
   # --------------------------------------------------------------------------
   # Set <MODULEQTLIBRARY_NAME>_INCLUDE_DIRS
   # --------------------------------------------------------------------------
