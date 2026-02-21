@@ -225,6 +225,21 @@ macro(slicerMacroBuildLoadableModule)
     set(_slicer_gui_lib qSlicerBaseQTGUI)
   endif()
 
+  # Loadable modules are Qt-based and always need Qt5::Widgets, Qt5::Xml, and
+  # CTKVisualizationVTKWidgets when building against an installed (non-superbuild)
+  # Slicer where Qt5 and CTK headers may not be transitively available.
+  # Qt5::Xml is required because CTK headers (e.g. ctkPimpl.h) include <QtGlobal>
+  # and similar Qt headers.  This mirrors the same block in
+  # SlicerMacroBuildModuleQtLibrary, which has an explicit note that
+  # SlicerMacroBuildLoadableModule needs them for the same reason.
+  if(NOT Slicer_SUPERBUILD)
+    list(APPEND LOADABLEMODULE_TARGET_LIBRARIES
+      Qt5::Widgets
+      Qt5::Xml
+      CTKVisualizationVTKWidgets
+      )
+  endif()
+
   target_link_libraries(${lib_name}
     # The two PUBLIC keywords are not a duplication, they allow developers to
     # include PRIVATE/INTERFACE keywords in their library list
