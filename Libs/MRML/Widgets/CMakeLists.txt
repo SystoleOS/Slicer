@@ -441,6 +441,14 @@ if(NOT ${PROJECT_NAME}_INSTALL_NO_DEVELOPMENT)
   install(
     FILES ${headers}
     DESTINATION include/${PROJECT_NAME} COMPONENT Development)
+  # Also install generated UI headers: private _p.h headers include them and
+  # standalone modules that use those private headers need them at build time.
+  foreach(_ui_src ${MRMLWidgets_UI_SRCS})
+    get_filename_component(_ui_name "${_ui_src}" NAME_WE)
+    install(FILES
+      "${CMAKE_CURRENT_BINARY_DIR}/ui_${_ui_name}.h"
+      DESTINATION include/${PROJECT_NAME} COMPONENT Development)
+  endforeach()
 endif()
 
   # --------------------------------------------------------------------------
