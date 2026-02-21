@@ -110,6 +110,11 @@ macro(SlicerMacroBuildModuleQtLibrary)
     unset(_qt_inc_root)
     unset(_qt_loadable_subdirs)
   endif()
+  # Allow callers to inject extra library search paths for inter-module deps
+  # (e.g. when one standalone module depends on another module's libraries).
+  if(DEFINED EXTRA_MODULE_LIB_DIRS)
+    list(APPEND MODULEQTLIBRARY_LINK_DIRECTORIES ${EXTRA_MODULE_LIB_DIRS})
+  endif()
 
   # --------------------------------------------------------------------------
   # Set <MODULEQTLIBRARY_NAME>_INCLUDE_DIRS

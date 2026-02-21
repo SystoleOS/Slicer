@@ -89,6 +89,11 @@ macro(SlicerMacroBuildModuleWidgets)
         "${Slicer_HOME}/${Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR}"
         )
     endif()
+    # Allow callers to inject extra library search paths for inter-module deps
+    # (e.g. when one standalone module depends on another module's libraries).
+    if(DEFINED EXTRA_MODULE_LIB_DIRS)
+      list(APPEND MODULEWIDGETS_LINK_DIRECTORIES ${EXTRA_MODULE_LIB_DIRS})
+    endif()
   endif()
 
   if(NOT DEFINED MODULEWIDGETS_FOLDER AND DEFINED MODULE_NAME)
