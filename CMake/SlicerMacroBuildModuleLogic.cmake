@@ -72,10 +72,16 @@ macro(SlicerMacroBuildModuleLogic)
   # (MRMLLogic), and routinely uses VTK addon utilities (vtkAddon). In superbuild
   # mode these come transitively from SlicerBaseLogic, but in a system install
   # transitive dependencies may not propagate, so we list them explicitly here.
+  # VTK::CommonCore is also required: VTK 9.x has empty VTK_INCLUDE_DIRS and
+  # headers only propagate through CMake IMPORTED targets.  MRMLCore does not
+  # re-export VTK::CommonCore in its installed config, so every module logic
+  # that includes vtkMRMLAbstractLogic.h (-> vtkObserverManager.h -> vtkObject.h)
+  # needs it listed explicitly.
   list(APPEND MODULELOGIC_TARGET_LIBRARIES
     MRMLCore
     MRMLLogic
     vtkAddon
+    VTK::CommonCore
     )
 
   if(Slicer_BUILD_CLI_SUPPORT)
