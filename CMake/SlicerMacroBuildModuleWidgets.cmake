@@ -64,12 +64,15 @@ macro(SlicerMacroBuildModuleWidgets)
   # carries CTK transitively. In a system install it is empty; fall back to
   # the actual provider of qSlicerWidget and add CTKVisualizationVTKCore
   # explicitly since the transitive chain is broken.
+  # qSlicerBaseQTCore must also be listed explicitly: --as-needed prevents
+  # resolving qSlicerObject symbols transitively through qSlicerBaseQTGUI.
   if(Slicer_GUI_LIBRARY)
     list(APPEND MODULEWIDGETS_TARGET_LIBRARIES
       ${Slicer_GUI_LIBRARY}
       )
   else()
     list(APPEND MODULEWIDGETS_TARGET_LIBRARIES
+      qSlicerBaseQTCore
       qSlicerBaseQTGUI
       CTKVisualizationVTKCore
       )
