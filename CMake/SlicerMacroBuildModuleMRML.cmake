@@ -52,6 +52,9 @@ macro(SlicerMacroBuildModuleMRML)
   list(APPEND MODULEMRML_INCLUDE_DIRECTORIES
     ${Slicer_Libs_INCLUDE_DIRS}
     ${Slicer_ModuleMRML_INCLUDE_DIRS}
+    # Root Slicer include dir – provides vtkSlicerVersionConfigureMinimal.h
+    # and other top-level Slicer headers that are not under a sub-directory.
+    "${Slicer_HOME}/include/Slicer-${Slicer_VERSION_MAJOR}.${Slicer_VERSION_MINOR}"
     )
 
   if(NOT Slicer_SUPERBUILD)
