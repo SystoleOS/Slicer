@@ -122,6 +122,7 @@ macro(SlicerMacroBuildModuleQtLibrary)
       ${_qt_loadable_subdirs}
       )
     list(APPEND MODULEQTLIBRARY_LINK_DIRECTORIES
+      "${Slicer_HOME}/${Slicer_INSTALL_LIB_DIR}"
       "${Slicer_HOME}/${Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR}"
       )
     unset(_qt_inc_root)
