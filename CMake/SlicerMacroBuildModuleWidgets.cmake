@@ -66,6 +66,8 @@ macro(SlicerMacroBuildModuleWidgets)
   # explicitly since the transitive chain is broken.
   # qSlicerBaseQTCore must also be listed explicitly: --as-needed prevents
   # resolving qSlicerObject symbols transitively through qSlicerBaseQTGUI.
+  # qMRMLWidgets must be listed explicitly for the same reason: symbols such
+  # as qMRMLItemDelegate are not resolved transitively through qSlicerBaseQTGUI.
   if(Slicer_GUI_LIBRARY)
     list(APPEND MODULEWIDGETS_TARGET_LIBRARIES
       ${Slicer_GUI_LIBRARY}
@@ -74,6 +76,7 @@ macro(SlicerMacroBuildModuleWidgets)
     list(APPEND MODULEWIDGETS_TARGET_LIBRARIES
       qSlicerBaseQTCore
       qSlicerBaseQTGUI
+      qMRMLWidgets
       CTKVisualizationVTKCore
       )
   endif()
