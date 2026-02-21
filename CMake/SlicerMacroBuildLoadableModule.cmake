@@ -219,10 +219,12 @@ macro(slicerMacroBuildLoadableModule)
 
   # In the superbuild Slicer_GUI_LIBRARY is set (e.g. qSlicerBaseQTApp).
   # In a system install it is empty; fall back to qSlicerBaseQTGUI directly.
+  # qSlicerBaseQTCore must also be listed explicitly: --as-needed prevents
+  # resolving qSlicerObject symbols transitively through qSlicerBaseQTGUI.
   if(Slicer_GUI_LIBRARY)
     set(_slicer_gui_lib ${Slicer_GUI_LIBRARY})
   else()
-    set(_slicer_gui_lib qSlicerBaseQTGUI)
+    set(_slicer_gui_lib qSlicerBaseQTCore qSlicerBaseQTGUI)
   endif()
 
   # Loadable modules are Qt-based and always need Qt5::Widgets, Qt5::Xml, and
