@@ -39,6 +39,12 @@ set(${KIT}_TARGET_LIBRARIES
   qMRMLWidgets
   MRMLLogic
   MRMLCore
+  vtkSegmentationCore
+  )
+
+set(${KIT}_LINK_DIRECTORIES
+  ${Slicer_Libs_LIBRARY_DIRS}
+  ${Slicer_Base_LIBRARY_DIRS}
   )
 
 #-----------------------------------------------------------------------------
@@ -53,4 +59,5 @@ SlicerMacroBuildModuleQtLibrary(
   TARGET_LIBRARIES ${${KIT}_TARGET_LIBRARIES}
   RESOURCES ${${KIT}_RESOURCES}
   WRAP_PYTHONQT
+  LINK_DIRECTORIES ${${KIT}_LINK_DIRECTORIES}
   )
