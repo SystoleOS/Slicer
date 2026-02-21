@@ -84,6 +84,23 @@ macro(SlicerMacroBuildModuleQtLibrary)
     CTKVisualizationVTKWidgets
     )
 
+  # In the superbuild Slicer_GUI_LIBRARY (e.g. qSlicerBaseQTApp) carries
+  # qSlicerBaseQTCore and qSlicerBaseQTGUI transitively.  In a system install
+  # it is empty; list them explicitly so that --as-needed does not drop them.
+  # qMRMLWidgets is also needed explicitly for the same reason.
+  if(Slicer_GUI_LIBRARY)
+    list(APPEND MODULEQTLIBRARY_TARGET_LIBRARIES
+      ${Slicer_GUI_LIBRARY}
+      )
+  else()
+    list(APPEND MODULEQTLIBRARY_TARGET_LIBRARIES
+      qSlicerBaseQTCore
+      qSlicerBaseQTGUI
+      qMRMLWidgets
+      CTKVisualizationVTKCore
+      )
+  endif()
+
   # When building against an installed (non-superbuild) Slicer, headers and
   # libraries from installed qt-loadable modules (SubjectHierarchy, Colors,
   # etc.) are not covered by any Slicer_*_INCLUDE_DIRS / _LIBRARY_DIRS
