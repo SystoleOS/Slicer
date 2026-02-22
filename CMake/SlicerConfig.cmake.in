@@ -173,7 +173,7 @@ set(Slicer_LICENSE_FILE "@Slicer_LICENSE_FILE_CONFIG@")
 set(Slicer_README_FILE "@Slicer_README_FILE_CONFIG@")
 
 # Path to qrcc.py script used in slicerFunctionAddPythonQtResources  CMake function
-set(Slicer_QRCC_SCRIPT "@Slicer_QRCC_SCRIPT@")
+# Computed relative to Slicer_HOME after install directories are set (see below).
 
 # Test templates directory
 set(Slicer_CXX_MODULE_TEST_TEMPLATES_DIR "@Slicer_CXX_MODULE_TEST_TEMPLATES_DIR_CONFIG@")
@@ -345,6 +345,7 @@ set(Slicer_INSTALL_BIN_DIR "@Slicer_INSTALL_BIN_DIR@")
 set(Slicer_INSTALL_LIB_DIR "@Slicer_INSTALL_LIB_DIR@")
 set(Slicer_INSTALL_INCLUDE_DIR "@Slicer_INSTALL_INCLUDE_DIR@")
 set(Slicer_INSTALL_SHARE_DIR "@Slicer_INSTALL_SHARE_DIR@")
+set(Slicer_QRCC_SCRIPT "${Slicer_HOME}/${Slicer_INSTALL_SHARE_DIR}/Scripts/qrcc.py")
 set(Slicer_INSTALL_ITKFACTORIES_DIR "@Slicer_INSTALL_ITKFACTORIES_DIR@")
 
 set(Slicer_INSTALL_CLIMODULES_BIN_DIR "@Slicer_INSTALL_CLIMODULES_BIN_DIR@")

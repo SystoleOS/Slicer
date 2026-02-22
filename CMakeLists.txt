@@ -541,6 +541,11 @@ include(SlicerBlockCXXRequiredFlags)
 # Slicer directories
 #-----------------------------------------------------------------------------
 include(SlicerDirectories)
+install(FILES
+  "${CMAKE_CURRENT_SOURCE_DIR}/Utilities/Scripts/qrcc.py"
+  DESTINATION "${Slicer_SHARE_DIR}/Scripts"
+  PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+  COMPONENT Development)
 
 # SlicerExecutionModel output directories
 if(Slicer_SUPERBUILD)
