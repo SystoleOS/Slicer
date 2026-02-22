@@ -49,6 +49,17 @@ function(slicerFunctionAddPythonQtResources RESOURCE_NAMES)
       message(FATAL_ERROR "Slicer_QRCC_SCRIPT set to ${Slicer_QRCC_SCRIPT} corresponds to an nonexistent file.")
     endif()
 
+    # Ensure PYTHON_EXECUTABLE is set; in standalone builds it may not have been
+    # set before this function is called.
+    if(NOT DEFINED PYTHON_EXECUTABLE OR PYTHON_EXECUTABLE STREQUAL "")
+      if(DEFINED Python3_EXECUTABLE AND NOT Python3_EXECUTABLE STREQUAL "")
+        set(PYTHON_EXECUTABLE "${Python3_EXECUTABLE}")
+      else()
+        find_package(Python3 REQUIRED COMPONENTS Interpreter)
+        set(PYTHON_EXECUTABLE "${Python3_EXECUTABLE}")
+      endif()
+    endif()
+
     # Create command to generate the compiled resource script
     add_custom_command(
       OUTPUT ${out_path}
