@@ -28,8 +28,14 @@ set(${KIT}_SRCS
 
 set(${KIT}_VTK_LIBRARIES
   VTK::RenderingVolume
-  VTK::RenderingVolume${VTK_RENDERING_BACKEND}
   )
+# VTK 9.x uses OpenGL2 backend exclusively; prefer the explicit target over the
+# VTK_RENDERING_BACKEND variable which may not be set in standalone builds.
+if(TARGET VTK::RenderingVolumeOpenGL2)
+  list(APPEND ${KIT}_VTK_LIBRARIES VTK::RenderingVolumeOpenGL2)
+elseif(DEFINED VTK_RENDERING_BACKEND AND VTK_RENDERING_BACKEND)
+  list(APPEND ${KIT}_VTK_LIBRARIES VTK::RenderingVolume${VTK_RENDERING_BACKEND})
+endif()
 
 set(${KIT}_TARGET_LIBRARIES
   vtkSlicer${MODULE_NAME}ModuleLogic
