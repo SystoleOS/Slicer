@@ -7,7 +7,10 @@ namespace.
 # and the "Slicer Python Console" environments. For more details, see Base/Python/slicer/__init__.py
 import vtk  # noqa: F401
 
-from MRMLCLIPython import *
+try:
+    from MRMLCLIPython import *
+except ImportError:
+    pass  # MRMLCLIPython is only built when Slicer_BUILD_CLI=ON
 from MRMLCorePython import *
 from MRMLDisplayableManagerPython import *
 from MRMLLogicPython import *
