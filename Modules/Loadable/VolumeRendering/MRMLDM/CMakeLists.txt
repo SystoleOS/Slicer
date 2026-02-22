@@ -7,6 +7,7 @@ set(${KIT}_EXPORT_DIRECTIVE "VTK_SLICER_${MODULE_NAME_UPPER}_MODULE_MRMLDISPLAYA
 set(${KIT}_INCLUDE_DIRECTORIES
   ${vtkSlicer${MODULE_NAME}ModuleLogic_INCLUDE_DIRS}
   ${vtkSlicer${MODULE_NAME}ModuleMRML_INCLUDE_DIRS}
+  ${vtkSlicerMarkupsModuleMRML_INCLUDE_DIRS}
   )
 
 set(displayable_manager_SRCS
