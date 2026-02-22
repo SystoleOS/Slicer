@@ -1,3 +1,28 @@
+cmake_minimum_required(VERSION 3.16.3...3.19.7 FATAL_ERROR)
+
+#-----------------------------------------------------------------------------
+project(Segmentations)
+
+#-----------------------------------------------------------------------------
+set(CMAKE_CXX_STANDARD "17")
+
+#-----------------------------------------------------------------------------
+find_package(Slicer REQUIRED)
+include(${Slicer_USE_FILE})
+
+# UseSlicer.cmake resets Slicer_INSTALL_QTLOADABLEMODULES_SHARE_DIR to empty
+# when Slicer_QTLOADABLEMODULES_SHARE_DIR is unset (standalone build). Restore.
+if(NOT Slicer_INSTALL_QTLOADABLEMODULES_SHARE_DIR)
+  set(Slicer_INSTALL_QTLOADABLEMODULES_SHARE_DIR
+    "./share/Slicer-${Slicer_VERSION}/qt-loadable-modules")
+endif()
+# UseSlicer.cmake also resets Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR to empty
+# when Slicer_QTLOADABLEMODULES_LIB_DIR is unset (standalone build). Restore.
+if(NOT Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR)
+  set(Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR
+    "./lib/Slicer-${Slicer_VERSION}/qt-loadable-modules")
+endif()
+
 #-----------------------------------------------------------------------------
 set(MODULE_NAME "Segmentations")
 
@@ -87,6 +112,7 @@ slicerMacroBuildLoadableModule(
   TARGET_LIBRARIES ${MODULE_TARGET_LIBRARIES}
   RESOURCES ${MODULE_RESOURCES}
   WITH_GENERIC_TESTS
+  LINK_DIRECTORIES ${EXTRA_MODULE_LIB_DIRS}
   )
 
 #-----------------------------------------------------------------------------
