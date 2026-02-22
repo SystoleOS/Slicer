@@ -5,8 +5,7 @@ set(KIT ${PROJECT_NAME})
 set(${KIT}_EXPORT_DIRECTIVE "Q_SLICER_MODULE_${MODULE_NAME_UPPER}_WIDGETS_EXPORT")
 
 set(${KIT}_INCLUDE_DIRECTORIES
-  ${vtkSlicer${MODULE_NAME}ModuleMRML_SOURCE_DIR}
-  ${vtkSlicer${MODULE_NAME}ModuleMRML_BINARY_DIR}
+  ${vtkSlicer${MODULE_NAME}ModuleMRML_INCLUDE_DIRS}
   )
 
 set(${KIT}_SRCS
@@ -73,6 +72,7 @@ SlicerMacroBuildModuleWidgets(
   TARGET_LIBRARIES ${${KIT}_TARGET_LIBRARIES}
   RESOURCES ${${KIT}_RESOURCES}
   WRAP_PYTHONQT
+  LINK_DIRECTORIES ${EXTRA_MODULE_LIB_DIRS}
   )
 
 #-----------------------------------------------------------------------------

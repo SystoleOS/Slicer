@@ -8,7 +8,7 @@ find_package(JsonCpp REQUIRED)
 
 set(${KIT}_INCLUDE_DIRECTORIES
   ${JsonCpp_INCLUDE_DIR}
-  ${vtkSlicerMarkupsModuleMRML_SOURCE_DIR}
+  ${vtkSlicerMarkupsModuleMRML_INCLUDE_DIRS}
   )
 
 set(${KIT}_SRCS
@@ -44,4 +44,5 @@ SlicerMacroBuildModuleMRML(
   INCLUDE_DIRECTORIES ${${KIT}_INCLUDE_DIRECTORIES}
   SRCS ${${KIT}_SRCS}
   TARGET_LIBRARIES ${${KIT}_TARGET_LIBRARIES}
+  LINK_DIRECTORIES ${EXTRA_MODULE_LIB_DIRS}
   )
