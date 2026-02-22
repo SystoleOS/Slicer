@@ -24,6 +24,7 @@ set(${KIT}_TARGET_LIBRARIES
   vtkSlicer${MODULE_NAME}ModuleMRML
   vtkSlicerTerminologiesModuleLogic
   vtkSlicerMarkupsModuleMRML
+  vtkITK
   )
 
 #-----------------------------------------------------------------------------
@@ -33,4 +34,5 @@ SlicerMacroBuildModuleLogic(
   INCLUDE_DIRECTORIES ${${KIT}_INCLUDE_DIRECTORIES}
   SRCS ${${KIT}_SRCS}
   TARGET_LIBRARIES ${${KIT}_TARGET_LIBRARIES}
+  LINK_DIRECTORIES ${EXTRA_MODULE_LIB_DIRS}
   )

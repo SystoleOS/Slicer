@@ -9,6 +9,7 @@ set(${KIT}_INCLUDE_DIRECTORIES
   ${vtkSlicerSegmentationsModuleLogic_INCLUDE_DIRS}
   ${qSlicerSegmentationsEditorEffects_INCLUDE_DIRS}
   ${qSlicerTerminologiesModuleWidgets_INCLUDE_DIRS}
+  ${vtkSlicerTerminologiesModuleLogic_INCLUDE_DIRS}
   )
 
 set(${KIT}_SRCS
@@ -86,6 +87,7 @@ SlicerMacroBuildModuleWidgets(
   TARGET_LIBRARIES ${${KIT}_TARGET_LIBRARIES}
   RESOURCES ${${KIT}_RESOURCES}
   WRAP_PYTHONQT
+  LINK_DIRECTORIES ${EXTRA_MODULE_LIB_DIRS}
   )
 
 #-----------------------------------------------------------------------------
