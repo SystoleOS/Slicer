@@ -167,6 +167,27 @@ endif()
 # and https://github.com/commontk/PythonQt/issues/8
 if(Slicer_USE_PYTHONQT)
   find_package(PythonQt)
+  # Bridge modern Python3 CMake variables/targets to the legacy names expected
+  # by CTK macros (ctkMacroBuildLibWrapper, ctkMacroWrapPythonQt, etc.).
+  # find_package(PythonInterp) and find_package(PythonLibs) were removed in
+  # CMake 3.27; find_package(CTK) above has already found Python3 for us.
+  if(TARGET Python3::Python)
+    if(NOT PYTHON_EXECUTABLE)
+      set(PYTHON_EXECUTABLE "${Python3_EXECUTABLE}")
+    endif()
+    if(NOT PYTHON_LIBRARIES)
+      set(PYTHON_LIBRARIES ${Python3_LIBRARIES})
+    endif()
+    if(NOT PYTHON_INCLUDE_DIRS)
+      set(PYTHON_INCLUDE_DIRS ${Python3_INCLUDE_DIRS})
+    endif()
+    if(NOT PYTHONINTERP_FOUND)
+      set(PYTHONINTERP_FOUND TRUE)
+    endif()
+    if(NOT PYTHONLIBS_FOUND)
+      set(PYTHONLIBS_FOUND TRUE)
+    endif()
+  endif()
 endif()
 
 # --------------------------------------------------------------------------
