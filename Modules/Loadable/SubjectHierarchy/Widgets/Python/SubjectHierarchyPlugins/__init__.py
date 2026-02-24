@@ -5,7 +5,7 @@ import traceback
 import logging
 import sys
 
-currentDir = os.path.dirname(os.path.realpath(__file__))
+currentDir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(currentDir)
 for fileName in os.listdir(currentDir):
     fileNameNoExtension = os.path.splitext(fileName)[0]
