@@ -167,6 +167,14 @@ endif()
 # and https://github.com/commontk/PythonQt/issues/8
 if(Slicer_USE_PYTHONQT)
   find_package(PythonQt)
+  # Expose the PythonQt header directory globally so that any target in a
+  # standalone (install-tree) build can include PythonQt headers directly
+  # (e.g. ctkAbstractPythonManager.h includes PythonQtPythonInclude.h).
+  # In the full Slicer superbuild this is satisfied by global include dirs
+  # set in the top-level CMakeLists.txt; in standalone builds it is not.
+  if(PYTHONQT_INCLUDE_DIR)
+    include_directories(${PYTHONQT_INCLUDE_DIR})
+  endif()
   # Bridge modern Python3 CMake variables/targets to the legacy names expected
   # by CTK macros (ctkMacroBuildLibWrapper, ctkMacroWrapPythonQt, etc.).
   # find_package(PythonInterp) and find_package(PythonLibs) were removed in
