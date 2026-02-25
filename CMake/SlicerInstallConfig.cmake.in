@@ -127,6 +127,12 @@ set(Slicer_Libs_INCLUDE_DIRS
   "@vtkAddon_INCLUDE_DIRS@"
   )
 
+# MRMLCLI_INCLUDE_DIRS is only present when CLI support is enabled.
+if(Slicer_BUILD_CLI_SUPPORT)
+  set(MRMLCLI_INCLUDE_DIRS "${Slicer_HOME}/include/MRMLCLI"
+    CACHE INTERNAL "MRMLCLI includes" FORCE)
+endif()
+
 # Slicer Base library directories.
 set(Slicer_Base_LIBRARY_DIRS
   "${Slicer_HOME}/@Slicer_INSTALL_LIB_DIR@"
