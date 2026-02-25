@@ -308,10 +308,18 @@ void qSlicerCoreApplicationPrivate::init()
   ctkAppLauncherSettings appLauncherSettings;
   appLauncherSettings.setLauncherName(q->applicationName());
   appLauncherSettings.setLauncherDir(this->SlicerHome);
-  if (!appLauncherSettings.readSettings(q->launcherSettingsFilePath()))
-  {
-    q->showConsoleMessage(QString("Failed to read launcher settings %1").arg(q->launcherSettingsFilePath()));
-  }
+  // Only attempt to read the launcher settings if the file actually exists.
+  // When Slicer is deployed without the CTK app launcher (e.g. using a plain
+  // shell wrapper that sets all required environment variables directly), the
+  // file will not be present and no warning should be emitted.
+  if (QFile::exists(q->launcherSettingsFilePath()))
+    {
+    if (!appLauncherSettings.readSettings(q->launcherSettingsFilePath()))
+      {
+      q->showConsoleMessage(QString("Failed to read launcher settings %1")
+                            .arg(q->launcherSettingsFilePath()));
+      }
+    }
 
   // Regular environment variables
   QHash<QString, QString> envVars = appLauncherSettings.envVars();
