@@ -68,6 +68,9 @@ if(NOT Slicer_SUPERBUILD)
     set(TBB_DIR "@TBB_DIR@")
   endif()
   set(CTK_DIR "@CTK_DIR@")
+  if(Slicer_BUILD_CLI_SUPPORT)
+    set(SlicerExecutionModel_DIR "@SlicerExecutionModel_DIR@")
+  endif()
 endif()
 
 # Set the Slicer_EXPORT_HEADER_TEMPLATE to the install dir
