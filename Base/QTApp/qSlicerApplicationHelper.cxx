@@ -21,6 +21,8 @@
 #include "qSlicerApplicationHelper.h"
 
 // Qt includes
+#include <QCoreApplication>
+#include <QDir>
 #include <QFont>
 #include <QtGlobal> // For Q_OS_*, QT_VERSION
 #include <QLabel>
@@ -44,6 +46,7 @@
 #include "qSlicerLoadableModuleFactory.h"
 #include "qSlicerModuleFactoryManager.h"
 #include "qSlicerModuleManager.h"
+#include "vtkSlicerConfigure.h"         // For CTK_LIBRARY_DIR
 #include "vtkSlicerVersionConfigure.h" // For Slicer_MAIN_PROJECT_VERSION_FULL
 
 #ifdef Slicer_USE_PYTHONQT
@@ -93,6 +96,17 @@ qSlicerApplicationHelper::~qSlicerApplicationHelper() = default;
 void qSlicerApplicationHelper::preInitializeApplication(
     const char* argv0, ctkProxyStyle* style)
 {
+  // Register CTK Qt designer plugins (ctkCollapsibleButton, …) so that
+  // QFormBuilder finds them.  Must be done before QApplication is created.
+  // CTK_LIBRARY_DIR is baked in at compile time via vtkSlicerConfigure.h.
+  QCoreApplication::addLibraryPath(
+    QDir::cleanPath(QString::fromLatin1(CTK_LIBRARY_DIR)));
+
+  // Disable the QtWebEngine sandbox in environments that do not support
+  // unprivileged user namespaces (e.g. Docker, most HPC systems).
+  // Must be set before any QtWebEngine object is instantiated.
+  qputenv("QTWEBENGINE_DISABLE_SANDBOX", "1");
+
 #if defined(Q_OS_MACOS) && (QT_VERSION < QT_VERSION_CHECK(5, 15, 10))
   // See https://github.com/Slicer/Slicer/issues/7261
   QLoggingCategory::setFilterRules("qt.qpa.fonts=false");
