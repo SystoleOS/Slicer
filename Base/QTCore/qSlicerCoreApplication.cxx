@@ -381,19 +381,31 @@ void qSlicerCoreApplicationPrivate::init()
     }
   }
 
-  // Prepend SLICER_PYTHONPATH (colon-separated, assembled by Guix
-  // native-search-path from contributing packages) to PYTHONPATH so that
-  // Slicer's Python stack is available when qSlicerCorePythonManager calls
-  // Py_InitializeFromConfig(), which reads PYTHONPATH from the process
-  // environment.
+  // Build PYTHONPATH for the Guix profile layout:
+  //   1. CTK_LIBRARY_DIR     — CTKWidgetsPythonQt*.so and other CTK PythonQt
+  //                            extension modules (installed to lib/, no subdir).
+  //   2. vtkAddon_LIB_DIR    — vtkAddonPython.so (similarly flat in lib/).
+  //   3. SLICER_PYTHONPATH   — colon-separated list assembled by Guix
+  //                            native-search-path: slicer bin/Python wrappers,
+  //                            lib/Slicer-5.8 C-extensions, site-packages for
+  //                            vtk, vtkAddon, numpy, scipy, …
+  //   4. existing PYTHONPATH — anything the user already set.
+  // Steps 1–2 are guarded by Slicer_USE_PYTHONQT because the PythonQt
+  // extension modules only exist in the Python-enabled build.
   {
+  QString existing = this->Environment.value("PYTHONPATH");
+  QStringList paths;
+#ifdef Slicer_USE_PYTHONQT
+  paths << QString::fromLatin1(CTK_LIBRARY_DIR);
+  paths << QString::fromLatin1(vtkAddon_LIB_DIR);
+#endif
   QString slicerPyPath = this->Environment.value("SLICER_PYTHONPATH");
   if (!slicerPyPath.isEmpty())
+    paths << slicerPyPath.split(QLatin1Char(':'));
+  if (!existing.isEmpty())
+    paths << existing.split(QLatin1Char(':'));
+  if (!paths.isEmpty())
     {
-    QString existing = this->Environment.value("PYTHONPATH");
-    QStringList paths = slicerPyPath.split(QLatin1Char(':'));
-    if (!existing.isEmpty())
-      paths << existing.split(QLatin1Char(':'));
     paths.removeDuplicates();
     q->setEnvironmentVariable("PYTHONPATH", paths.join(QLatin1Char(':')));
     }

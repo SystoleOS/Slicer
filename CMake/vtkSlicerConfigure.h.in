@@ -125,6 +125,7 @@
 #define VTK_DIR "@VTK_DIR@"
 #define CTK_DIR "@CTK_DIR@"
 #define CTK_LIBRARY_DIR "@CTK_LIBRARY_DIR@"
+#define vtkAddon_LIB_DIR "@vtkAddon_LIB_DIR@"
 //#define Teem_DIR "@Teem_DIR@"
 
 #define Slicer_QM_DIR "@Slicer_QM_DIR@"
