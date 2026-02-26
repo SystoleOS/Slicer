@@ -170,6 +170,29 @@ QStringList qSlicerCoreCommandOptions::additionalModulePaths()const
   }
   // handle rest of pathS
   allAdditionalModulePaths.append(d->ParsedArgs.value("additional-module-paths").toStringList());
+
+  // Also honour the SLICER_ADDITIONAL_MODULE_PATHS environment variable
+  // (colon-separated on Unix/macOS, semicolon-separated on Windows).
+  // This allows Guix/Nix profile-based deployments to declare module paths
+  // via native-search-path without requiring a shell wrapper to translate
+  // them into command-line arguments.
+  QByteArray envPaths = qgetenv("SLICER_ADDITIONAL_MODULE_PATHS");
+  if (!envPaths.isEmpty())
+    {
+#ifdef Q_OS_WIN
+    const char sep = ';';
+#else
+    const char sep = ':';
+#endif
+    for (const QByteArray& p : envPaths.split(sep))
+      {
+      if (!p.isEmpty())
+        {
+        allAdditionalModulePaths << QString::fromLocal8Bit(p);
+        }
+      }
+    }
+
   return allAdditionalModulePaths;
 }
 
