@@ -200,21 +200,20 @@ for kit in available_kits:
     del kit
 
 # -----------------------------------------------------------------------------
-# Import numpy and scipy early, as a workaround for application hang in import
-# of numpy or scipy at application startup on Windows 11 due to output redirection
-# (only needed for embedded Python, not for standalone).
-# See details in https://github.com/Slicer/Slicer/issues/5945
-# While the workaround is only needed for Windows 11, it is performed on
-# all operating systems to minimize differences of the startup process
-# between different platforms.
+# Import numpy and scipy early on Windows 11 to work around an application
+# hang caused by output redirection at startup (Slicer issue #5945).
+# The workaround is only needed on Windows; skip it on other platforms to
+# avoid printing spurious ImportErrors when numpy/scipy are not installed.
 
-if not standalone_python:
+import sys as _sys
+if not standalone_python and _sys.platform == "win32":
     try:
         import numpy  # noqa: F401
         import scipy  # noqa: F401
         import scipy.linalg  # noqa: F401
     except ImportError as detail:
         print(detail)
+del _sys
 
 # -----------------------------------------------------------------------------
 # Cleanup: Removing things the user shouldn't have to see.
