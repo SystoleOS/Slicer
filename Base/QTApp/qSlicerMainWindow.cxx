@@ -1831,6 +1831,18 @@ void qSlicerMainWindow::setHomeModuleCurrent()
   Q_D(qSlicerMainWindow);
   QSettings settings;
   QString homeModule = settings.value("Modules/HomeModule").toString();
+  // If the saved home module is not available in the current module pool
+  // (e.g. the profile has fewer modules than the session that saved the
+  // setting), fall back to no module rather than silently keeping a stale
+  // pending name that prevents proper layout initialization.
+  if (!homeModule.isEmpty())
+    {
+    qSlicerModuleManager* moduleManager = qSlicerApplication::application()->moduleManager();
+    if (!moduleManager || !moduleManager->module(homeModule))
+      {
+      homeModule = QString();
+      }
+    }
   d->ModuleSelectorToolBar->selectModule(homeModule);
 }
 
