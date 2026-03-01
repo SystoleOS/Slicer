@@ -28,6 +28,8 @@
 #include <QMouseEvent>
 #include <QSettings>
 #include <QSplashScreen>
+#include <QFile>
+#include <QTextStream>
 #include <QTimer>
 
 // CTK includes
@@ -157,6 +159,20 @@ int qSlicerApplicationHelper::postInitializeApplication(
     app.installEventFilter(app.style());
   }
 
+  // Apply custom Qt stylesheet if SLICER_INIT_DIR/style.qss exists.
+  {
+    QByteArray initDir = qgetenv("SLICER_INIT_DIR");
+    if (!initDir.isEmpty())
+      {
+      QFile qssFile(QString::fromLocal8Bit(initDir) + "/style.qss");
+      if (qssFile.open(QFile::ReadOnly | QFile::Text))
+        {
+        QTextStream ts(&qssFile);
+        app.setStyleSheet(ts.readAll());
+        }
+      }
+  }
+
 #ifdef Slicer_USE_QtTesting
   setEnableQtTesting(); // disabled the native menu bar.
 #endif
@@ -182,7 +198,18 @@ int qSlicerApplicationHelper::postInitializeApplication(
 
   if (showSplashScreen)
   {
-    QPixmap pixmap(":/SplashScreen.png");
+    QPixmap pixmap;
+    {
+      QByteArray initDir = qgetenv("SLICER_INIT_DIR");
+      if (!initDir.isEmpty())
+        {
+        pixmap.load(QString::fromLocal8Bit(initDir) + "/splash.png");
+        }
+      if (pixmap.isNull())
+        {
+        pixmap.load(":/SplashScreen.png");
+        }
+    }
 
     // The application launcher shows the splash screen without DPI scaling (if the screen resolution is higher
     // then the splashscreen icon appears smaller).
