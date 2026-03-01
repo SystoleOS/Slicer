@@ -12,6 +12,7 @@
 
 // Qt includes
 #include <QDebug>
+#include <QFileInfo>
 #include <QVariant>
 
 // Slicer includes
@@ -43,6 +44,17 @@ void qSlicerPythonManager::executeInitializationScripts()
 
   // Evaluate application script
   this->executeFile(app->slicerHome() + "/bin/Python/slicer/slicerqt.py");
+
+  // Execute custom initialization script if SLICER_INIT_DIR/init.py exists.
+  QByteArray initDir = qgetenv("SLICER_INIT_DIR");
+  if (!initDir.isEmpty())
+    {
+    QString initPy = QString::fromLocal8Bit(initDir) + "/init.py";
+    if (QFileInfo::exists(initPy))
+      {
+      this->executeFile(initPy);
+      }
+    }
 }
 
 //-----------------------------------------------------------------------------
