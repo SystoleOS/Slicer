@@ -493,3 +493,25 @@ if(NOT Slicer_DONT_USE_EXTENSION)
      mark_as_superbuild(GIT_EXECUTABLE)
   endif()
 endif()
+
+# When building inside a Guix shell (GUIX_ENVIRONMENT is set), automatically add
+# installed Slicer module packages (slicer-markups-5.8, etc.) to the link and
+# include search paths so extension builds work without extra cmake flags.
+if(DEFINED ENV{GUIX_ENVIRONMENT})
+  set(_guix_env "$ENV{GUIX_ENVIRONMENT}")
+  set(_guix_qt_lib "${_guix_env}/lib/Slicer-${Slicer_VERSION}/qt-loadable-modules")
+  if(EXISTS "${_guix_qt_lib}")
+    link_directories("${_guix_qt_lib}")
+    file(GLOB _guix_inc_dirs
+         "${_guix_env}/include/Slicer-${Slicer_VERSION}/qt-loadable-modules/*")
+    foreach(_d ${_guix_inc_dirs})
+      if(IS_DIRECTORY "${_d}")
+        include_directories("${_d}")
+      endif()
+    endforeach()
+    unset(_guix_inc_dirs)
+    unset(_d)
+  endif()
+  unset(_guix_qt_lib)
+  unset(_guix_env)
+endif()
