@@ -190,6 +190,14 @@ endif()
 # Extension build support (required when building extensions against an installed Slicer)
 set(Slicer_EXTENSION_GENERATE_CONFIG "${Slicer_CMAKE_DIR}/SlicerExtensionGenerateConfig.cmake")
 
+# Launch command used by SlicerMacroSimpleTest and SlicerMacroBuildLoadableModule
+# when defining CTest tests.  Replaces the CTK applauncher (absent in Guix):
+# slicer-launch extends LD_LIBRARY_PATH from SLICER_ADDITIONAL_MODULE_PATHS and
+# then execs its arguments, so the developer can point that variable at their
+# extension build directory before running ctest.
+set(Slicer_LAUNCH_COMMAND "${Slicer_HOME}/bin/slicer-launch")
+set(SEM_LAUNCH_COMMAND "${Slicer_HOME}/bin/slicer-launch")
+
 # Components needed to build modules from outside a Slicer build tree or
 # from outside a Slicer installation tree
 # set(TCLAP_DIR "${Slicer_HOME}/lib/tclap")
