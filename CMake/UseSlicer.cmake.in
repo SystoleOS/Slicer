@@ -175,6 +175,14 @@ if(Slicer_USE_PYTHONQT)
   if(PYTHONQT_INCLUDE_DIR)
     include_directories(${PYTHONQT_INCLUDE_DIR})
   endif()
+  # Qt5 component headers are not transitively propagated through CTK's cmake
+  # targets (CTK links Qt5::Xml privately).  CTK public headers include e.g.
+  # <QDomDocument> which requires the QtXml include path to be globally visible.
+  foreach(_qt5_comp Xml Widgets Network Svg)
+    if(Qt5${_qt5_comp}_INCLUDE_DIRS)
+      include_directories(${Qt5${_qt5_comp}_INCLUDE_DIRS})
+    endif()
+  endforeach()
   # Bridge modern Python3 CMake variables/targets to the legacy names expected
   # by CTK macros (ctkMacroBuildLibWrapper, ctkMacroWrapPythonQt, etc.).
   # find_package(PythonInterp) and find_package(PythonLibs) were removed in
