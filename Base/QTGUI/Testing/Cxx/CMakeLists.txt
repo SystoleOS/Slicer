@@ -122,3 +122,15 @@ endif()
 
 set(Slicer_CXX_MODULE_TEST_TEMPLATES_DIR ${CMAKE_CURRENT_SOURCE_DIR}
   CACHE INTERNAL "Path to cxx test templates directory.")
+
+# Install the CXX test templates so that projects building against the
+# installed tree (e.g. Guix-packaged extensions) can find them.
+# Use CMAKE_CURRENT_SOURCE_DIR — the .cxx.in files are plain sources and
+# are never copied to the binary directory when BUILD_TESTING is OFF.
+if(NOT Slicer_INSTALL_NO_DEVELOPMENT)
+  install(FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/qSlicerModuleGenericTest.cxx.in
+    ${CMAKE_CURRENT_SOURCE_DIR}/qSlicerModuleWidgetGenericTest.cxx.in
+    DESTINATION ${Slicer_INSTALL_SHARE_DIR}/test-templates COMPONENT Development
+    )
+endif()
