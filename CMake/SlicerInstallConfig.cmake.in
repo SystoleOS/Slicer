@@ -102,7 +102,7 @@ set(Slicer_Libs_LIBRARY_DIRS
   "${Slicer_HOME}/lib/ModuleDescriptionParser"
   "${Slicer_HOME}/lib/Qdec"
   "${Slicer_HOME}/lib/tclap"
-  "${Slicer_HOME}/lib/vtkAddon"
+  "@vtkAddon_LIB_DIR@"
   "${Slicer_HOME}/lib/vtkITK"
   "${Slicer_HOME}/lib/vtkSegmentationCore"
   "${Slicer_HOME}/lib/vtkTeem"
