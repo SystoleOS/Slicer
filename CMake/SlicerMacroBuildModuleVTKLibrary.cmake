@@ -151,6 +151,9 @@ macro(SlicerMacroBuildModuleVTKLibrary)
   # --------------------------------------------------------------------------
   # Install library
   # --------------------------------------------------------------------------
+  if(POLICY CMP0177)
+    cmake_policy(SET CMP0177 NEW)
+  endif()
   if(NOT MY_NO_INSTALL)
     install(TARGETS ${lib_name}
       RUNTIME DESTINATION ${Slicer_INSTALL_QTLOADABLEMODULES_BIN_DIR} COMPONENT RuntimeLibraries
