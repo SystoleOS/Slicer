@@ -185,6 +185,9 @@ set(Slicer_INSTALL_QTLOADABLEMODULES_INCLUDE_DIR "@Slicer_INSTALL_QTLOADABLEMODU
 set(Slicer_INSTALL_QTLOADABLEMODULES_SHARE_DIR "@Slicer_INSTALL_QTLOADABLEMODULES_SHARE_DIR@")
 
 if(Slicer_USE_PYTHONQT)
+  # PythonQt location — needed so that find_package(PythonQt) in UseSlicer.cmake
+  # can set PYTHONQT_INCLUDE_DIR for any extension build.
+  set(PYTHONQT_INSTALL_DIR "@PYTHONQT_INSTALL_DIR@")
   # Non-install relative paths needed by standalone module builds (e.g. for
   # ctkMacroCompilePythonScript DESTINATION_DIR which is relative to CMAKE_BINARY_DIR).
   set(Slicer_QTSCRIPTEDMODULES_SUBDIR "@Slicer_QTSCRIPTEDMODULES_SUBDIR@")
