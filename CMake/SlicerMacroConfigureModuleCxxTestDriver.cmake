@@ -108,9 +108,15 @@ macro(SlicerMacroConfigureModuleCxxTestDriver)
       PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${Slicer_BIN_DIR}
       )
+    # Test drivers include qSlicerApplicationHelper.h which requires
+    # qSlicerBaseQTApp and CTKScriptingPythonCore. In a superbuild these come
+    # transitively through Slicer_GUI_LIBRARY; in an install-tree build they
+    # must be listed explicitly.
     target_link_libraries(${SLICER_TEST_DRIVER_NAME}CxxTests
       ${SLICER_TEST_DRIVER_NAME}
       ${SLICER_TEST_DRIVER_TARGET_LIBRARIES}
+      qSlicerBaseQTApp
+      CTKScriptingPythonCore
       )
     if(NOT DEFINED SLICER_TEST_DRIVER_FOLDER AND DEFINED MODULE_NAME)
       set(SLICER_TEST_DRIVER_FOLDER "Module-${MODULE_NAME}")
