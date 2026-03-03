@@ -231,8 +231,9 @@ macro(SlicerMacroBuildBaseQtLibrary)
   # Install headers
   # --------------------------------------------------------------------------
   if(NOT Slicer_INSTALL_NO_DEVELOPMENT)
-    # Install headers
-    file(GLOB headers "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
+    # Install headers and template implementation files (.txx)
+    file(GLOB headers "${CMAKE_CURRENT_SOURCE_DIR}/*.h"
+                      "${CMAKE_CURRENT_SOURCE_DIR}/*.txx")
     install(FILES
       ${headers}
       ${dynamicHeaders}
