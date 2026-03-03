@@ -176,6 +176,13 @@ set(Slicer_INSTALL_CLIMODULES_BIN_DIR "@Slicer_INSTALL_CLIMODULES_BIN_DIR@")
 set(Slicer_INSTALL_CLIMODULES_LIB_DIR "@Slicer_INSTALL_CLIMODULES_LIB_DIR@")
 set(Slicer_INSTALL_CLIMODULES_SHARE_DIR "@Slicer_INSTALL_CLIMODULES_SHARE_DIR@")
 
+# Non-install relative paths needed by extension builds: SlicerMacroBuildLoadableModule
+# uses these as LIBRARY_OUTPUT_DIRECTORY / RUNTIME_OUTPUT_DIRECTORY relative to
+# CMAKE_BINARY_DIR.  Without them the .so files land flat in the build root.
+set(Slicer_QTLOADABLEMODULES_SUBDIR "@Slicer_QTLOADABLEMODULES_SUBDIR@")
+set(Slicer_QTLOADABLEMODULES_BIN_DIR "@Slicer_QTLOADABLEMODULES_BIN_DIR@")
+set(Slicer_QTLOADABLEMODULES_LIB_DIR "@Slicer_QTLOADABLEMODULES_LIB_DIR@")
+
 # Always expose install dirs so external projects can build loadable and scripted
 # modules against an installed Slicer even when Slicer_BUILD_QTLOADABLEMODULES=OFF.
 set(Slicer_INSTALL_QTLOADABLEMODULES_BIN_DIR "@Slicer_INSTALL_QTLOADABLEMODULES_BIN_DIR@")
