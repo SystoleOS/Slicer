@@ -141,11 +141,18 @@ set(Slicer_Base_LIBRARY_DIRS
   )
 
 # Slicer Base include file directories.
+# Note: SlicerBaseCLI and SlicerBaseLogic install under include/ (not include/Slicer-5.8/).
+# The Qt-based libraries install under include/Slicer-5.8/<LibName>/.
 set(Slicer_Base_INCLUDE_DIRS
   "${Slicer_HOME}/@Slicer_INSTALL_INCLUDE_DIR@"
-  "${Slicer_HOME}/@Slicer_INSTALL_INCLUDE_DIR@/SlicerBaseCLI"
-  "${Slicer_HOME}/@Slicer_INSTALL_INCLUDE_DIR@/SlicerBaseGUI"
-  "${Slicer_HOME}/@Slicer_INSTALL_INCLUDE_DIR@/SlicerBaseLogic"
+  "${Slicer_HOME}/include/SlicerBaseCLI"
+  "${Slicer_HOME}/include/SlicerBaseLogic"
+  "${Slicer_HOME}/@Slicer_INSTALL_INCLUDE_DIR@/qSlicerApp"
+  "${Slicer_HOME}/@Slicer_INSTALL_INCLUDE_DIR@/qSlicerBaseQTApp"
+  "${Slicer_HOME}/@Slicer_INSTALL_INCLUDE_DIR@/qSlicerBaseQTCLI"
+  "${Slicer_HOME}/@Slicer_INSTALL_INCLUDE_DIR@/qSlicerBaseQTCore"
+  "${Slicer_HOME}/@Slicer_INSTALL_INCLUDE_DIR@/qSlicerBaseQTGUI"
+  "${Slicer_HOME}/@Slicer_INSTALL_INCLUDE_DIR@/qSlicerModulesCore"
   )
 
 # The location of the UseSlicer.cmake file.
