@@ -328,7 +328,16 @@ macro(slicerMacroBuildLoadableModule)
 
     ctk_add_executable_utf8(${KIT}GenericCxxTests ${Tests})
     set_target_properties(${KIT}GenericCxxTests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${Slicer_BIN_DIR})
-    target_link_libraries(${KIT}GenericCxxTests ${KIT})
+    # GenericCxxTests includes qSlicerApplicationHelper.h (via the generic test
+    # template) which requires qSlicerBaseQTApp and CTKScriptingPythonCore.
+    # In a superbuild, Slicer_GUI_LIBRARY (= qSlicerBaseQTApp) is already
+    # transitively available through ${KIT}; in an install-tree build the
+    # module links qSlicerBaseQTCore/GUI instead, so link them explicitly here.
+    target_link_libraries(${KIT}GenericCxxTests
+      ${KIT}
+      qSlicerBaseQTApp
+      CTKScriptingPythonCore
+      )
     if(NOT "${LOADABLEMODULE_FOLDER}" STREQUAL "")
       set_target_properties(${KIT}GenericCxxTests PROPERTIES FOLDER ${LOADABLEMODULE_FOLDER})
     endif()
