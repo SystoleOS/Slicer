@@ -101,6 +101,12 @@ void qSlicerApplicationHelper::preInitializeApplication(
   // CTK_LIBRARY_DIR is baked in at compile time via vtkSlicerConfigure.h.
   QCoreApplication::addLibraryPath(
     QDir::cleanPath(QString::fromLatin1(CTK_LIBRARY_DIR)));
+  // Also register Slicer's own Qt designer plugins (qMRMLWidgetsPlugin, …)
+  // so that QUiLoader can instantiate qMRMLWidget, qMRMLNodeComboBox, etc.
+  // when scripted modules load their .ui files at runtime.
+  // Slicer_PLUGIN_DIR is CMAKE_INSTALL_PREFIX/lib, baked in at compile time.
+  QCoreApplication::addLibraryPath(
+    QDir::cleanPath(QString::fromLatin1(Slicer_PLUGIN_DIR)));
 
   // Disable the QtWebEngine sandbox in environments that do not support
   // unprivileged user namespaces (e.g. Docker, most HPC systems).

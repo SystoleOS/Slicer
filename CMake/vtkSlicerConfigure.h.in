@@ -126,6 +126,9 @@
 #define CTK_DIR "@CTK_DIR@"
 #define CTK_LIBRARY_DIR "@CTK_LIBRARY_DIR@"
 #define vtkAddon_LIB_DIR "@vtkAddon_LIB_DIR@"
+// Qt plugin root for Slicer's own designer plugins (qMRMLWidgetsPlugin, …).
+// These are installed to Slicer_PLUGIN_DIR/designer/ at install time.
+#define Slicer_PLUGIN_DIR "@CMAKE_INSTALL_PREFIX@/lib"
 //#define Teem_DIR "@Teem_DIR@"
 
 #define Slicer_QM_DIR "@Slicer_QM_DIR@"
