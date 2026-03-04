@@ -107,6 +107,21 @@ void qSlicerApplicationHelper::preInitializeApplication(
   // Slicer_PLUGIN_DIR is CMAKE_INSTALL_PREFIX/lib, baked in at compile time.
   QCoreApplication::addLibraryPath(
     QDir::cleanPath(QString::fromLatin1(Slicer_PLUGIN_DIR)));
+  // Register Qt designer plugins from loadable-module packages.  Each entry in
+  // SLICER_ADDITIONAL_MODULE_PATHS points to a qt-loadable-modules/ directory;
+  // module packages install their designer plugins in a designer/ subdirectory
+  // there so that they end up in the merged Guix profile and are found by Qt.
+  {
+    const QByteArray additionalPaths = qgetenv("SLICER_ADDITIONAL_MODULE_PATHS");
+    if (!additionalPaths.isEmpty())
+    {
+      for (const QString& path :
+           QString::fromLocal8Bit(additionalPaths).split(":", QString::SkipEmptyParts))
+      {
+        QCoreApplication::addLibraryPath(QDir::cleanPath(path));
+      }
+    }
+  }
 
   // Disable the QtWebEngine sandbox in environments that do not support
   // unprivileged user namespaces (e.g. Docker, most HPC systems).

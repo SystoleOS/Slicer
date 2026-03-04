@@ -415,6 +415,24 @@ if(Slicer_USE_PYTHONQT)
   endif()
 endif()
 
+# In standalone module builds CMAKE_LIBRARY_OUTPUT_DIRECTORY is not set, which
+# causes ctkMacroBuildQtPlugin to resolve the designer plugin build path as the
+# root-filesystem "/designer/" directory (empty string + "/designer").  Set a
+# reasonable default so the build succeeds.
+# Also redirect CTK_INSTALL_QTPLUGIN_DIR so that each module package's designer
+# plugins install alongside its loadable-module libraries.  At runtime Slicer
+# adds every SLICER_ADDITIONAL_MODULE_PATHS entry (which points to the merged
+# qt-loadable-modules/ profile directory) as a Qt library-path, so Qt will scan
+# qt-loadable-modules/designer/ and find these plugins there.
+if(NOT DEFINED Slicer_SOURCE_DIR)
+  if(NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${Slicer_QTLOADABLEMODULES_LIB_DIR}")
+  endif()
+  if(Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR)
+    set(CTK_INSTALL_QTPLUGIN_DIR "${Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR}")
+  endif()
+endif()
+
 # These variables can be used when configuring extension external projects in
 # two different scenarios: (1) bundled extensions and (2) regular extensions.
 #
