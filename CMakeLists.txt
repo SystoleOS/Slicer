@@ -1130,6 +1130,33 @@ set(Slicer_EXTENSION_GENERATE_CONFIG ${Slicer_SOURCE_DIR}/CMake/SlicerExtensionG
 set(Slicer_EXTENSION_CPACK ${Slicer_SOURCE_DIR}/CMake/SlicerExtensionCPack.cmake)
 
 # --------------------------------------------------------------------------
+# Install hierarchy files and generate their paths for the install-tree config.
+#
+# vtkMacroKitPythonWrap sets <Kit>_WRAP_HIERARCHY_FILE CACHE INTERNAL for each
+# wrapped library (MRMLCore, MRMLLogic, ...).  Extension builds need these
+# paths so that vtkWrapPython can resolve the Slicer class hierarchy.  We
+# install the generated .txt files and emit the correct paths into the
+# install-tree SlicerConfig.cmake via @Slicer_INSTALL_WRAP_HIERARCHY_FILES_CONFIG@.
+# --------------------------------------------------------------------------
+
+if(Slicer_USE_PYTHONQT)
+  set(_slicer_hierarchy_install_dir "${Slicer_INSTALL_LIB_DIR}/hierarchy/Slicer")
+  get_property(_wrap_hierarchy_targets GLOBAL PROPERTY SLICER_WRAP_HIERARCHY_TARGETS)
+  set(Slicer_INSTALL_WRAP_HIERARCHY_FILES_CONFIG)
+  foreach(_target ${_wrap_hierarchy_targets})
+    if(${_target}_WRAP_HIERARCHY_FILE)
+      install(FILES "${${_target}_WRAP_HIERARCHY_FILE}"
+        DESTINATION "${_slicer_hierarchy_install_dir}"
+        COMPONENT Development)
+      string(APPEND Slicer_INSTALL_WRAP_HIERARCHY_FILES_CONFIG
+        "set(${_target}_WRAP_HIERARCHY_FILE \"\${_slicer_hierarchy_dir}/${_target}Hierarchy.txt\")\n")
+    endif()
+  endforeach()
+  unset(_wrap_hierarchy_targets)
+  unset(_slicer_hierarchy_install_dir)
+endif()
+
+# --------------------------------------------------------------------------
 # Bundle remote modules and extensions adding source directories.
 # --------------------------------------------------------------------------
 

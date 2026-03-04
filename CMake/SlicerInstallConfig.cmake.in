@@ -92,6 +92,24 @@ set(MRML_LIBRARIES "@MRML_LIBRARIES@")
 # Slicer Libs VTK wrapped libraries
 set(Slicer_Libs_VTK_WRAPPED_LIBRARIES "@Slicer_Libs_VTK_WRAPPED_LIBRARIES@")
 
+# See vtkAddon/CMake/vtkMacroKitPythonWrap.cmake
+# Per-library hierarchy file paths for extension Python wrapping.  Extension
+# builds call vtkMacroKitPythonWrap which reads <Kit>_WRAP_HIERARCHY_FILE via
+# _get_dependencies_recurse to pass parent-class hierarchy information to
+# vtkWrapPython.  Without these, classes inheriting from vtkSlicerModuleLogic
+# etc. are wrapped as "special types" and cannot be instantiated from Python.
+#
+# NOTE: We deliberately do NOT set Slicer_VTK_WRAP_HIERARCHY_DIR here.
+# That variable is also used as the OUTPUT directory for new hierarchy files
+# generated during an extension build.  If we set it to the read-only store
+# path, extension builds fail when vtkWrapHierarchy tries to write there.
+# The variable defaults to CMAKE_CURRENT_BINARY_DIR (writable build tree).
+set(_slicer_hierarchy_dir "${Slicer_HOME}/@Slicer_INSTALL_LIB_DIR@/hierarchy/Slicer")
+
+# Slicer VTK wrap hierarchy files
+@Slicer_INSTALL_WRAP_HIERARCHY_FILES_CONFIG@
+unset(_slicer_hierarchy_dir)
+
 # Slicer Libs library directories.
 set(Slicer_Libs_LIBRARY_DIRS
   "${Slicer_HOME}/lib/IGT"
